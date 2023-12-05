@@ -1,0 +1,84 @@
+#pragma once
+
+#include "../../../DataStructures/MLTB/MLData.h"
+#include "../../../Helpers/Console/Progress.h"
+#include "../../../Helpers/MultiThreading.h"
+#include "../../../Helpers/String/String.h"
+#include "../../TripBased/Query/Profiler.h"
+#include "TransferSearch.h"
+#include <cmath>
+#include <vector>
+
+namespace TripBased {
+
+class Builder {
+public:
+    Builder(MLData& data)
+        : data(data)
+        , search(data)
+    {
+        data.createCompactLayoutGraph();
+    }
+
+    void process(std::vector<int> levels, std::vector<int> ids)
+    {
+        std::vector<std::pair<TripId, StopIndex>> stopEvents = data.getBorderStopEvents(levels, ids);
+        for (auto element : stopEvents) {
+            search.run(element.first, element.second, levels, ids);
+        }
+    }
+
+    // obacht, das ist eine recs function
+    void computeCellIds(std::vector<std::vector<int>>& result, std::vector<int> level, int depth, int NUM_LEVELS, int NUM_CELLS_PER_LEVELS) {
+        if (depth == NUM_LEVELS) {
+            result.push_back(level);
+            return;
+        }
+        
+        for (int cell(0); cell < NUM_CELLS_PER_LEVELS; ++cell) {
+            std::vector<int> copy(level);
+            copy[depth] = cell;
+            computeCellIds(result, copy, depth + 1, NUM_LEVELS, NUM_CELLS_PER_LEVELS);
+        }
+    }
+
+    void generateAllLevelCellIds(std::vector<std::vector<int>>& result, int NUM_LEVELS) {
+        std::vector<int> currentLevel(NUM_LEVELS, 0);
+        computeCellIds(result, currentLevel, 0, NUM_LEVELS, data.numberOfCellsPerLevel());
+    }
+
+    void printInfo()
+    {
+        search.getProfiler().printStatistics();
+    }
+
+    void customize() {
+        for (int level(0); level < data.numberOfLevels(); ++level) {
+            std::vector<int> levels(data.numberOfLevels() - level, 0);
+            for (size_t i(0); i < levels.size(); ++i) levels[i] = data.numberOfLevels() - i - 1;
+
+            std::vector<std::vector<int>> result;
+            result.reserve(std::pow(data.numberOfCellsPerLevel(), data.numberOfLevels() - level));
+
+            generateAllLevelCellIds(result, data.numberOfLevels() - level);
+            
+            std::cout << "**** Level: " << level << ", " << result.size() << " cells!" << std::endl;
+
+            Progress progress(result.size());
+            
+            for (auto& element : result) {
+                process(levels, element);
+                ++progress;
+            }
+            progress.finished();
+            printInfo();
+            search.getProfiler().reset();
+        }
+        data.stopEventGraph[ARCFlag].swap(search.getFlags());
+    }
+
+private:
+    MLData& data;
+    TransferSearch<TripBased::AggregateProfiler> search;
+};
+}

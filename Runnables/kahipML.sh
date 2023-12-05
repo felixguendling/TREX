@@ -1,0 +1,1 @@
+./../../KaHIP/deploy/kaffpa ../../Datasets/Germany/layout.graph.metis --imbalance=5 --k=64 --preconfiguration=ssocial --hierarchy_parameter_string=4:4:4 --distance_parameter_string=1:1:1 --output_filename=../../Datasets/Germany/partition3_4.txt --time_limit=60

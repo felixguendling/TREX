@@ -12,7 +12,7 @@
 #include "../../DataStructures/TripBased/Data.h"
 
 #include "../../DataStructures/Queries/Queries.h"
-#include "../../Algorithms/MLTB/Query/MLQuery.h"
+#include "../../Algorithms/MLTB/Query/MLQueryBitset.h"
 
 #include "../../Helpers/Console/Progress.h"
 #include "../../Helpers/MultiThreading.h"
@@ -215,8 +215,9 @@ public:
     {
         const std::string tripFile = getParameter("Input file (MLTB Data)");
         TripBased::MLData data(tripFile);
+        data.fixFlags();
         data.printInfo();
-        TripBased::MLQuery<TripBased::AggregateProfiler> algorithm(data);
+        TripBased::MLQueryBitset<TripBased::AggregateProfiler> algorithm(data);
 
         const size_t n = getParameter<size_t>("Number of queries");
         const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);

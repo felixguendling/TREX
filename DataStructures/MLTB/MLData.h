@@ -9,6 +9,8 @@
 #include "../RAPTOR/Data.h"
 #include "../RAPTOR/Entities/RouteSegment.h"
 #include "../TripBased/Data.h"
+
+#include <iostream>
 #include <numeric>
 #include <string>
 
@@ -49,6 +51,50 @@ public:
 
             std::vector<bool> flags(numberOfLevels(), false);
             stopEventGraph.set(ARCFlag, edge, flags);
+        }
+    }
+
+    int getTotalNumberOfCells() const {
+        return std::pow(multiPartition.getNumberOfCellsPerLevel(),
+                        multiPartition.getNumberOfLevels());
+    }
+
+    int getPartitionCell(StopId stop) {
+        return multiPartition.getGlobalId(multiPartition[stop]);
+    }
+
+    void fixFlags() {
+        const int num_cells = getTotalNumberOfCells();
+        std::vector<int> count(multiPartition.getNumberOfLevels() + 1);
+        for (const auto [edge, from] : stopEventGraph.edgesWithFromVertex()) {
+            StopId fromStop = getStopOfStopEvent(StopEventId(from));
+
+            auto& flags = stopEventGraph.get(ARCFlag, edge);
+            int current_level = 0;
+            for (std::size_t i = 0; i < flags.size(); ++i) {
+                if (flags[i]) {
+                    current_level = i + 1;
+                    flags[i] = false;
+                }
+            }
+            flags.resize(num_cells);
+            ++count.at(current_level);
+
+            auto cell = multiPartition[fromStop];
+            const auto set_level = [&](auto&& rec, int level) -> void {
+                if (level == 0) {
+                    flags[multiPartition.getGlobalId(cell)] = true;
+                } else {
+                    for (int lc = 0; lc < multiPartition.getNumberOfCellsPerLevel(); ++lc) {
+                        cell[level - 1] = lc;
+                        rec(rec, level - 1);
+                    }
+                }
+            };
+            set_level(set_level, current_level);
+        }
+        for (std::size_t i = 0; i < count.size(); ++i) {
+            std::cout << "Transfers on level " << i << ": " << count[i] << '\n';
         }
     }
 

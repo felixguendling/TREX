@@ -388,7 +388,7 @@ public:
     std::vector<TripId> tripOfStopEvent;
     std::vector<StopIndex> indexOfStopEvent;
 
-    TransferGraphWithARCFlag stopEventGraph;
+    TransferGraphWithLocalLevel stopEventGraph;
 
     std::vector<ArrivalEvent> arrivalEvents;
 };

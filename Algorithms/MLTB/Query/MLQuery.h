@@ -42,17 +42,17 @@ private:
 
     struct EdgeLabel {
         EdgeLabel(const StopEventId stopEvent = noStopEvent, const TripId trip = noTripId,
-            const StopEventId firstEvent = noStopEvent, const std::vector<bool> flags = {})
+            const StopEventId firstEvent = noStopEvent, const uint8_t localLevel = 0)
             : stopEvent(stopEvent)
             , trip(trip)
             , firstEvent(firstEvent)
-            , flags(flags)
+            , localLevel(localLevel)
         {
         }
         StopEventId stopEvent;
         TripId trip;
         StopEventId firstEvent;
-        std::vector<bool> flags;
+        uint8_t localLevel;
     };
 
     struct RouteLabel {
@@ -99,7 +99,6 @@ public:
         , sourceStop(noStop)
         , targetStop(noStop)
         , sourceDepartureTime(never)
-        , flags(data.numberOfLevels() * data.stopEventGraph.numEdges(), false)
     {
         reverseTransferGraph.revert();
 
@@ -107,11 +106,7 @@ public:
             edgeLabels[edge].stopEvent = StopEventId(data.stopEventGraph.get(ToVertex, edge) + 1);
             edgeLabels[edge].trip = data.tripOfStopEvent[data.stopEventGraph.get(ToVertex, edge)];
             edgeLabels[edge].firstEvent = data.firstStopEventOfTrip[edgeLabels[edge].trip];
-            edgeLabels[edge].flags = data.stopEventGraph.get(ARCFlag, edge);
-
-            for (int level(0); level < (int) data.numberOfLevels(); ++level) {
-                flags[edge * data.numberOfLevels() + level] = data.stopEventGraph.get(ARCFlag, edge)[level];
-            }
+            edgeLabels[edge].localLevel = data.stopEventGraph.get(LocalLevel, edge);
         }
 
         for (const RouteId route : data.raptorData.routes()) {
@@ -128,7 +123,7 @@ public:
         }
         profiler.registerPhases({ PHASE_SCAN_INITIAL, PHASE_EVALUATE_INITIAL, PHASE_SCAN_TRIPS });
         profiler.registerMetrics({ METRIC_ROUNDS, METRIC_SCANNED_TRIPS, METRIC_SCANNED_STOPS, METRIC_RELAXED_TRANSFERS,
-            METRIC_ENQUEUES, METRIC_ADD_JOURNEYS });
+            METRIC_ENQUEUES, METRIC_ADD_JOURNEYS, DISCARDED_EDGE });
     }
 
     inline void run(const Vertex source, const int departureTime, const Vertex target) noexcept
@@ -359,8 +354,10 @@ private:
         if (reachedIndex.alreadyReached(label.trip, label.stopEvent - label.firstEvent)) [[likely]]
             return;
 
-        if (!isEdgeFlagged(label))
+        if (discardEdge(label)) {
+            profiler.countMetric(DISCARDED_EDGE);
             return;
+        }
 
         queue[queueSize] = TripLabel(label.stopEvent, StopEventId(label.firstEvent + reachedIndex(label.trip)), parent);
         ++queueSize;
@@ -368,25 +365,14 @@ private:
         reachedIndex.update(label.trip, StopIndex(label.stopEvent - label.firstEvent));
     }
 
-    inline bool isEdgeFlagged(const EdgeLabel& label) noexcept {
-        if (label.flags[data.numberOfLevels() - 1])
-            return true;
-
-        // check if inside either source or target cell
-        StopId toStop = data.getStopOfStopEvent(label.stopEvent);
-
-        int lowestCommonSource = data.getLowestCommonLevel(toStop, sourceStop);
-        int lowestCommonTarget = data.getLowestCommonLevel(toStop, targetStop);
-
-        if (lowestCommonSource == 0 || lowestCommonTarget == 0) {
-            return true;
-        }
-
-        if (lowestCommonSource == data.numberOfLevels() || lowestCommonTarget == data.numberOfLevels()) {
-            return false;
-        }
-
-        return (label.flags[lowestCommonSource] || label.flags[lowestCommonTarget]);
+    inline bool discardEdge(const EdgeLabel& label) noexcept {
+        // TODO
+        uint8_t lcl = std::min(
+                data.getLowestCommonLevel(data.getStopOfStopEvent(label.stopEvent), sourceStop),
+                data.getLowestCommonLevel(data.getStopOfStopEvent(label.stopEvent), targetStop)
+        );
+        
+        return label.localLevel + 1 < lcl;
     }
 
     inline void addTargetLabel(const int newArrivalTime, const u_int32_t parent = -1) noexcept
@@ -496,8 +482,6 @@ private:
     int sourceDepartureTime;
 
     Profiler profiler;
-
-    std::vector<bool> flags;
 };
 
 } // namespace TripBased

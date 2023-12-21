@@ -42,13 +42,7 @@ public:
 
             AssertMsg(multiPartition.inSameCell(fromStop, toStop), "Stops are not in the same cell!");
 
-            /* std::vector<bool> flags((numberOfCellsPerLevel() + 1) * numberOfLevels(), false); */
-            /* for (size_t level(0); level < (size_t)numberOfLevels(); ++level) { */
-            /*     flags[numberOfLevels() + level * numberOfLevels() + multiPartition.getCell(level, fromStop)] = true; */
-            /* } */
-
-            std::vector<bool> flags(numberOfLevels(), false);
-            stopEventGraph.set(ARCFlag, edge, flags);
+            stopEventGraph.set(LocalLevel, edge, 0);
         }
     }
 
@@ -74,12 +68,12 @@ public:
             }
         }
 
-        std::cout << "*** Information about the number of cuts depending on the level ***" << std::endl;
-        std::cout << "*** Note: A trip can only be a cut trip once ***" << std::endl;
+        std::cout << "**** Information about the number of cuts depending on the level ****" << std::endl;
+        std::cout << "**** Note: A trip can only be a cut trip once ****" << std::endl;
         std::cout << "Levels\tCut\tPercentage[%]" << std::endl;
 
         for (size_t level(0); level < cutsPerLevel.size(); ++level) {
-            std::cout << level << "\t" << String::prettyInt(cutsPerLevel[level]) << "\t" << String::prettyDouble((float)(cutsPerLevel[level] / (float)raptorData.numberOfTrips())) << std::endl;
+            std::cout << level << "\t" << String::prettyInt(cutsPerLevel[level]) << "\t" << String::prettyDouble((float)(cutsPerLevel[level] / (float)raptorData.numberOfTrips()) * 100) << std::endl;
         }
     }
 
@@ -284,7 +278,6 @@ public:
         std::vector<std::pair<TripId, StopIndex>> result;
         result.reserve(2000);
         // maybe reserve
-
         std::vector<int> stopsInCell = multiPartition.verticesInCell(levels, ids);
 
         for (size_t i(0); i < stopsInCell.size(); ++i) {
@@ -326,23 +319,16 @@ public:
 
     inline void serialize(const std::string& fileName) const noexcept
     {
-        /* raptorData.serialize(fileName + ".raptor"); */
-        /* IO::serialize(fileName, firstTripOfRoute, routeOfTrip, firstStopIdOfTrip, firstStopEventOfTrip, tripOfStopEvent, */
-        /*     indexOfStopEvent, arrivalEvents, multiPartition, unionFind); */
         Data::serialize(fileName + ".trip");
         IO::serialize(fileName, multiPartition, unionFind, layoutGraph);
         stopEventGraph.writeBinary(fileName + ".trip.graph");
-        /* layoutGraph.writeBinary(fileName + ".layout"); */
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
-        /* raptorData.deserialize(fileName + ".raptor"); */
-        /* IO::deserialize(fileName, firstTripOfRoute, routeOfTrip, firstStopIdOfTrip, firstStopEventOfTrip, tripOfStopEvent, */
-        /*     indexOfStopEvent, arrivalEvents, multiPartition, unionFind); */
         Data::deserialize(fileName + ".trip");
         IO::deserialize(fileName, multiPartition, unionFind, layoutGraph);
-        /* layoutGraph.readBinary(fileName + ".layout"); */
+        stopEventGraph.readBinary(fileName + ".trip.graph");
     }
 
     // Assert that no transfer is cut

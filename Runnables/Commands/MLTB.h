@@ -166,37 +166,22 @@ public:
         TripBased::MLData data(tripFile);
         data.printInfo();
 
-        std::vector<size_t> numGlobalTransfers(data.numberOfLevels(), 0);
-
-        std::vector<std::pair<StopEventId, Edge>> examplesOfTopMostTransfers;
+        std::vector<size_t> numLocalTransfers(data.numberOfLevels(), 0);
 
         for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
-            std::vector<bool>& flags = data.stopEventGraph.get(ARCFlag, edge);
-
             for (int level(data.numberOfLevels() - 1); level >= 0; --level) {
-                if (flags[level]) {
-                    ++numGlobalTransfers[level];
-
-                    if (level == data.numberOfLevels() - 1 && examplesOfTopMostTransfers.size() < 10)
-                        examplesOfTopMostTransfers.push_back(std::make_pair(StopEventId(from), edge));
+                if (data.stopEventGraph.get(LocalLevel, edge) >= level) {
+                    ++numLocalTransfers[level];
                     break;
                 }
             }
         }
 
-        std::cout << "** Number of Global Transfers **" << std::endl;
+        std::cout << "** Number of Local Transfers **" << std::endl;
         std::cout << "Note: Each transfer is counted for it's highest level!"<< std::endl;
         
-        for (size_t level(0); level < numGlobalTransfers.size(); ++level) {
-            std::cout << "Level " << level << ":       " << String::prettyInt(numGlobalTransfers[level]) << std::endl;
-        }
-
-        std::cout << "Here are " << String::prettyInt(examplesOfTopMostTransfers.size()) << " topmost global transfers:" << std::endl;
-
-        for (auto& pair : examplesOfTopMostTransfers) {
-            std::cout << "\tFrom Stop " << data.raptorData.stopData[data.getStopOfStopEvent(pair.first)] << " to Stop " << data.raptorData.stopData[data.getStopOfStopEvent(StopEventId(data.stopEventGraph.get(ToVertex, pair.second)))] << std::endl;
-            /* std::cout << "\tFrom Trip " << data.raptorData.tripData[data.tripOfStopEvent[pair.first]] << " to Trip " << data.raptorData.tripData[data.tripOfStopEvent[StopEventId(data.stopEventGraph.get(ToVertex, pair.second))]] << std::endl; */
-            std::cout << "\tFrom Route " << data.raptorData.routeData[data.routeOfTrip[data.tripOfStopEvent[pair.first]]] << " to Route " << data.raptorData.routeData[data.routeOfTrip[data.tripOfStopEvent[StopEventId(data.stopEventGraph.get(ToVertex, pair.second))]]] << std::endl;
+        for (size_t level(0); level < numLocalTransfers.size(); ++level) {
+            std::cout << "Level " << level << ":       " << String::prettyInt(numLocalTransfers[level]) << "    " << String::prettyDouble((100.0 * numLocalTransfers[level] / data.stopEventGraph.numEdges())) << " %" << std::endl;
         }
     }
 };
@@ -215,6 +200,7 @@ public:
     {
         const std::string tripFile = getParameter("Input file (MLTB Data)");
         TripBased::MLData data(tripFile);
+
         data.printInfo();
         TripBased::MLQuery<TripBased::AggregateProfiler> algorithm(data);
 
@@ -231,4 +217,3 @@ public:
         std::cout << "Avg. Journeys: " << String::prettyDouble(numberOfJourneys / (float) queries.size()) << std::endl;
     }
 };
-

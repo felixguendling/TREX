@@ -62,7 +62,7 @@ public:
 
             generateAllLevelCellIds(result, data.numberOfLevels() - level);
             
-            std::cout << "**** Level: " << level << ", " << result.size() << " cells!" << std::endl;
+            std::cout << "**** Level: " << level << ", " << result.size() << " cells! ****" << std::endl;
 
             Progress progress(result.size());
             
@@ -74,7 +74,7 @@ public:
             printInfo();
             search.getProfiler().reset();
         }
-        data.stopEventGraph[ARCFlag].swap(search.getFlags());
+        data.stopEventGraph[LocalLevel].swap(search.getLocalLevels());
     }
 
 private:

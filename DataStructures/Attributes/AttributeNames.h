@@ -107,7 +107,10 @@ using BundleSizeType = AttributeNameWrapper<27>;
 
 // Arc-Flag TB
 using ARCFlag = AttributeNameWrapper<28>;
-using UnknownType = AttributeNameWrapper<29>;
+
+// MLTB
+using LocalLevel = AttributeNameWrapper<29>;
+using UnknownType = AttributeNameWrapper<30>;
 // Ensure that Unknown is the last entry!
 
 } // namespace ImplementationDetail
@@ -141,6 +144,7 @@ constexpr ImplementationDetail::ProfileIndexType ProfileIndex;
 constexpr ImplementationDetail::OriginalEdgeType OriginalEdge;
 constexpr ImplementationDetail::BundleSizeType BundleSize;
 constexpr ImplementationDetail::ARCFlag ARCFlag;
+constexpr ImplementationDetail::LocalLevel LocalLevel;
 constexpr ImplementationDetail::UnknownType Unknown;
 // Ensure that Unknown is the last entry!
 
@@ -176,7 +180,8 @@ constexpr const char* AttributeNameStrings[] = {
     /* 26 */ "OriginalEdge",
     /* 27 */ "BundleSize",
     /* 28 */ "ARCFlag",
-    /* 29 */ "Unknown"
+    /* 29 */ "LocalLevel",
+    /* 30 */ "Unknown"
     // Ensure that Unknown is the last entry!
 };
 

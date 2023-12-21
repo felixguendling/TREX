@@ -96,7 +96,7 @@ public:
         return inSameCell(cellIds[a], cellIds[b]);
     }
 
-    inline bool inSameCell(int a, std::vector<int> levels, std::vector<int> cellIds)
+    inline bool inSameCell(int a, std::vector<int>& levels, std::vector<int>& cellIds)
     {
         AssertMsg(levels.size() == cellIds.size(), "Levels and CellIds must have same size!");
 

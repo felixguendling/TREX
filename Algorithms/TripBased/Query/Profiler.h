@@ -41,6 +41,7 @@ typedef enum {
     METRIC_ADD_JOURNEYS,
     METRIC_COUNT_DISTANCE,
     NUMBER_OF_RUNS,
+    DISCARDED_EDGE,
     NUM_METRICS
 } Metric;
 
@@ -52,7 +53,8 @@ constexpr const char* MetricNames[] = {
     "Enqueued trips",
     "Added journeys",
     "Distance / MaxSpeed",
-    "Number of Runs"
+    "Number of Runs",
+    "Number of discarded edges"
 };
 
 class NoProfiler {

@@ -1,0 +1,4 @@
+raptorToMLTB /home/patrick/Documents/Datasets/Germany/raptor.binary /home/patrick/Documents/Datasets/Germany/mltb.binary 3 4
+applyPartitionFile /home/patrick/Documents/Datasets/Germany/partition3_4.txt /home/patrick/Documents/Datasets/Germany/mltb.binary true
+customize /home/patrick/Documents/Datasets/Germany/mltb.binary /home/patrick/Documents/Datasets/Germany/mltb.binary
+showInfoOfMLTB /home/patrick/Documents/Datasets/Germany/mltb.binary

@@ -81,15 +81,13 @@ public:
         , reachedIndex(data)
         , edgeLabels(data.stopEventGraph.numEdges())
         , routeLabels(data.numberOfRoutes())
-        , flags(data.stopEventGraph.numEdges())
+        , localLevels(data.stopEventGraph.numEdges(), 0)
         , toBeUnpacked(data.numberOfStopEvents())
     {
         for (const Edge edge : data.stopEventGraph.edges()) {
             edgeLabels[edge].stopEvent = StopEventId(data.stopEventGraph.get(ToVertex, edge) + 1);
             edgeLabels[edge].trip = data.tripOfStopEvent[data.stopEventGraph.get(ToVertex, edge)];
             edgeLabels[edge].firstEvent = data.firstStopEventOfTrip[edgeLabels[edge].trip];
-
-            flags[edge] = data.stopEventGraph.get(ARCFlag, edge);
         }
 
         for (const RouteId route : data.raptorData.routes()) {
@@ -131,8 +129,8 @@ public:
         return profiler;
     }
 
-    inline std::vector<std::vector<bool>>& getFlags() noexcept {
-        return flags;
+    inline std::vector<uint8_t>& getLocalLevels() noexcept {
+        return localLevels;
     }
 
 private:
@@ -209,14 +207,10 @@ private:
         profiler.countMetric(METRIC_ENQUEUES);
         const EdgeLabel& label = edgeLabels[edge];
 
-        // check that this transfer is a global transfer from below
-        if (minLevel > 0) {
-            if (!flags[edge][minLevel - 1]) {
-                return;
-            }
-        } 
-
         if (reachedIndex.alreadyReached(label.trip, label.stopEvent - label.firstEvent) || !isStopInCell(data.getStop(label.trip, StopIndex(label.stopEvent - label.firstEvent)))) [[likely]]
+            return;
+
+        if (minLevel > localLevels[edge])
             return;
 
         queue[queueSize] = TripLabel(
@@ -245,9 +239,7 @@ private:
         Edge currentEdge = label.parentTransfer;
 
         while (currentEdge != noEdge) {
-            // TODO add time step to not unpack uncesessay
-            flags[currentEdge][minLevel] = true;
-            // check dass die reference alles regelt
+            localLevels[currentEdge] = minLevel + 1;
 
             index = label.parent;
             label = queue[index];
@@ -267,7 +259,7 @@ private:
 
     std::vector<EdgeLabel> edgeLabels;
     std::vector<RouteLabel> routeLabels;
-    std::vector<std::vector<bool>> flags;
+    std::vector<uint8_t> localLevels;
 
     std::vector<int> levels;
     std::vector<int> cellIds;

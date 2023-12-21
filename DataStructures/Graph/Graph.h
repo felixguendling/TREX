@@ -74,6 +74,16 @@ using DynamicTransferGraphWithARCFlag = DynamicGraph<WithCoordinates, WithTravel
 using SimpleDynamicGraphWithARCFlag = DynamicGraph<NoVertexAttributes, WithARCFlag>;
 using SimpleEdgeListWithARCFlag = EdgeList<NoVertexAttributes, WithARCFlag>;
 
+// MLTB
+using WithLocalLevel = List<Attribute<LocalLevel, uint8_t>>;
+using WithTravelTimeAndLocalLevel = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>>;
+
+using TransferGraphWithLocalLevel = StaticGraph<WithCoordinates, WithTravelTimeAndLocalLevel>;
+using DynamicTransferGraphWithLocalLevel = DynamicGraph<WithCoordinates, WithTravelTimeAndLocalLevel>;
+using SimpleDynamicGraphWithLocalLevel = DynamicGraph<NoVertexAttributes, WithLocalLevel>;
+using SimpleEdgeListWithLocalLevel = EdgeList<NoVertexAttributes, WithLocalLevel>;
+
+
 // Transfer Pattern
 using EdgeListDAGTransferPattern = EdgeList<WithViaVertex, WithTravelTime>;
 using DynamicDAGTransferPattern = DynamicGraph<WithViaVertex, WithTravelTime>;

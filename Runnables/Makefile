@@ -6,7 +6,7 @@ RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG
 SPARSEHASH=-I ../ExternalLibs/sparsehash/include
 
 
-all: MLTBRelease TPRelease ArcTBRelease NetworkRelease ULTRARelease 
+all: MLTBRelease
 # all: TPDebug ArcTBDebug NetworkDebug ULTRADebug
 
 NetworkDebug:

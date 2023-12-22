@@ -83,7 +83,6 @@ using DynamicTransferGraphWithLocalLevel = DynamicGraph<WithCoordinates, WithTra
 using SimpleDynamicGraphWithLocalLevel = DynamicGraph<NoVertexAttributes, WithLocalLevel>;
 using SimpleEdgeListWithLocalLevel = EdgeList<NoVertexAttributes, WithLocalLevel>;
 
-
 // Transfer Pattern
 using EdgeListDAGTransferPattern = EdgeList<WithViaVertex, WithTravelTime>;
 using DynamicDAGTransferPattern = DynamicGraph<WithViaVertex, WithTravelTime>;

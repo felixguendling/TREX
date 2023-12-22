@@ -74,7 +74,6 @@ private:
 public:
     TransferSearch(MLData& data)
         : data(data)
-        , reachedRoutes(data.numberOfRoutes())
         , queue(data.numberOfStopEvents())
         , edgeRanges(data.numberOfStopEvents())
         , queueSize(0)
@@ -129,7 +128,8 @@ public:
         return profiler;
     }
 
-    inline std::vector<uint8_t>& getLocalLevels() noexcept {
+    inline std::vector<uint8_t>& getLocalLevels() noexcept
+    {
         return localLevels;
     }
 
@@ -207,7 +207,8 @@ private:
         profiler.countMetric(METRIC_ENQUEUES);
         const EdgeLabel& label = edgeLabels[edge];
 
-        if (reachedIndex.alreadyReached(label.trip, label.stopEvent - label.firstEvent) || !isStopInCell(data.getStop(label.trip, StopIndex(label.stopEvent - label.firstEvent)))) [[likely]]
+        // break if a) already reached OR b) the stop if this transfer is not in the same cell
+        if (reachedIndex.alreadyReached(label.trip, label.stopEvent - label.firstEvent) || !isStopInCell(data.getStop(label.trip, StopIndex(label.stopEvent - label.firstEvent - 1)))) [[likely]]
             return;
 
         if (minLevel > localLevels[edge])
@@ -249,8 +250,6 @@ private:
 
 private:
     MLData& data;
-
-    IndexedSet<false, RouteId> reachedRoutes;
 
     std::vector<TripLabel> queue;
     std::vector<EdgeRange> edgeRanges;

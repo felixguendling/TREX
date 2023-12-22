@@ -2,9 +2,9 @@
 
 #include "../../../DataStructures/Container/Set.h"
 #include "../../../DataStructures/Graph/Utils/Conversion.h"
+#include "../../../DataStructures/MLTB/MLData.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
-#include "../../../DataStructures/MLTB/MLData.h"
 #include "../../TripBased/Query/Profiler.h"
 #include "../../TripBased/Query/ReachedIndex.h"
 
@@ -365,14 +365,15 @@ private:
         reachedIndex.update(label.trip, StopIndex(label.stopEvent - label.firstEvent));
     }
 
-    inline bool discardEdge(const EdgeLabel& label) noexcept {
+    inline bool discardEdge(const EdgeLabel& label) noexcept
+    {
         // TODO
+        StopId stop = data.getStop(label.trip, StopIndex(label.stopEvent - label.firstEvent - 1));
         uint8_t lcl = std::min(
-                data.getLowestCommonLevel(data.getStopOfStopEvent(label.stopEvent), sourceStop),
-                data.getLowestCommonLevel(data.getStopOfStopEvent(label.stopEvent), targetStop)
-        );
-        
-        return label.localLevel + 1 < lcl;
+            data.getLowestCommonLevel(stop, sourceStop),
+            data.getLowestCommonLevel(stop, targetStop));
+
+        return label.localLevel < lcl;
     }
 
     inline void addTargetLabel(const int newArrivalTime, const u_int32_t parent = -1) noexcept

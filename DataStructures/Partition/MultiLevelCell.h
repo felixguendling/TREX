@@ -22,9 +22,10 @@ public:
         return ids[level];
     }
 
-    inline std::vector<int> getIds() {
+    inline std::vector<int> getIds()
+    {
         return ids;
-    } 
+    }
 
     // sets the correct ids
     inline void setIds(std::vector<int> newIds)

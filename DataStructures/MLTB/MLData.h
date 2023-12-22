@@ -246,7 +246,8 @@ public:
         return multiPartition.inSameCell(stop, levels, cellIds);
     }
 
-    inline std::vector<int> getIdsOfStop(StopId stop) {
+    inline std::vector<int> getIdsOfStop(StopId stop)
+    {
         AssertMsg(isStop(stop), "Stop is not a stop!");
         return multiPartition.getCellIds(stop);
     }
@@ -304,7 +305,8 @@ public:
         return result;
     }
 
-    inline int getLowestCommonLevel(StopId a, StopId b) {
+    inline int getLowestCommonLevel(StopId a, StopId b)
+    {
         return multiPartition.getLowestCommonLevel(a, b);
     }
 
@@ -352,6 +354,26 @@ public:
     inline bool isCell(size_t level, size_t cell) const
     {
         return cell < multiPartition.getNumberOfCellsInLevel(level);
+    }
+
+    inline void writePartitionToCSV(const std::string& fileName) noexcept
+    {
+        std::ofstream file(fileName);
+
+        file << "StopID";
+
+        for (size_t level(0); level < multiPartition.getNumberOfLevels(); ++level)
+            file << ",Level " << level;
+        file << "\n";
+
+        auto& cells = multiPartition.getIds();
+        for (size_t i(0); i < cells.size(); ++i) {
+            file << i;
+            for (size_t l(0); l < multiPartition.getNumberOfLevels(); ++l)
+                file << "," << cells[i][l];
+            file << "\n";
+        }
+        file.close();
     }
 
 public:

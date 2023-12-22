@@ -1,4 +1,4 @@
-raptorToMLTB /home/patrick/Documents/Datasets/Germany/raptor.binary /home/patrick/Documents/Datasets/Germany/mltb.binary 3 4
-applyPartitionFile /home/patrick/Documents/Datasets/Germany/partition3_4.txt /home/patrick/Documents/Datasets/Germany/mltb.binary true
-customize /home/patrick/Documents/Datasets/Germany/mltb.binary /home/patrick/Documents/Datasets/Germany/mltb.binary
-showInfoOfMLTB /home/patrick/Documents/Datasets/Germany/mltb.binary
+raptorToMLTB ../../Datasets/Germany/raptor.binary ../../Datasets/Germany/MLTB/mltb.binary 3 4
+applyPartitionFile ../../Datasets/Germany/MLTB/partition3_4.txt ../../Datasets/Germany/MLTB/mltb.binary true
+customize ../../Datasets/Germany/MLTB/mltb.binary ../../Datasets/Germany/MLTB/mltb.binary
+showInfoOfMLTB ../../Datasets/Germany/MLTB/mltb.binary

@@ -16,6 +16,7 @@ int main(int argc, char** argv)
     new CreateCompactLayoutGraph(shell);
     new Customization(shell);
     new ShowInfoOfMLTB(shell);
+    new WriteMLTBToCSV(shell);
     new RunMLQuery(shell);
 
     shell.run();

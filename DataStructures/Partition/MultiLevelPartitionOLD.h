@@ -116,13 +116,14 @@ public:
         return result;
     }
 
-    inline int getLowestCommonLevel(int a, int b) {
+    inline int getLowestCommonLevel(int a, int b)
+    {
         AssertMsg(a < (int)cellIds.size(), "Element is not valid!");
         AssertMsg(b < (int)cellIds.size(), "Element is not valid!");
 
         if (a == b)
             return 0;
-        
+
         for (int level(numLevels - 1); level >= 0; --level) {
             if (cellIds[a][level] != cellIds[b][level])
                 return level + 1;
@@ -162,7 +163,8 @@ public:
         return elements;
     }
 
-    inline std::vector<int> getCellIds(int a) noexcept {
+    inline std::vector<int> getCellIds(int a) noexcept
+    {
         AssertMsg(a < (int)cellIds.size(), "Element is not valid!");
 
         return cellIds[a].getIds();

@@ -72,7 +72,11 @@ public:
     {
     }
 
-    inline void reset() noexcept {}
+    inline void printStatisticsAsCSV() const noexcept
+    {
+    }
+
+    inline void reset() noexcept { }
 };
 
 class AggregateProfiler : public NoProfiler {
@@ -153,7 +157,21 @@ public:
         std::cout << "Total time: " << String::musToString(totalTime / numQueries) << std::endl;
     }
 
-    inline void reset() noexcept {
+    inline void printStatisticsAsCSV() const noexcept 
+    {
+        for (const Metric metric : metrics) {
+            std::cout << "\"" << MetricNames[metric] << "\","
+                      << (float)(metricValue[metric] / static_cast<double>(numQueries), 2) << std::endl;
+        }
+        for (const Phase phase : phases) {
+            std::cout << "\"" << PhaseNames[phase] << "\","
+                      << (uint64_t)(phaseTime[phase] / static_cast<double>(numQueries)) << std::endl;
+        }
+        std::cout << "\"Total time\"," << (uint64_t)(totalTime / numQueries) << std::endl;
+    }
+
+    inline void reset() noexcept
+    {
         totalTime = 0.0;
         phaseTime.assign(NUM_PHASES, 0.0);
         metricValue.assign(NUM_METRICS, 0);

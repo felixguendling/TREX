@@ -95,6 +95,8 @@ inline void toEdgeListCSV(const std::string& fileBaseName, const GRAPH& graph) n
         csv << ",EdgeFlags";
     if constexpr (GRAPH::HasEdgeAttribute(ARCFlag))
         csv << ",ARCFlag";
+    if constexpr (GRAPH::HasEdgeAttribute(LocalLevel))
+        csv << ",LocalLevel";
 
     csv << "\n";
 
@@ -118,6 +120,8 @@ inline void toEdgeListCSV(const std::string& fileBaseName, const GRAPH& graph) n
             csv << "," << join(graph.get(EdgeFlags, edge));
         if constexpr (GRAPH::HasEdgeAttribute(ARCFlag))
             csv << "," << join(graph.get(ARCFlag, edge));
+        if constexpr (GRAPH::HasEdgeAttribute(LocalLevel))
+            csv << "," << (int)graph.get(LocalLevel, edge);
         csv << "\n";
     }
     csv.close();

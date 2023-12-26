@@ -179,11 +179,11 @@ public:
     {
         for (const Metric metric : metrics) {
             std::cout << "\"" << MetricNames[metric] << "\","
-                      << (float)(metricValue[metric] / static_cast<double>(numQueries), 2) << std::endl;
+                      << (float)(metricValue[metric] / (double)(numQueries)) << std::endl;
         }
         for (const Phase phase : phases) {
             std::cout << "\"" << PhaseNames[phase] << "\","
-                      << (uint64_t)(phaseTime[phase] / static_cast<double>(numQueries)) << std::endl;
+                      << (uint64_t)(phaseTime[phase] / (double)(numQueries)) << std::endl;
         }
         std::cout << "\"Total time\"," << (uint64_t)(totalTime / numQueries) << std::endl;
     }

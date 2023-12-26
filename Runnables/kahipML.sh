@@ -1,1 +1,1 @@
-./../../KaHIP/deploy/kaffpa ../../Datasets/Karlsruhe/MLTB/compact_layout.graph.metis --imbalance=5 --k=16 --preconfiguration=ssocial --hierarchy_parameter_string=4:4 --distance_parameter_string=1:1 --output_filename=../../Datasets/Karlsruhe/MLTB/partition2_4.txt --time_limit=60
+./../../KaHIP/deploy/kaffpa ../../Datasets/Germany/MLTB/compact_layout.graph.metis --imbalance=10 --k=256 --preconfiguration=ssocial --hierarchy_parameter_string=16:16 --distance_parameter_string=1:1:1:1:1 --output_filename=../../Datasets/Germany/MLTB/partition2_17.txt --time_limit=120

@@ -16,22 +16,18 @@ public:
     Builder(MLData& data)
         : data(data)
         , search(data)
+        , incommingEventsOfCell(0)
+        , avgPathLengthPerLevel(data.numberOfLevels(), 0)
     {
         data.createCompactLayoutGraph();
     }
 
-    void process(std::vector<int>& levels, std::vector<int>& ids, const bool verbose = true)
+    void process(std::vector<int>& levels, std::vector<int>& ids, size_t indexOfCell)
     {
         std::vector<std::pair<TripId, StopIndex>> stopEvents = data.getBorderStopEvents(levels, ids);
 
-        if (verbose) {
-            std::cout << "**** { ";
-            for (size_t i(0); i < levels.size(); ++i) {
-                std::cout << levels[i] << ": " << ids[i] << " ";
-            }
+        incommingEventsOfCell[indexOfCell] = stopEvents.size();
 
-            std::cout << "} # Events: " << (int)stopEvents.size() << std::endl;
-        }
         for (auto element : stopEvents) {
             search.run(element.first, element.second, levels, ids);
         }
@@ -75,21 +71,38 @@ public:
 
             generateAllLevelCellIds(result, data.numberOfLevels() - level);
 
+            // for stats
+            size_t indexOfCell = 0;
+            incommingEventsOfCell.assign(std::pow(data.numberOfCellsPerLevel(), data.numberOfLevels() - level), 0);
+
             if (verbose)
                 std::cout << "**** Level: " << level << ", " << result.size() << " cells! ****" << std::endl;
 
             Progress progress(result.size());
 
             for (auto& element : result) {
-                process(levels, element, verbose);
+                process(levels, element, indexOfCell);
                 ++progress;
+                ++indexOfCell;
             }
             progress.finished();
+
             if (verbose) {
-                std::cout << "Profiler Stats for Level " << level << std::endl;
+                std::cout << "##### Stats for Level " << level << std::endl;
                 printInfo();
+
+                avgPathLengthPerLevel[level] = search.getAvgPathLengthPerLevel();
+                std::cout << "**** Avg. Path Length: " << avgPathLengthPerLevel[level] << std::endl;
+                std::cout << "Cell Index, Incomming Events\n";
+                for (size_t i(0); i < incommingEventsOfCell.size(); ++i) {
+                    std::cout << (int)i << "," << incommingEventsOfCell[i] << "\n";
+                }
+                std::cout << "###############################" << std::endl;
             }
             search.getProfiler().reset();
+            search.resetStats();
+
+            indexOfCell = 0;
         }
         data.stopEventGraph[LocalLevel].swap(search.getLocalLevels());
     }
@@ -97,5 +110,10 @@ public:
 private:
     MLData& data;
     TransferSearch<TripBased::AggregateProfiler> search;
+
+    // to collect stats
+    // vector to count how many incomming events need to be processed at cell [i]
+    std::vector<uint64_t> incommingEventsOfCell;
+    std::vector<double> avgPathLengthPerLevel;
 };
 }

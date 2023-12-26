@@ -1,9 +1,0 @@
-parseGTFS ../../Datasets/GTFS/Karlsruhe/ ../../Datasets/Karlsruhe/gtfs.binary
-gtfsToIntermediate ../../Datasets/Karlsruhe/gtfs.binary 20231209 20231210 true false ../../Datasets/Karlsruhe/intermediate.binary
-reduceGraph ../../Datasets/Karlsruhe/intermediate.binary ../../Datasets/Karlsruhe/intermediate.binary
-reduceToMaximumConnectedComponent ../../Datasets/Karlsruhe/intermediate.binary ../../Datasets/Karlsruhe/intermediate.binary
-makeIntermediateTransitive ../../Datasets/Karlsruhe/intermediate.binary ../../Datasets/Karlsruhe/intermediate.binary
-reduceGraph ../../Datasets/Karlsruhe/intermediate.binary ../../Datasets/Karlsruhe/intermediate.binary
-makeOneHopTransfers ../../Datasets/Karlsruhe/intermediate.binary 86400 ../../Datasets/Karlsruhe/intermediate.binary true
-intermediateToRAPTOR ../../Datasets/Karlsruhe/intermediate.binary ../../Datasets/Karlsruhe/raptor.binary
-createLayoutGraph ../../Datasets/Karlsruhe/raptor.binary ../../Datasets/Karlsruhe/raptor.layout.graph true

@@ -82,6 +82,8 @@ public:
         , routeLabels(data.numberOfRoutes())
         , localLevels(data.stopEventGraph.numEdges(), 0)
         , toBeUnpacked(data.numberOfStopEvents())
+        , extractedPaths(0)
+        , totalLengthPfExtractedPaths(0)
     {
         for (const Edge edge : data.stopEventGraph.edges()) {
             edgeLabels[edge].stopEvent = StopEventId(data.stopEventGraph.get(ToVertex, edge) + 1);
@@ -229,6 +231,8 @@ private:
     {
         for (const size_t index : toBeUnpacked) {
             unpackStopEvent(index);
+
+            ++extractedPaths;
         }
     }
 
@@ -245,7 +249,21 @@ private:
             index = label.parent;
             label = queue[index];
             currentEdge = label.parentTransfer;
+
+            ++totalLengthPfExtractedPaths;
         }
+    }
+
+public:
+    inline double getAvgPathLengthPerLevel() noexcept
+    {
+        return (double)totalLengthPfExtractedPaths / (double)extractedPaths;
+    }
+
+    inline void resetStats() noexcept
+    {
+        totalLengthPfExtractedPaths = 0;
+        extractedPaths = 0;
     }
 
 private:
@@ -267,6 +285,10 @@ private:
     Profiler profiler;
 
     IndexedSet<false, size_t> toBeUnpacked;
+
+    // stats
+    uint64_t extractedPaths;
+    uint64_t totalLengthPfExtractedPaths;
 };
 
 } // namespace TripBased

@@ -1,0 +1,2 @@
+raptorToMLTB ../../Datasets/Germany/raptor.binary ../../Datasets/Germany/MLTB/mltb.binary 2 16
+createCompactLayoutGraph ../../Datasets/Germany/MLTB/mltb.binary ../../Datasets/Germany/MLTB/compact_layout.graph true

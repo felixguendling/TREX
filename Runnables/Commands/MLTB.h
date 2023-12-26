@@ -217,8 +217,6 @@ public:
 
         const size_t n = getParameter<size_t>("Number of queries");
         const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);
-        /* std::vector<StopQuery> queries; */
-        /* queries.emplace_back(StopId(2113), StopId(2165), 62986); */
 
         std::vector<std::vector<std::pair<int, int>>> result;
         result.assign(n, {});
@@ -254,6 +252,7 @@ public:
             i += 1;
         }
         algorithm.getProfiler().printStatistics();
+        algorithm.showTransferLevels();
 
         if (eval) {
             size_t wrongQueries = 0;

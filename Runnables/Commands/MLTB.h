@@ -116,7 +116,7 @@ public:
     {
         addParameter("Input file (MLTB Data)");
         addParameter("Output file (METIS File)");
-        addParameter("Write GRAPHML?");
+        addParameter("Write GRAPHML?", "false");
     }
 
     virtual void execute() noexcept
@@ -141,19 +141,21 @@ public:
     {
         addParameter("Input file (MLTB Data)");
         addParameter("Output file (MLTB Data)");
+        addParameter("Verbose?", "true");
     }
 
     virtual void execute() noexcept
     {
         const std::string mltbFile = getParameter("Input file (MLTB Data)");
         const std::string output = getParameter("Output file (MLTB Data)");
+        const bool verbose = getParameter<bool>("Verbose?");
 
         TripBased::MLData data(mltbFile);
         data.printInfo();
 
         TripBased::Builder bobTheBuilder(data);
 
-        bobTheBuilder.customize();
+        bobTheBuilder.customize(verbose);
 
         data.serialize(output);
     }
@@ -165,17 +167,28 @@ public:
         : ParameterizedCommand(shell, "showInfoOfMLTB", "Shows Information about the given MLTB file.")
     {
         addParameter("Input file (MLTB Data)");
+        addParameter("Write to csv?", "false");
+        addParameter("Output file (csv)", "levelDegree");
     }
 
     virtual void execute() noexcept
     {
         const std::string tripFile = getParameter("Input file (MLTB Data)");
+        const bool writeToCSV = getParameter<bool>("Write to csv?");
+        const std::string fileName = getParameter("Output file (csv)");
         TripBased::MLData data(tripFile);
         data.printInfo();
 
         std::vector<size_t> numLocalTransfers(data.numberOfLevels(), 0);
+        std::vector<size_t> numLocalEvents(data.numberOfLevels(), 0);
+
+        std::vector<std::vector<size_t>> degreePerLevel(data.numberOfLevels() + 1);
+        for (size_t l(0); l < (size_t)data.numberOfLevels() + 1; ++l) {
+            degreePerLevel[l].assign(data.stopEventGraph.numVertices(), 0);
+        }
 
         for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
+            ++degreePerLevel[data.stopEventGraph.get(LocalLevel, edge)][from];
             for (int level(data.numberOfLevels() - 1); level >= 0; --level) {
                 if (data.stopEventGraph.get(LocalLevel, edge) >= level) {
                     ++numLocalTransfers[level];
@@ -184,11 +197,29 @@ public:
             }
         }
 
+        for (StopEventId event(0); event < data.numberOfStopEvents(); ++event) {
+            ++numLocalEvents[data.getLocalLevelOfEvent(event)];
+        }
+
         std::cout << "** Number of Local Transfers **" << std::endl;
-        std::cout << "Note: Each transfer is counted for it's highest level!" << std::endl;
 
         for (size_t level(0); level < numLocalTransfers.size(); ++level) {
             std::cout << "Level " << level << ":       " << String::prettyInt(numLocalTransfers[level]) << "    " << String::prettyDouble((100.0 * numLocalTransfers[level] / data.stopEventGraph.numEdges())) << " %" << std::endl;
+        }
+
+        std::cout << "** Number of local Events **" << std::endl;
+        for (size_t level(0); level < numLocalTransfers.size(); ++level) {
+            std::cout << "Level " << level << ":       " << String::prettyInt(numLocalEvents[level]) << "    " << String::prettyDouble((100.0 * numLocalEvents[level] / data.numberOfStopEvents())) << " %" << std::endl;
+        }
+
+        if (writeToCSV) {
+            for (size_t l(0); l < (size_t)data.numberOfLevels() + 1; ++l) {
+                std::ofstream outputfile(fileName + ".level" + std::to_string(l) + ".csv");
+
+                outputfile << "StopEventId,Degree\n";
+                for (size_t i(0); i < degreePerLevel[l].size(); ++i)
+                    outputfile << i << "," << degreePerLevel[l][i] << "\n";
+            }
         }
     }
 };

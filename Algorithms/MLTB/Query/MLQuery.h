@@ -101,6 +101,7 @@ public:
         , sourceDepartureTime(never)
         , transferPerLevel(data.numberOfLevels() + 1, 0)
         , numQueries(0)
+        , irrelevantEvents(0)
     {
         reverseTransferGraph.revert();
 
@@ -197,10 +198,12 @@ public:
 
     inline void showTransferLevels() noexcept
     {
-        std::cout << "**** # of relaxed transfers per level" << std::endl;
+        std::cout << "# of relaxed transfers per level" << std::endl;
 
         for (size_t level(0); level < transferPerLevel.size(); ++level)
-            std::cout << level << "," << (double)transferPerLevel[level] / (double)numQueries << std::endl;
+            std::cout << level << "\t" << (double)transferPerLevel[level] / (double)numQueries << std::endl;
+
+        std::cout << "# of irrelvant events: " << irrelevantEvents / (double)numQueries << std::endl;
     }
 
 private:
@@ -324,19 +327,28 @@ private:
             for (size_t i = roundBegin; i < roundEnd; ++i) {
                 TripLabel& label = queue[i];
                 for (StopEventId j = label.begin; j < label.end; j++) {
+                    if (data.arrivalEvents[j].arrivalTime >= minArrivalTime)
+                        break;
                     StopId stop = data.arrivalEvents[j].stop;
+
                     uint8_t lcl = std::min(
                         data.getLowestCommonLevel(stop, sourceStop),
                         data.getLowestCommonLevel(stop, targetStop));
 
+                    irrelevantEvents += (data.getLocalLevelOfEvent(j) < lcl || data.stopEventGraph.outDegree(Vertex(j)) == 0);
+
                     for (const Edge transfer : data.stopEventGraph.edgesFrom(Vertex(j))) {
                         profiler.countMetric(METRIC_RELAXED_TRANSFERS);
-                        if (edgeLabels[transfer].localLevel < lcl) {
+
+                        const EdgeLabel& label = edgeLabels[transfer];
+
+                        if (label.localLevel < lcl || data.getLocalLevelOfEvent(label.stopEvent) < lcl) {
                             profiler.countMetric(DISCARDED_EDGE);
+                            reachedIndex.update(label.trip, StopIndex(label.stopEvent - label.firstEvent));
                             continue;
                         }
 
-                        ++transferPerLevel[edgeLabels[transfer].localLevel];
+                        ++transferPerLevel[lcl];
                         enqueue(transfer, i);
                     }
                 }
@@ -483,6 +495,9 @@ private:
     Profiler profiler;
     std::vector<uint64_t> transferPerLevel;
     size_t numQueries;
+
+    // STATS
+    size_t irrelevantEvents;
 };
 
 } // namespace TripBased

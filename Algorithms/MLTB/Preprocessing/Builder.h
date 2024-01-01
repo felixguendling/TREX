@@ -92,7 +92,8 @@ public:
                 printInfo();
 
                 avgPathLengthPerLevel[level] = search.getAvgPathLengthPerLevel();
-                std::cout << "**** Avg. Path Length: " << avgPathLengthPerLevel[level] << std::endl;
+                std::cout << "Avg. # of Transfers Unpacked: " << avgPathLengthPerLevel[level] << std::endl;
+                std::cout << "# of added shortcuts: " << search.getNumberOfAddedShortcuts() << std::endl;
                 std::cout << "Cell Index, Incomming Events\n";
                 for (size_t i(0); i < incommingEventsOfCell.size(); ++i) {
                     std::cout << (int)i << "," << incommingEventsOfCell[i] << "\n";

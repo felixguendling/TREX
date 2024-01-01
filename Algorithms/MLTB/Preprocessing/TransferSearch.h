@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../../../DataStructures/Container/Set.h"
+/* #include "../../../DataStructures/Container/Set.h" */
+#include "../../../DataStructures/Container/Map.h"
 #include "../../../DataStructures/MLTB/MLData.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../../DataStructures/TripBased/Data.h"
 #include "../../TripBased/Query/Profiler.h"
 #include "../../TripBased/Query/ReachedIndex.h"
-/* #include "ReachedIndex.h" */
 
 namespace TripBased {
 
@@ -82,13 +82,19 @@ public:
         , routeLabels(data.numberOfRoutes())
         , localLevels(data.stopEventGraph.numEdges(), 0)
         , toBeUnpacked(data.numberOfStopEvents())
+        , fromStopEventId(data.stopEventGraph.numEdges())
+        , lastExtractedRun(data.numberOfStopEvents(), 0)
+        , currentRun(0)
         , extractedPaths(0)
         , totalLengthPfExtractedPaths(0)
+        , numAddedShortcuts(0)
     {
-        for (const Edge edge : data.stopEventGraph.edges()) {
+        for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
             edgeLabels[edge].stopEvent = StopEventId(data.stopEventGraph.get(ToVertex, edge) + 1);
             edgeLabels[edge].trip = data.tripOfStopEvent[data.stopEventGraph.get(ToVertex, edge)];
             edgeLabels[edge].firstEvent = data.firstStopEventOfTrip[edgeLabels[edge].trip];
+
+            fromStopEventId[edge] = StopEventId(from);
         }
 
         for (const RouteId route : data.raptorData.routes()) {
@@ -141,6 +147,11 @@ private:
         queueSize = 0;
         reachedIndex.clear();
         toBeUnpacked.clear();
+
+        if (currentRun == 0) {
+            lastExtractedRun.assign(data.numberOfStopEvents(), 0);
+        }
+        ++currentRun;
     }
 
     inline void scanTrips() noexcept
@@ -161,7 +172,7 @@ private:
                     // check if stop of j is outside this cell => add to 'toBeUnpacked'
                     StopId currentStop = data.getStopOfStopEvent(j);
                     if (!isStopInCell(currentStop)) {
-                        toBeUnpacked.insert(i);
+                        toBeUnpacked.insert(i, j);
                     }
                 }
             }
@@ -210,7 +221,7 @@ private:
         const EdgeLabel& label = edgeLabels[edge];
 
         // break if a) already reached OR b) the stop if this transfer is not in the same cell
-        if (reachedIndex.alreadyReached(label.trip, label.stopEvent - label.firstEvent) || !isStopInCell(data.getStop(label.trip, StopIndex(label.stopEvent - label.firstEvent - 1)))) [[likely]]
+        if (reachedIndex.alreadyReached(label.trip, label.stopEvent - label.firstEvent) || !isStopInCell(data.getStop(label.trip, StopIndex(label.stopEvent - label.firstEvent - 1))))
             return;
 
         if (minLevel > localLevels[edge])
@@ -227,31 +238,81 @@ private:
         reachedIndex.update(label.trip, StopIndex(label.stopEvent - label.firstEvent));
     }
 
+    // all marked events which we want to marks as local for the next level
     inline void unpack()
     {
-        for (const size_t index : toBeUnpacked) {
+        // we need to loop over the collected queue elements,
+        // and for each element, we stored the latest ('das hinterste') event which we want to mark as local
+        for (const size_t index : toBeUnpacked.getKeys()) {
             unpackStopEvent(index);
 
+            // STATS
             ++extractedPaths;
         }
     }
 
+    // unpacks a reached stop event
     inline void unpackStopEvent(size_t index)
     {
         AssertMsg(index < queueSize, "Index is out of bounds!");
+        AssertMsg(toBeUnpacked[index] < data.numberOfStopEvents(), "StopEvent out of range!");
 
-        TripLabel& label = queue[index];
+        // did we already extract it? => skip
+        if (lastExtractedRun[toBeUnpacked[index]] == currentRun)
+            return;
+
+        TripLabel label = queue[index];
+        AssertMsg(label.begin <= toBeUnpacked[index] && toBeUnpacked[index] < label.end, "Out of range!");
+
+        // toBeUnpacked[index] *needs* to be between begin and end, hence the && j < label.end check
+        for (StopEventId j(label.begin); j <= toBeUnpacked[index] && j < label.end; ++j) {
+            data.getLocalLevelOfEvent(j) = minLevel + 1;
+
+            if (lastExtractedRun[j] == currentRun)
+                return;
+
+            lastExtractedRun[j] = currentRun;
+        }
         Edge currentEdge = label.parentTransfer;
+
+        // STATS
+        uint8_t numCurrentEdges(0);
 
         while (currentEdge != noEdge) {
             localLevels[currentEdge] = minLevel + 1;
 
             index = label.parent;
             label = queue[index];
+
+            // we don't want to mark all events on the queue segment, but only those before the transfer
+            // a queue segment looks like this:
+            // [start event, (...), event from which the transfer led to the "unpacked event" (call it e), (...), the last event]
+            // the currentEdge starts at e, but we want to mark all events from [start event, e]
+            StopEventId e = fromStopEventId[currentEdge];
+
+            AssertMsg(label.begin <= e && e < label.end, "FromVertex is out of bounds! FromStopEvent: " << e << ", but label: " << label.begin << " -> " << label.end);
+
+            for (StopEventId j(label.begin); j <= e && j < label.end; ++j) {
+                data.getLocalLevelOfEvent(j) = minLevel + 1;
+
+                if (lastExtractedRun[j] == currentRun)
+                    return;
+
+                lastExtractedRun[j] = currentRun;
+            }
+
             currentEdge = label.parentTransfer;
 
+            // STATS
             ++totalLengthPfExtractedPaths;
+            ++numCurrentEdges;
         }
+
+        AssertMsg(index == 0, "Index is not 0!");
+
+        // STATS
+        // only add shortcut if you skip at least 2 transfers
+        numAddedShortcuts += (numCurrentEdges > 1);
     }
 
 public:
@@ -260,10 +321,17 @@ public:
         return (double)totalLengthPfExtractedPaths / (double)extractedPaths;
     }
 
+    inline uint64_t getNumberOfAddedShortcuts() noexcept
+    {
+        return numAddedShortcuts;
+    }
+
     inline void resetStats() noexcept
     {
+        // STATS
         totalLengthPfExtractedPaths = 0;
         extractedPaths = 0;
+        numAddedShortcuts = 0;
     }
 
 private:
@@ -271,6 +339,7 @@ private:
 
     std::vector<TripLabel> queue;
     std::vector<EdgeRange> edgeRanges;
+
     size_t queueSize;
     ReachedIndex reachedIndex;
 
@@ -284,11 +353,21 @@ private:
 
     Profiler profiler;
 
-    IndexedSet<false, size_t> toBeUnpacked;
+    // [roundIndex] = biggest StopEvent that is outside of the cell
+    IndexedMap<StopEventId, false, size_t> toBeUnpacked;
+
+    // same as FromVertex, but for the stopEventGraph, it is not defined
+    // we need to extract quickly the event from which the transfer was possible
+    std::vector<StopEventId> fromStopEventId;
+
+    // like a timestamp, used to check in which run the stop event has already been extracted
+    std::vector<size_t> lastExtractedRun;
+    size_t currentRun;
 
     // stats
     uint64_t extractedPaths;
     uint64_t totalLengthPfExtractedPaths;
+    uint64_t numAddedShortcuts;
 };
 
 } // namespace TripBased

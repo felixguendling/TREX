@@ -71,7 +71,7 @@ public:
 
             generateAllLevelCellIds(result, data.numberOfLevels() - level);
 
-            // for stats
+            // STATS
             size_t indexOfCell = 0;
             incommingEventsOfCell.assign(std::pow(data.numberOfCellsPerLevel(), data.numberOfLevels() - level), 0);
 
@@ -85,6 +85,8 @@ public:
                 ++progress;
                 ++indexOfCell;
             }
+
+            search.addCollectShortcuts();
             progress.finished();
 
             if (verbose) {
@@ -92,12 +94,12 @@ public:
                 printInfo();
 
                 avgPathLengthPerLevel[level] = search.getAvgPathLengthPerLevel();
-                std::cout << "Avg. # of Transfers Unpacked: " << avgPathLengthPerLevel[level] << std::endl;
-                std::cout << "# of added shortcuts: " << search.getNumberOfAddedShortcuts() << std::endl;
-                std::cout << "Cell Index, Incomming Events\n";
-                for (size_t i(0); i < incommingEventsOfCell.size(); ++i) {
-                    std::cout << (int)i << "," << incommingEventsOfCell[i] << "\n";
-                }
+                std::cout << "\"Avg. # of Transfers Unpacked\"," << avgPathLengthPerLevel[level] << std::endl;
+                std::cout << "\"# of added shortcuts\"," << search.getNumberOfAddedShortcuts() << std::endl;
+                /* std::cout << "Cell Index, Incomming Events\n"; */
+                /* for (size_t i(0); i < incommingEventsOfCell.size(); ++i) { */
+                /*     std::cout << (int)i << "," << incommingEventsOfCell[i] << "\n"; */
+                /* } */
                 std::cout << "###############################" << std::endl;
             }
             search.getProfiler().reset();
@@ -105,7 +107,27 @@ public:
 
             indexOfCell = 0;
         }
+
         data.stopEventGraph[LocalLevel].swap(search.getLocalLevels());
+        /* data.localLevelOfTrip = search.getLocalLevelOfTrips(); */
+
+        if (verbose) {
+            Graph::printInfo(search.getAugmentedGraph());
+        }
+
+        Graph::copy(search.getAugmentedGraph(), data.stopEventGraph);
+
+        /*         if (verbose) { */
+        /*             std::vector<size_t> tripBuckets(data.numberOfLevels()+1, 0); */
+
+        /*             for (auto& level : search.getLocalLevelOfTrips()) { */
+        /*                 ++tripBuckets[level]; */
+        /*             } */
+
+        /*             std::cout << "Trip Distribution over Levels:" << std::endl; */
+        /*             for (size_t level(0); level < tripBuckets.size(); ++level) */
+        /*                 std::cout << level << "\t" << tripBuckets[level] << std::endl; */
+        /*         } */
     }
 
 private:

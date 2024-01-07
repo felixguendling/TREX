@@ -148,7 +148,7 @@ public:
     {
         for (const Metric metric : metrics) {
             std::cout << MetricNames[metric] << ": "
-                      << String::prettyDouble(metricValue[metric] / static_cast<double>(numQueries), 2) << std::endl;
+                      << (metricValue[metric] / static_cast<double>(numQueries)) << std::endl;
         }
         for (const Phase phase : phases) {
             std::cout << PhaseNames[phase] << ": "

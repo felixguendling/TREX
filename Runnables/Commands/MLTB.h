@@ -93,7 +93,7 @@ public:
                 TripBased::ComputeStopEventGraph(data, numberOfThreads, pinMultiplier);
             }
         }
-        data.addFlagsToStopEventGraph();
+        data.addInformationToStopEventGraph();
         data.printInfo();
         data.serialize(mltbFile);
     }
@@ -156,7 +156,6 @@ public:
         TripBased::Builder bobTheBuilder(data);
 
         bobTheBuilder.customize(verbose);
-
         data.serialize(output);
     }
 };
@@ -179,8 +178,9 @@ public:
         TripBased::MLData data(tripFile);
         data.printInfo();
 
-        std::vector<size_t> numLocalTransfers(data.numberOfLevels(), 0);
-        std::vector<size_t> numLocalEvents(data.numberOfLevels(), 0);
+        std::vector<size_t> numLocalTransfers(data.numberOfLevels() + 1, 0);
+        std::vector<size_t> numLocalEvents(data.numberOfLevels() + 1, 0);
+        std::vector<size_t> numHopsPerLevel(data.numberOfLevels() + 1, 0);
 
         std::vector<std::vector<size_t>> degreePerLevel(data.numberOfLevels() + 1);
         for (size_t l(0); l < (size_t)data.numberOfLevels() + 1; ++l) {
@@ -189,16 +189,16 @@ public:
 
         for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
             ++degreePerLevel[data.stopEventGraph.get(LocalLevel, edge)][from];
-            for (int level(data.numberOfLevels() - 1); level >= 0; --level) {
-                if (data.stopEventGraph.get(LocalLevel, edge) >= level) {
-                    ++numLocalTransfers[level];
-                    break;
-                }
-            }
-        }
+            ++numLocalTransfers[data.stopEventGraph.get(LocalLevel, edge)];
+            numHopsPerLevel[data.stopEventGraph.get(LocalLevel, edge)] += data.stopEventGraph.get(Hop, edge);
 
-        for (StopEventId event(0); event < data.numberOfStopEvents(); ++event) {
-            ++numLocalEvents[data.getLocalLevelOfEvent(event)];
+            /* for (int level(data.numberOfLevels() - 1); level >= 0; --level) { */
+            /*     if (data.stopEventGraph.get(LocalLevel, edge) >= level) { */
+            /*         ++numLocalTransfers[level]; */
+            /*         numHopsPerLevel[level] += data.stopEventGraph.get(Hop, edge); */
+            /*         break; */
+            /*     } */
+            /* } */
         }
 
         std::cout << "** Number of Local Transfers **" << std::endl;
@@ -207,10 +207,20 @@ public:
             std::cout << "Level " << level << ":       " << String::prettyInt(numLocalTransfers[level]) << "    " << String::prettyDouble((100.0 * numLocalTransfers[level] / data.stopEventGraph.numEdges())) << " %" << std::endl;
         }
 
-        std::cout << "** Number of local Events **" << std::endl;
+        std::cout << "** Avg # of hops per Level **" << std::endl;
+
         for (size_t level(0); level < numLocalTransfers.size(); ++level) {
-            std::cout << "Level " << level << ":       " << String::prettyInt(numLocalEvents[level]) << "    " << String::prettyDouble((100.0 * numLocalEvents[level] / data.numberOfStopEvents())) << " %" << std::endl;
+            std::cout << "Level " << level << ":      " << String::prettyDouble(numHopsPerLevel[level] / (double)numLocalTransfers[level]) << std::endl;
         }
+
+        /* for (StopEventId event(0); event < data.numberOfStopEvents(); ++event) { */
+        /*     ++numLocalEvents[data.getLocalLevelOfEvent(event)]; */
+        /* } */
+
+        /* std::cout << "** Number of local Events **" << std::endl; */
+        /* for (size_t level(0); level < numLocalTransfers.size(); ++level) { */
+        /*     std::cout << "Level " << level << ":       " << String::prettyInt(numLocalEvents[level]) << "    " << String::prettyDouble((100.0 * numLocalEvents[level] / data.numberOfStopEvents())) << " %" << std::endl; */
+        /* } */
 
         if (writeToCSV) {
             for (size_t l(0); l < (size_t)data.numberOfLevels() + 1; ++l) {
@@ -253,6 +263,7 @@ public:
         result.assign(n, {});
 
         size_t numberOfJourneys = 0;
+
         size_t i(0);
         for (const StopQuery& query : queries) {
             algorithm.run(query.source, query.departureTime, query.target);
@@ -283,6 +294,7 @@ public:
             i += 1;
         }
         algorithm.getProfiler().printStatistics();
+        std::cout << "Avg. Journeys: " << String::prettyDouble(numberOfJourneys / (float)queries.size()) << std::endl;
         algorithm.showTransferLevels();
 
         if (eval) {

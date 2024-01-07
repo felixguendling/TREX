@@ -77,9 +77,15 @@ using SimpleEdgeListWithARCFlag = EdgeList<NoVertexAttributes, WithARCFlag>;
 // MLTB
 using WithLocalLevel = List<Attribute<LocalLevel, uint8_t>>;
 using WithTravelTimeAndLocalLevel = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>>;
+using WithTravelTimeAndLocalLevelAndFromVertex = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<FromVertex, Vertex>>;
 
-using TransferGraphWithLocalLevel = StaticGraph<WithCoordinates, WithTravelTimeAndLocalLevel>;
-using DynamicTransferGraphWithLocalLevel = DynamicGraph<WithCoordinates, WithTravelTimeAndLocalLevel>;
+using WithLocalLevelAndHop = List<Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>>;
+using WithTravelTimeAndLocalLevelAndHop = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>>;
+using WithTravelTimeAndLocalLevelAndHopAndFromVertex = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>, Attribute<FromVertex, Vertex>>;
+
+using TransferGraphWithLocalLevelAndHop = StaticGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHop>;
+using DynamicTransferGraphWithLocalLevelAndHop = DynamicGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHop>;
+using DynamicTransferGraphWithLocalLevelAndHopAndFromVertex = DynamicGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHopAndFromVertex>;
 using SimpleDynamicGraphWithLocalLevel = DynamicGraph<NoVertexAttributes, WithLocalLevel>;
 using SimpleEdgeListWithLocalLevel = EdgeList<NoVertexAttributes, WithLocalLevel>;
 

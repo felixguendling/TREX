@@ -97,6 +97,8 @@ inline void toEdgeListCSV(const std::string& fileBaseName, const GRAPH& graph) n
         csv << ",ARCFlag";
     if constexpr (GRAPH::HasEdgeAttribute(LocalLevel))
         csv << ",LocalLevel";
+    if constexpr (GRAPH::HasEdgeAttribute(Hop))
+        csv << ",Hop";
 
     csv << "\n";
 
@@ -122,6 +124,8 @@ inline void toEdgeListCSV(const std::string& fileBaseName, const GRAPH& graph) n
             csv << "," << join(graph.get(ARCFlag, edge));
         if constexpr (GRAPH::HasEdgeAttribute(LocalLevel))
             csv << "," << (int)graph.get(LocalLevel, edge);
+        if constexpr (GRAPH::HasEdgeAttribute(Hop))
+            csv << "," << (int)graph.get(Hop, edge);
         csv << "\n";
     }
     csv.close();
@@ -173,6 +177,10 @@ inline void toGML(const std::string& fileBaseName, const GRAPH& graph) noexcept
         gml << "        <key id=\"viavertex_e\" for=\"edge\" attr.name=\"viavertex\" attr.type=\"int\"/>\n";
     if constexpr (GRAPH::HasEdgeAttribute(ARCFlag))
         gml << "        <key id=\"arcflag_e\" for=\"edge\" attr.name=\"arcflag\" attr.type=\"string\"/>\n"; // I don't know how else to 'elegantly' store a vector of booleans inside graphml
+    if constexpr (GRAPH::HasEdgeAttribute(LocalLevel))
+        gml << "        <key id=\"locallevel_e\" for=\"edge\" attr.name=\"locallevel\" attr.type=\"int\"/>\n";
+    if constexpr (GRAPH::HasEdgeAttribute(Hop))
+        gml << "        <key id=\"hop_e\" for=\"edge\" attr.name=\"hop\" attr.type=\"int\"/>\n";
 
     gml << "    <graph id=\"G\" edgedefault=\"directed\">\n";
     for (const Vertex vertex : graph.vertices()) {
@@ -215,6 +223,10 @@ inline void toGML(const std::string& fileBaseName, const GRAPH& graph) noexcept
             gml << "            <data key=\"viavertex_e\">" << size_t(graph.get(ViaVertex, edge)) << "</data>\n";
         if constexpr (GRAPH::HasEdgeAttribute(ARCFlag))
             gml << "            <data key=\"arcflag_e\">" << join(graph.get(ARCFlag, edge)) << "</data>\n";
+        if constexpr (GRAPH::HasEdgeAttribute(LocalLevel))
+            gml << "            <data key=\"locallevel_e\">" << (int)graph.get(LocalLevel, edge) << "</data>\n";
+        if constexpr (GRAPH::HasEdgeAttribute(Hop))
+            gml << "            <data key=\"hop_e\">" << (int)graph.get(Hop, edge) << "</data>\n";
 
         gml << "        </edge>\n";
     }

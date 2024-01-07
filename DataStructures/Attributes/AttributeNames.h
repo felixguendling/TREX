@@ -110,7 +110,9 @@ using ARCFlag = AttributeNameWrapper<28>;
 
 // MLTB
 using LocalLevel = AttributeNameWrapper<29>;
-using UnknownType = AttributeNameWrapper<30>;
+using Hop = AttributeNameWrapper<30>;
+
+using UnknownType = AttributeNameWrapper<31>;
 // Ensure that Unknown is the last entry!
 
 } // namespace ImplementationDetail
@@ -145,6 +147,7 @@ constexpr ImplementationDetail::OriginalEdgeType OriginalEdge;
 constexpr ImplementationDetail::BundleSizeType BundleSize;
 constexpr ImplementationDetail::ARCFlag ARCFlag;
 constexpr ImplementationDetail::LocalLevel LocalLevel;
+constexpr ImplementationDetail::Hop Hop;
 constexpr ImplementationDetail::UnknownType Unknown;
 // Ensure that Unknown is the last entry!
 
@@ -181,7 +184,8 @@ constexpr const char* AttributeNameStrings[] = {
     /* 27 */ "BundleSize",
     /* 28 */ "ARCFlag",
     /* 29 */ "LocalLevel",
-    /* 30 */ "Unknown"
+    /* 30 */ "Hop",
+    /* 31 */ "Unknown"
     // Ensure that Unknown is the last entry!
 };
 

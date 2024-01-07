@@ -101,7 +101,7 @@ public:
         , sourceDepartureTime(never)
         , transferPerLevel(data.numberOfLevels() + 1, 0)
         , numQueries(0)
-        , irrelevantEvents(0)
+    /* , irrelevantEvents(0) */
     {
         reverseTransferGraph.revert();
 
@@ -203,7 +203,7 @@ public:
         for (size_t level(0); level < transferPerLevel.size(); ++level)
             std::cout << level << "\t" << (double)transferPerLevel[level] / (double)numQueries << std::endl;
 
-        std::cout << "# of irrelvant events: " << irrelevantEvents / (double)numQueries << std::endl;
+        /* std::cout << "# of irrelvant events: " << irrelevantEvents / (double)numQueries << std::endl; */
     }
 
 private:
@@ -335,14 +335,14 @@ private:
                         data.getLowestCommonLevel(stop, sourceStop),
                         data.getLowestCommonLevel(stop, targetStop));
 
-                    irrelevantEvents += (data.getLocalLevelOfEvent(j) < lcl || data.stopEventGraph.outDegree(Vertex(j)) == 0);
+                    /* irrelevantEvents += (data.getLocalLevelOfEvent(j) < lcl || data.stopEventGraph.outDegree(Vertex(j)) == 0); */
 
                     for (const Edge transfer : data.stopEventGraph.edgesFrom(Vertex(j))) {
                         profiler.countMetric(METRIC_RELAXED_TRANSFERS);
 
                         const EdgeLabel& label = edgeLabels[transfer];
 
-                        if (label.localLevel < lcl || data.getLocalLevelOfEvent(label.stopEvent) < lcl) {
+                        if (label.localLevel < lcl) [[likely]] {
                             profiler.countMetric(DISCARDED_EDGE);
                             reachedIndex.update(label.trip, StopIndex(label.stopEvent - label.firstEvent));
                             continue;
@@ -497,7 +497,7 @@ private:
     size_t numQueries;
 
     // STATS
-    size_t irrelevantEvents;
+    /* size_t irrelevantEvents; */
 };
 
 } // namespace TripBased

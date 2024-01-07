@@ -1,7 +1,7 @@
 #pragma once
 
-/* #include "../../../DataStructures/Container/Set.h" */
-#include "../../../DataStructures/Container/Map.h"
+#include "../../../DataStructures/Container/Set.h"
+/* #include "../../../DataStructures/Container/Map.h" */
 #include "../../../DataStructures/MLTB/MLData.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
@@ -71,9 +71,31 @@ private:
         std::vector<int> departureTimes;
     };
 
+    // Stores the shortcut information, which we insert into the augmentedStopEventGraph
+    // we keep track of the number of transfer we hid inside
+    struct ShortCutToInsert {
+        StopEventId fromStopEventId;
+        StopEventId toStopEventId;
+        uint8_t hopCounter;
+
+        ShortCutToInsert(StopEventId fromStopEventId, StopEventId toStopEventId, uint8_t hopCounter)
+            : fromStopEventId(fromStopEventId)
+            , toStopEventId(toStopEventId)
+            , hopCounter(hopCounter)
+        {
+        }
+
+        bool operator<(const ShortCutToInsert& other)
+        {
+            return std::tie(fromStopEventId, toStopEventId, hopCounter) < std::tie(other.fromStopEventId, other.toStopEventId, other.hopCounter);
+        }
+    };
+
 public:
     TransferSearch(MLData& data)
         : data(data)
+        , augmentedStopEventGraph()
+        , edgesToInsert()
         , queue(data.numberOfStopEvents())
         , edgeRanges(data.numberOfStopEvents())
         , queueSize(0)
@@ -83,12 +105,19 @@ public:
         , localLevels(data.stopEventGraph.numEdges(), 0)
         , toBeUnpacked(data.numberOfStopEvents())
         , fromStopEventId(data.stopEventGraph.numEdges())
-        , lastExtractedRun(data.numberOfStopEvents(), 0)
-        , currentRun(0)
+        /* , lastExtractedRun(data.numberOfStopEvents(), 0) */
+        /* , lastExtractedRun(data.stopEventGraph.numEdges(), 0) */
+        /* , currentRun(0) */
         , extractedPaths(0)
         , totalLengthPfExtractedPaths(0)
         , numAddedShortcuts(0)
     {
+        // copy stopEventGraph to augmentedStopEventGraph
+        Graph::copy(data.stopEventGraph, augmentedStopEventGraph);
+
+        // we dont insert straight away, but rather collect the shortcuts, then add them
+        edgesToInsert.reserve(augmentedStopEventGraph.numEdges());
+
         for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
             edgeLabels[edge].stopEvent = StopEventId(data.stopEventGraph.get(ToVertex, edge) + 1);
             edgeLabels[edge].trip = data.tripOfStopEvent[data.stopEventGraph.get(ToVertex, edge)];
@@ -148,10 +177,10 @@ private:
         reachedIndex.clear();
         toBeUnpacked.clear();
 
-        if (currentRun == 0) {
-            lastExtractedRun.assign(data.numberOfStopEvents(), 0);
-        }
-        ++currentRun;
+        /* if (currentRun == 0) { */
+        /*     lastExtractedRun.assign(data.stopEventGraph.numEdges(), 0); */
+        /* } */
+        /* ++currentRun; */
     }
 
     inline void scanTrips() noexcept
@@ -172,7 +201,7 @@ private:
                     // check if stop of j is outside this cell => add to 'toBeUnpacked'
                     StopId currentStop = data.getStopOfStopEvent(j);
                     if (!isStopInCell(currentStop)) {
-                        toBeUnpacked.insert(i, j);
+                        toBeUnpacked.insert(i);
                     }
                 }
             }
@@ -243,7 +272,7 @@ private:
     {
         // we need to loop over the collected queue elements,
         // and for each element, we stored the latest ('das hinterste') event which we want to mark as local
-        for (const size_t index : toBeUnpacked.getKeys()) {
+        for (const size_t index : toBeUnpacked) {
             unpackStopEvent(index);
 
             // STATS
@@ -255,64 +284,50 @@ private:
     inline void unpackStopEvent(size_t index)
     {
         AssertMsg(index < queueSize, "Index is out of bounds!");
-        AssertMsg(toBeUnpacked[index] < data.numberOfStopEvents(), "StopEvent out of range!");
-
-        // did we already extract it? => skip
-        if (lastExtractedRun[toBeUnpacked[index]] == currentRun)
-            return;
-
         TripLabel label = queue[index];
-        AssertMsg(label.begin <= toBeUnpacked[index] && toBeUnpacked[index] < label.end, "Out of range!");
-
-        // toBeUnpacked[index] *needs* to be between begin and end, hence the && j < label.end check
-        for (StopEventId j(label.begin); j <= toBeUnpacked[index] && j < label.end; ++j) {
-            data.getLocalLevelOfEvent(j) = minLevel + 1;
-
-            if (lastExtractedRun[j] == currentRun)
-                return;
-
-            lastExtractedRun[j] = currentRun;
-        }
         Edge currentEdge = label.parentTransfer;
 
-        // STATS
-        uint8_t numCurrentEdges(0);
+        // new vertices for the shortcut
+        StopEventId toVertex = label.begin;
+        StopEventId fromVertex = noStopEvent; // will be assigned
+
+        uint8_t currentHopCounter(0);
 
         while (currentEdge != noEdge) {
+            // commented this out since I want to create shortcuts, hence i need to rewind all transfers, even if i have already seen it.
+            /* if (lastExtractedRun[currentEdge] == currentRun) */
+            /*     return; */
+            /* lastExtractedRun[currentEdge] = currentRun; */
+
             localLevels[currentEdge] = minLevel + 1;
+
+            fromVertex = fromStopEventId[currentEdge];
+
+            // set the locallevel of the events
+            /* StopEventId e = fromStopEventId[currentEdge]; */
+            /* data.getLocalLevelOfEvent(e) = minLevel + 1; */
+
+            currentHopCounter += data.stopEventGraph.get(Hop, currentEdge);
 
             index = label.parent;
             label = queue[index];
-
-            // we don't want to mark all events on the queue segment, but only those before the transfer
-            // a queue segment looks like this:
-            // [start event, (...), event from which the transfer led to the "unpacked event" (call it e), (...), the last event]
-            // the currentEdge starts at e, but we want to mark all events from [start event, e]
-            StopEventId e = fromStopEventId[currentEdge];
-
-            AssertMsg(label.begin <= e && e < label.end, "FromVertex is out of bounds! FromStopEvent: " << e << ", but label: " << label.begin << " -> " << label.end);
-
-            for (StopEventId j(label.begin); j <= e && j < label.end; ++j) {
-                data.getLocalLevelOfEvent(j) = minLevel + 1;
-
-                if (lastExtractedRun[j] == currentRun)
-                    return;
-
-                lastExtractedRun[j] = currentRun;
-            }
-
             currentEdge = label.parentTransfer;
 
             // STATS
             ++totalLengthPfExtractedPaths;
-            ++numCurrentEdges;
         }
 
-        AssertMsg(index == 0, "Index is not 0!");
+        AssertMsg(index == 0, "The origin of the journey does not start with the incomming event!");
 
-        // STATS
-        // only add shortcut if you skip at least 2 transfers
-        numAddedShortcuts += (numCurrentEdges > 1);
+        // only add a shortcut if we can skip at least 2 transfers
+        if (currentHopCounter >= 2) {
+            AssertMsg(fromVertex != noStopEvent, "From StopEvent has not been assigned properly");
+            AssertMsg(fromVertex != toVertex, "From- and To StopEvent should not be the same");
+            edgesToInsert.emplace_back(fromVertex, toVertex, currentHopCounter);
+
+            // STATS
+            ++numAddedShortcuts;
+        }
     }
 
 public:
@@ -334,8 +349,35 @@ public:
         numAddedShortcuts = 0;
     }
 
+    // this adds the shortcuts to the augmentedStopEventGraph
+    void addCollectShortcuts() noexcept
+    {
+        std::sort(edgesToInsert.begin(), edgesToInsert.end());
+
+        for (auto& shortcut : edgesToInsert) {
+            Vertex from(shortcut.fromStopEventId);
+            Vertex to(shortcut.toStopEventId);
+
+            Edge edge = augmentedStopEventGraph.findOrAddEdge(from, to);
+            AssertMsg(augmentedStopEventGraph.isEdge(edge), "Shortcut is not a valid edge");
+
+            augmentedStopEventGraph.set(LocalLevel, edge, minLevel + 1);
+            augmentedStopEventGraph.set(Hop, edge, shortcut.hopCounter);
+        }
+
+        edgesToInsert.clear();
+    }
+
+    DynamicTransferGraphWithLocalLevelAndHopAndFromVertex& getAugmentedGraph() noexcept
+    {
+        return augmentedStopEventGraph;
+    }
+
 private:
     MLData& data;
+
+    DynamicTransferGraphWithLocalLevelAndHopAndFromVertex augmentedStopEventGraph;
+    std::vector<ShortCutToInsert> edgesToInsert;
 
     std::vector<TripLabel> queue;
     std::vector<EdgeRange> edgeRanges;
@@ -353,16 +395,15 @@ private:
 
     Profiler profiler;
 
-    // [roundIndex] = biggest StopEvent that is outside of the cell
-    IndexedMap<StopEventId, false, size_t> toBeUnpacked;
+    IndexedSet<false, size_t> toBeUnpacked;
 
     // same as FromVertex, but for the stopEventGraph, it is not defined
     // we need to extract quickly the event from which the transfer was possible
     std::vector<StopEventId> fromStopEventId;
 
     // like a timestamp, used to check in which run the stop event has already been extracted
-    std::vector<size_t> lastExtractedRun;
-    size_t currentRun;
+    /* std::vector<size_t> lastExtractedRun; */
+    /* size_t currentRun; */
 
     // stats
     uint64_t extractedPaths;

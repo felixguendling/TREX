@@ -21,7 +21,8 @@ public:
         , multiPartition(numberOfStops(), numLevels, numCellsPerLevel)
         , unionFind(numberOfStops())
         , layoutGraph()
-        , localLevelOfEvent(raptor.numberOfStopEvents(), 0)
+    /* , localLevelOfEvent(raptor.numberOfStopEvents(), 0) */
+    /* , localLevelOfTrip(raptor.numberOfTrips(), 0) */
     {
     }
 
@@ -31,11 +32,13 @@ public:
     }
 
 public:
-    inline void addFlagsToStopEventGraph() noexcept
+    inline void addInformationToStopEventGraph() noexcept
     {
         std::vector<uint8_t> zeroLevels(stopEventGraph.numEdges(), 0);
         stopEventGraph.get(LocalLevel).swap(zeroLevels);
 
+        std::vector<uint8_t> initHops(stopEventGraph.numEdges(), 1);
+        stopEventGraph.get(Hop).swap(initHops);
         /* for (const auto [edge, from] : stopEventGraph.edgesWithFromVertex()) { */
         /*     StopEventId toVertex = StopEventId(stopEventGraph.get(ToVertex, edge)); */
         /*     AssertMsg(from < numberOfStopEvents(), "Transfers comes from a non-valid stopevent!"); */
@@ -256,12 +259,19 @@ public:
         return multiPartition.getCellIds(stop);
     }
 
-    inline uint8_t& getLocalLevelOfEvent(StopEventId event) noexcept
-    {
-        AssertMsg(event < localLevelOfEvent.size(), "Event is out of bounds!");
+    /* inline uint8_t& getLocalLevelOfEvent(StopEventId event) noexcept */
+    /* { */
+    /*     AssertMsg(event < localLevelOfEvent.size(), "Event is out of bounds!"); */
 
-        return localLevelOfEvent[event];
-    }
+    /*     return localLevelOfEvent[event]; */
+    /* } */
+
+    /*     inline uint8_t& getLocalLevelOfTrip(TripId trip) noexcept */
+    /*     { */
+    /*         AssertMsg(trip < localLevelOfTrip.size(), "trip is out of bounds!"); */
+
+    /*         return localLevelOfTrip[trip]; */
+    /*     } */
 
     inline std::vector<StopEventId> getStopEventOfStopInRoute(const StopId stop, const RouteId route) noexcept
     {
@@ -330,18 +340,19 @@ public:
     }
 
     // Serialization
-
     inline void serialize(const std::string& fileName) const noexcept
     {
         Data::serialize(fileName + ".trip");
-        IO::serialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent);
+        /* IO::serialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent, localLevelOfTrip); */
+        IO::serialize(fileName, multiPartition, unionFind, layoutGraph);
         stopEventGraph.writeBinary(fileName + ".trip.graph");
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
         Data::deserialize(fileName + ".trip");
-        IO::deserialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent);
+        /* IO::deserialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent, localLevelOfTrip); */
+        IO::deserialize(fileName, multiPartition, unionFind, layoutGraph);
         stopEventGraph.readBinary(fileName + ".trip.graph");
     }
 
@@ -351,7 +362,7 @@ public:
         for (const auto [edge, from] : raptorData.transferGraph.edgesWithFromVertex()) {
             Vertex toVertex = raptorData.transferGraph.get(ToVertex, edge);
             if (!multiPartition.inSameCell(from, toVertex)) {
-                std::cout << "*** A cut between footpath from " << from << " and " << toVertex << "! The respective union find: " << unionFind(from) << " and " << unionFind(toVertex) << std::endl;
+                std::cout << "**** A cut between footpath from " << from << " and " << toVertex << "! The respective union find: " << unionFind(from) << " and " << unionFind(toVertex) << std::endl;
                 return false;
             }
         }
@@ -394,7 +405,8 @@ public:
     StaticGraphWithWeightsAndCoordinates layoutGraph;
 
     // we also keep track of the highest locallevel of an event
-    std::vector<uint8_t> localLevelOfEvent;
+    /* std::vector<uint8_t> localLevelOfEvent; */
+    /* std::vector<uint8_t> localLevelOfTrip; */
 };
 
 } // namespace TripBased

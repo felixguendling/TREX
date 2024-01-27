@@ -5,7 +5,8 @@
 #include "../../Helpers/Ranges/SubRange.h"
 #include "../../Helpers/String/String.h"
 /* #include "../Partition/MultiLevelCell.h" */
-#include "../Partition/MultiLevelPartitionOLD.h"
+/* #include "../Partition/MultiLevelPartitionOLD.h" */
+#include "../Partition/MultiLevelPartitionBits.h"
 #include "../RAPTOR/Data.h"
 #include "../RAPTOR/Entities/RouteSegment.h"
 #include "../TripBased/Data.h"
@@ -21,7 +22,7 @@ public:
         , multiPartition(numberOfStops(), numLevels, numCellsPerLevel)
         , unionFind(numberOfStops())
         , layoutGraph()
-    /* , localLevelOfEvent(raptor.numberOfStopEvents(), 0) */
+        , localLevelOfEvent(raptor.numberOfStopEvents(), 0)
     /* , localLevelOfTrip(raptor.numberOfTrips(), 0) */
     {
     }
@@ -84,7 +85,7 @@ public:
         }
     }
 
-    inline void readPartitionFile(std::string fileName)
+    inline void readPartitionFile(const std::string& fileName)
     {
         std::vector<int> globalIds(numberOfStops(), 0);
         std::fstream file(fileName);
@@ -253,18 +254,18 @@ public:
         return multiPartition.inSameCell(stop, levels, cellIds);
     }
 
-    inline std::vector<int> getIdsOfStop(StopId stop)
-    {
-        AssertMsg(isStop(stop), "Stop is not a stop!");
-        return multiPartition.getCellIds(stop);
-    }
-
-    /* inline uint8_t& getLocalLevelOfEvent(StopEventId event) noexcept */
+    /* inline std::vector<int> getIdsOfStop(StopId stop) */
     /* { */
-    /*     AssertMsg(event < localLevelOfEvent.size(), "Event is out of bounds!"); */
-
-    /*     return localLevelOfEvent[event]; */
+    /*     AssertMsg(isStop(stop), "Stop is not a stop!"); */
+    /*     return multiPartition.getCellIds(stop); */
     /* } */
+
+    inline uint8_t& getLocalLevelOfEvent(StopEventId event) noexcept
+    {
+        AssertMsg(event < localLevelOfEvent.size(), "Event is out of bounds!");
+
+        return localLevelOfEvent[event];
+    }
 
     /*     inline uint8_t& getLocalLevelOfTrip(TripId trip) noexcept */
     /*     { */
@@ -335,24 +336,24 @@ public:
     inline void printInfo() const noexcept
     {
         Data::printInfo();
-        std::cout << "   Number of Levels:         " << std::setw(12) << multiPartition.getNumberOfLevels() << std::endl;
-        std::cout << "   Cells per Level:          " << std::setw(12) << multiPartition.getNumberOfCellsPerLevel() << std::endl;
+        std::cout << "   Number of Levels:         " << std::setw(12) << (int)multiPartition.getNumberOfLevels() << std::endl;
+        std::cout << "   Cells per Level:          " << std::setw(12) << (int)multiPartition.getNumberOfCellsPerLevel() << std::endl;
     }
 
     // Serialization
     inline void serialize(const std::string& fileName) const noexcept
     {
         Data::serialize(fileName + ".trip");
-        /* IO::serialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent, localLevelOfTrip); */
-        IO::serialize(fileName, multiPartition, unionFind, layoutGraph);
+        IO::serialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent);
+        /* IO::serialize(fileName, multiPartition, unionFind, layoutGraph); */
         stopEventGraph.writeBinary(fileName + ".trip.graph");
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
         Data::deserialize(fileName + ".trip");
-        /* IO::deserialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent, localLevelOfTrip); */
-        IO::deserialize(fileName, multiPartition, unionFind, layoutGraph);
+        IO::deserialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent);
+        /* IO::deserialize(fileName, multiPartition, unionFind, layoutGraph); */
         stopEventGraph.readBinary(fileName + ".trip.graph");
     }
 
@@ -381,22 +382,23 @@ public:
 
     inline void writePartitionToCSV(const std::string& fileName) noexcept
     {
-        std::ofstream file(fileName);
+        std::cout << "TODO!\nNeed to write a method to write the csv to " << fileName << std::endl;
+        /* std::ofstream file(fileName); */
 
-        file << "StopID";
+        /* file << "StopID"; */
 
-        for (size_t level(0); level < multiPartition.getNumberOfLevels(); ++level)
-            file << ",Level " << level;
-        file << "\n";
+        /* for (size_t level(0); level < multiPartition.getNumberOfLevels(); ++level) */
+        /*     file << ",Level " << level; */
+        /* file << "\n"; */
 
-        auto& cells = multiPartition.getIds();
-        for (size_t i(0); i < cells.size(); ++i) {
-            file << i;
-            for (size_t l(0); l < multiPartition.getNumberOfLevels(); ++l)
-                file << "," << cells[i][l];
-            file << "\n";
-        }
-        file.close();
+        /* auto& cells = multiPartition.getIds(); */
+        /* for (size_t i(0); i < cells.size(); ++i) { */
+        /*     file << i; */
+        /*     for (size_t l(0); l < multiPartition.getNumberOfLevels(); ++l) */
+        /*         file << "," << cells[i][l]; */
+        /*     file << "\n"; */
+        /* } */
+        /* file.close(); */
     }
 
 public:
@@ -405,7 +407,7 @@ public:
     StaticGraphWithWeightsAndCoordinates layoutGraph;
 
     // we also keep track of the highest locallevel of an event
-    /* std::vector<uint8_t> localLevelOfEvent; */
+    std::vector<uint8_t> localLevelOfEvent;
     /* std::vector<uint8_t> localLevelOfTrip; */
 };
 

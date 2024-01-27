@@ -106,8 +106,8 @@ public:
         , toBeUnpacked(data.numberOfStopEvents())
         , fromStopEventId(data.stopEventGraph.numEdges())
         /* , lastExtractedRun(data.numberOfStopEvents(), 0) */
-        /* , lastExtractedRun(data.stopEventGraph.numEdges(), 0) */
-        /* , currentRun(0) */
+        , lastExtractedRun(data.stopEventGraph.numEdges(), 0)
+        , currentRun(0)
         , extractedPaths(0)
         , totalLengthPfExtractedPaths(0)
         , numAddedShortcuts(0)
@@ -177,10 +177,10 @@ private:
         reachedIndex.clear();
         toBeUnpacked.clear();
 
-        /* if (currentRun == 0) { */
-        /*     lastExtractedRun.assign(data.stopEventGraph.numEdges(), 0); */
-        /* } */
-        /* ++currentRun; */
+        if (currentRun == 0) {
+            lastExtractedRun.assign(data.stopEventGraph.numEdges(), 0);
+        }
+        ++currentRun;
     }
 
     inline void scanTrips() noexcept
@@ -295,17 +295,17 @@ private:
 
         while (currentEdge != noEdge) {
             // commented this out since I want to create shortcuts, hence i need to rewind all transfers, even if i have already seen it.
-            /* if (lastExtractedRun[currentEdge] == currentRun) */
-            /*     return; */
-            /* lastExtractedRun[currentEdge] = currentRun; */
+            if (lastExtractedRun[currentEdge] == currentRun)
+                return;
+            lastExtractedRun[currentEdge] = currentRun;
 
             localLevels[currentEdge] = minLevel + 1;
 
             fromVertex = fromStopEventId[currentEdge];
 
             // set the locallevel of the events
-            /* StopEventId e = fromStopEventId[currentEdge]; */
-            /* data.getLocalLevelOfEvent(e) = minLevel + 1; */
+            StopEventId e = fromStopEventId[currentEdge];
+            data.getLocalLevelOfEvent(e) = minLevel + 1;
 
             currentHopCounter += data.stopEventGraph.get(Hop, currentEdge);
 
@@ -323,7 +323,7 @@ private:
         if (currentHopCounter >= 2) {
             AssertMsg(fromVertex != noStopEvent, "From StopEvent has not been assigned properly");
             AssertMsg(fromVertex != toVertex, "From- and To StopEvent should not be the same");
-            edgesToInsert.emplace_back(fromVertex, toVertex, currentHopCounter);
+            /* edgesToInsert.emplace_back(fromVertex, toVertex, currentHopCounter); */
 
             // STATS
             ++numAddedShortcuts;
@@ -402,8 +402,8 @@ private:
     std::vector<StopEventId> fromStopEventId;
 
     // like a timestamp, used to check in which run the stop event has already been extracted
-    /* std::vector<size_t> lastExtractedRun; */
-    /* size_t currentRun; */
+    std::vector<size_t> lastExtractedRun;
+    size_t currentRun;
 
     // stats
     uint64_t extractedPaths;

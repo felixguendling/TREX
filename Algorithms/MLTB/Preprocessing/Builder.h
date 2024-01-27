@@ -86,7 +86,7 @@ public:
                 ++indexOfCell;
             }
 
-            search.addCollectShortcuts();
+            /* search.addCollectShortcuts(); */
             progress.finished();
 
             if (verbose) {
@@ -115,7 +115,7 @@ public:
             Graph::printInfo(search.getAugmentedGraph());
         }
 
-        Graph::copy(search.getAugmentedGraph(), data.stopEventGraph);
+        /* Graph::copy(search.getAugmentedGraph(), data.stopEventGraph); */
 
         /*         if (verbose) { */
         /*             std::vector<size_t> tripBuckets(data.numberOfLevels()+1, 0); */

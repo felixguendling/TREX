@@ -4,9 +4,6 @@
 #include "../../Helpers/Assert.h"
 #include "../../Helpers/Ranges/SubRange.h"
 #include "../../Helpers/String/String.h"
-/* #include "../Partition/MultiLevelCell.h" */
-/* #include "../Partition/MultiLevelPartitionOLD.h" */
-#include "../Partition/MultiLevelPartitionBits.h"
 #include "../RAPTOR/Data.h"
 #include "../RAPTOR/Entities/RouteSegment.h"
 #include "../TripBased/Data.h"
@@ -17,13 +14,14 @@ namespace TripBased {
 
 class MLData : public Data {
 public:
-    MLData(const RAPTOR::Data& raptor, const int numLevels, const int numCellsPerLevel)
+    MLData(const RAPTOR::Data& raptor, const int numLevels, const int numCellsPerLevel = 2)
         : Data(raptor)
-        , multiPartition(numberOfStops(), numLevels, numCellsPerLevel)
+        , numberOfLevels(numLevels)
+        , numberOfCellsPerLevel(numCellsPerLevel)
         , unionFind(numberOfStops())
         , layoutGraph()
         , localLevelOfEvent(raptor.numberOfStopEvents(), 0)
-    /* , localLevelOfTrip(raptor.numberOfTrips(), 0) */
+        , cellIds(raptor.numberOfStops(), 0)
     {
     }
 
@@ -40,58 +38,15 @@ public:
 
         std::vector<uint8_t> initHops(stopEventGraph.numEdges(), 1);
         stopEventGraph.get(Hop).swap(initHops);
-        /* for (const auto [edge, from] : stopEventGraph.edgesWithFromVertex()) { */
-        /*     StopEventId toVertex = StopEventId(stopEventGraph.get(ToVertex, edge)); */
-        /*     AssertMsg(from < numberOfStopEvents(), "Transfers comes from a non-valid stopevent!"); */
-        /*     AssertMsg(toVertex < numberOfStopEvents(), "Transfers leads to a non-valid stopevent!"); */
-
-        /*     StopId fromStop = getStopOfStopEvent(StopEventId(from)); */
-        /*     StopId toStop = getStopOfStopEvent(toVertex); */
-
-        /*     AssertMsg(multiPartition.inSameCell(fromStop, toStop), "Stops are not in the same cell!"); */
-
-        /*     stopEventGraph.set(LocalLevel, edge, 0); */
-        /* } */
-    }
-
-    inline void showCuts() noexcept
-    {
-        std::vector<size_t> cutsPerLevel(multiPartition.getNumberOfLevels(), 0);
-
-        for (const RouteId route : routes()) {
-            SubRange<std::vector<StopId>> stopsInCurrentRoute = raptorData.stopsOfRoute(route);
-            size_t numberOfTrips = raptorData.numberOfTripsInRoute(route);
-
-            for (size_t i(1); i < stopsInCurrentRoute.size(); ++i) {
-                if (stopsInCurrentRoute[i] == stopsInCurrentRoute[i - 1])
-                    continue;
-
-                size_t lowestCross = multiPartition.findCrossingLevel(stopsInCurrentRoute[i - 1], stopsInCurrentRoute[i]);
-
-                if (lowestCross == (size_t)multiPartition.getNumberOfLevels())
-                    continue;
-
-                cutsPerLevel[lowestCross] += numberOfTrips;
-                i = stopsInCurrentRoute.size();
-            }
-        }
-
-        std::cout << "**** Information about the number of cuts depending on the level ****" << std::endl;
-        std::cout << "**** Note: A trip can only be a cut trip once ****" << std::endl;
-        std::cout << "Levels\tCut\tPercentage[%]" << std::endl;
-
-        for (size_t level(0); level < cutsPerLevel.size(); ++level) {
-            std::cout << level << "\t" << String::prettyInt(cutsPerLevel[level]) << "\t" << String::prettyDouble((float)(cutsPerLevel[level] / (float)raptorData.numberOfTrips()) * 100) << std::endl;
-        }
     }
 
     inline void readPartitionFile(const std::string& fileName)
     {
-        std::vector<int> globalIds(numberOfStops(), 0);
+        std::vector<uint64_t> globalIds(numberOfStops(), 0);
         std::fstream file(fileName);
 
         if (file.is_open()) {
-            int globalId(0);
+            uint64_t globalId(0);
             size_t index(0);
 
             while (file >> globalId) {
@@ -106,10 +61,11 @@ public:
             std::cerr << "Unable to open the file: " << fileName << std::endl;
         }
 
+        // now set the correct cellIds
         for (size_t i(0); i < numberOfStops(); ++i) {
             AssertMsg((size_t)unionFind(i) < globalIds.size(), "unionFind[i] is out of bounds!");
 
-            multiPartition.set(i, (size_t)globalIds[unionFind(i)]);
+            cellIds[i] = globalIds[unionFind(i)];
         }
 
         AssertMsg(assertNoCutTransfers(), "Footpath has been cut!");
@@ -189,8 +145,8 @@ public:
         dynamicLayoutGraph.packEdges();
         layoutGraph.clear();
         Graph::move(std::move(dynamicLayoutGraph), layoutGraph);
-        std::cout << "The Layout Graph looks like this:" << std::endl;
-        layoutGraph.printAnalysis();
+        /* std::cout << "The Layout Graph looks like this:" << std::endl; */
+        /* layoutGraph.printAnalysis(); */
     }
 
     inline void writeLayoutGraphToMETIS(const std::string fileName, const bool writeGRAPHML = true)
@@ -233,14 +189,21 @@ public:
     }
 
     // Getter
-    inline int numberOfLevels() const noexcept
+    inline int getNumberOfLevels() const noexcept
     {
-        return multiPartition.getNumberOfLevels();
+        return numberOfLevels;
     }
 
-    inline int numberOfCellsPerLevel() const noexcept
+    inline int getNumberOfCellsPerLevel() const noexcept
     {
-        return multiPartition.getNumberOfCellsPerLevel();
+        return numberOfCellsPerLevel;
+    }
+
+    inline uint64_t getCellIdOfStop(const StopId& stop) const noexcept
+    {
+        AssertMsg(isStop(stop), "Stop is not a stop!");
+
+        return cellIds[stop];
     }
 
     inline SubRange<std::vector<RAPTOR::RouteSegment>> routesContainingStop(const StopId stop) const noexcept
@@ -248,31 +211,11 @@ public:
         return raptorData.routesContainingStop(stop);
     }
 
-    inline bool stopInCell(StopId stop, std::vector<int> levels, std::vector<int> cellIds)
-    {
-        AssertMsg(isStop(stop), "Stop is not a stop!");
-        return multiPartition.inSameCell(stop, levels, cellIds);
-    }
-
-    /* inline std::vector<int> getIdsOfStop(StopId stop) */
-    /* { */
-    /*     AssertMsg(isStop(stop), "Stop is not a stop!"); */
-    /*     return multiPartition.getCellIds(stop); */
-    /* } */
-
     inline uint8_t& getLocalLevelOfEvent(StopEventId event) noexcept
     {
         AssertMsg(event < localLevelOfEvent.size(), "Event is out of bounds!");
-
         return localLevelOfEvent[event];
     }
-
-    /*     inline uint8_t& getLocalLevelOfTrip(TripId trip) noexcept */
-    /*     { */
-    /*         AssertMsg(trip < localLevelOfTrip.size(), "trip is out of bounds!"); */
-
-    /*         return localLevelOfTrip[trip]; */
-    /*     } */
 
     inline std::vector<StopEventId> getStopEventOfStopInRoute(const StopId stop, const RouteId route) noexcept
     {
@@ -294,66 +237,25 @@ public:
         return result;
     }
 
-    template <int DIRECTION = -1>
-    inline std::vector<std::pair<TripId, StopIndex>> getBorderStopEvents(std::vector<int> levels, std::vector<int> ids)
-    {
-        AssertMsg(levels.size() == ids.size(), "Levels and IDs need to be the same size!");
-        std::vector<std::pair<TripId, StopIndex>> result;
-        result.reserve(2000); // TODO pay attention to reserve
-
-        std::vector<int> stopsInCell = multiPartition.verticesInCell(levels, ids);
-
-        for (size_t i(0); i < stopsInCell.size(); ++i) {
-            StopId stop(stopsInCell[i]);
-
-            for (const RAPTOR::RouteSegment& route : routesContainingStop(stop)) {
-                // EDGE CASE: a stop is not a border stop (of a route) if it's at either end (start or end)
-                // boundary check for first / last stop on route
-                if ((route.stopIndex == 0 && DIRECTION == -1) || (route.stopIndex == raptorData.numberOfStopsInRoute(route.routeId) - 1 && DIRECTION == 1))
-                    continue;
-
-                // check if the next / previous stop in stop array of route is in another cell
-                RAPTOR::RouteSegment neighbourSeg(route.routeId, StopIndex(route.stopIndex + DIRECTION));
-
-                // check if neighbour in same cell
-                if (!multiPartition.inSameCell(raptorData.stopOfRouteSegment(neighbourSeg), levels, ids)) {
-                    // add all stop events of this route (plus the DIRECTION we are facing)
-                    for (TripId trip : tripsOfRoute(route.routeId)) {
-                        result.push_back(std::make_pair(trip, StopIndex(route.stopIndex + DIRECTION)));
-                    }
-                }
-            }
-        }
-
-        return result;
-    }
-
-    inline int getLowestCommonLevel(StopId a, StopId b)
-    {
-        return multiPartition.getLowestCommonLevel(a, b);
-    }
-
     inline void printInfo() const noexcept
     {
         Data::printInfo();
-        std::cout << "   Number of Levels:         " << std::setw(12) << (int)multiPartition.getNumberOfLevels() << std::endl;
-        std::cout << "   Cells per Level:          " << std::setw(12) << (int)multiPartition.getNumberOfCellsPerLevel() << std::endl;
+        std::cout << "   Number of Levels:         " << std::setw(12) << (int)numberOfLevels << std::endl;
+        std::cout << "   Cells per Level:          " << std::setw(12) << (int)numberOfCellsPerLevel << std::endl;
     }
 
     // Serialization
     inline void serialize(const std::string& fileName) const noexcept
     {
         Data::serialize(fileName + ".trip");
-        IO::serialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent);
-        /* IO::serialize(fileName, multiPartition, unionFind, layoutGraph); */
+        IO::serialize(fileName, numberOfLevels, numberOfCellsPerLevel, unionFind, layoutGraph, localLevelOfEvent, cellIds);
         stopEventGraph.writeBinary(fileName + ".trip.graph");
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
         Data::deserialize(fileName + ".trip");
-        IO::deserialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent);
-        /* IO::deserialize(fileName, multiPartition, unionFind, layoutGraph); */
+        IO::deserialize(fileName, numberOfLevels, numberOfCellsPerLevel, unionFind, layoutGraph, localLevelOfEvent, cellIds);
         stopEventGraph.readBinary(fileName + ".trip.graph");
     }
 
@@ -362,7 +264,7 @@ public:
     {
         for (const auto [edge, from] : raptorData.transferGraph.edgesWithFromVertex()) {
             Vertex toVertex = raptorData.transferGraph.get(ToVertex, edge);
-            if (!multiPartition.inSameCell(from, toVertex)) {
+            if (getCellIdOfStop(StopId(from)) != getCellIdOfStop(StopId(toVertex))) {
                 std::cout << "**** A cut between footpath from " << from << " and " << toVertex << "! The respective union find: " << unionFind(from) << " and " << unionFind(toVertex) << std::endl;
                 return false;
             }
@@ -370,45 +272,22 @@ public:
         return true;
     }
 
-    inline bool isLevel(size_t level) const
+    inline bool isLevel(int level) const
     {
-        return multiPartition.isLevelValid(level);
-    }
-
-    inline bool isCell(size_t level, size_t cell) const
-    {
-        return cell < multiPartition.getNumberOfCellsInLevel(level);
-    }
-
-    inline void writePartitionToCSV(const std::string& fileName) noexcept
-    {
-        std::cout << "TODO!\nNeed to write a method to write the csv to " << fileName << std::endl;
-        /* std::ofstream file(fileName); */
-
-        /* file << "StopID"; */
-
-        /* for (size_t level(0); level < multiPartition.getNumberOfLevels(); ++level) */
-        /*     file << ",Level " << level; */
-        /* file << "\n"; */
-
-        /* auto& cells = multiPartition.getIds(); */
-        /* for (size_t i(0); i < cells.size(); ++i) { */
-        /*     file << i; */
-        /*     for (size_t l(0); l < multiPartition.getNumberOfLevels(); ++l) */
-        /*         file << "," << cells[i][l]; */
-        /*     file << "\n"; */
-        /* } */
-        /* file.close(); */
+        return level < numberOfLevels;
     }
 
 public:
-    MultiLevelPartition multiPartition;
+    int numberOfLevels;
+    int numberOfCellsPerLevel;
     UnionFind unionFind;
     StaticGraphWithWeightsAndCoordinates layoutGraph;
 
     // we also keep track of the highest locallevel of an event
     std::vector<uint8_t> localLevelOfEvent;
-    /* std::vector<uint8_t> localLevelOfTrip; */
+
+    // for the 2' cell ids
+    std::vector<uint64_t> cellIds;
 };
 
 } // namespace TripBased

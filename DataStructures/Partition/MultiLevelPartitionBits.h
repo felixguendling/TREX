@@ -1,7 +1,7 @@
 #include "../../Helpers/IO/Serialization.h"
 #include <bitset>
-#include <cmath>
 #include <cassert>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -34,6 +34,13 @@ public:
     {
         assert(isLevelValid(level));
         return numberOfCellsPerLevel;
+    }
+
+    // Overload the [] operator to access the ID of an element directly
+    inline uint64_t operator[](uint64_t node) const
+    {
+        assert(isNodeValid(node));
+        return ids[node];
     }
 
     // set all ids to 0
@@ -116,6 +123,31 @@ public:
         // std::cout << std::bitset<64>(xorResult) << std::endl;
 
         return (64 - __builtin_clzll(xorResult)) / numberOfCellsPerLevel;
+    }
+
+    inline uint8_t getLowestCommonLevel(uint64_t stop, uint64_t node1, uint64_t node2) const
+    {
+        assert(isNodeValid(stop));
+        assert(isNodeValid(node1));
+        assert(isNodeValid(node2));
+
+        // Compute XOR of IDs for the two nodes against the stop
+        uint64_t xorResult1 = ids[stop] ^ ids[node1];
+        uint64_t xorResult2 = ids[stop] ^ ids[node2];
+
+        return (64 - std::max(__builtin_clzll(xorResult1), __builtin_clzll(xorResult2))) / numberOfCellsPerLevel;
+    }
+
+    // now, the stop parameter *is* the cellid
+    inline uint8_t getLowestCommonLevelExplizit(uint64_t stop, uint64_t node1, uint64_t node2) const
+    {
+        assert(isNodeValid(node1));
+        assert(isNodeValid(node2));
+        // Compute XOR of IDs for the two nodes against the stop
+        uint64_t xorResult1 = stop ^ ids[node1];
+        uint64_t xorResult2 = stop ^ ids[node2];
+
+        return 32 - (std::max(__builtin_clzll(xorResult1), __builtin_clzll(xorResult2)) >> 1);
     }
 
     // returns true iff node1 and node2 are in the same cell on the given level

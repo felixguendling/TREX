@@ -32,14 +32,12 @@ public:
     {
         addParameter("Input file (Partition File)");
         addParameter("Input file (MLTB Data)");
-        addParameter("Show Cut Information?");
     }
 
     virtual void execute() noexcept
     {
         const std::string raptorFile = getParameter("Input file (MLTB Data)");
         const std::string partitionFile = getParameter("Input file (Partition File)");
-        const bool showCut = getParameter<bool>("Show Cut Information?");
 
         TripBased::MLData data(raptorFile);
         data.printInfo();
@@ -47,9 +45,6 @@ public:
         data.createCompactLayoutGraph();
         data.readPartitionFile(partitionFile);
         data.serialize(raptorFile);
-
-        if (showCut)
-            data.showCuts();
     }
 };
 
@@ -142,6 +137,8 @@ public:
         addParameter("Input file (MLTB Data)");
         addParameter("Output file (MLTB Data)");
         addParameter("Verbose?", "true");
+        addParameter("Number of threads", "max");
+        addParameter("Pin multiplier", "1");
     }
 
     virtual void execute() noexcept
@@ -149,14 +146,28 @@ public:
         const std::string mltbFile = getParameter("Input file (MLTB Data)");
         const std::string output = getParameter("Output file (MLTB Data)");
         const bool verbose = getParameter<bool>("Verbose?");
+        const int numberOfThreads = getNumberOfThreads();
+        const int pinMultiplier = getParameter<int>("Pin multiplier");
 
         TripBased::MLData data(mltbFile);
         data.printInfo();
 
-        TripBased::Builder bobTheBuilder(data);
+        if (numberOfThreads == 1)
+            TripBased::Customize(data, verbose);
+        else
+            TripBased::Customize(data, numberOfThreads, pinMultiplier, verbose);
 
-        bobTheBuilder.customize(verbose);
         data.serialize(output);
+    }
+
+private:
+    inline int getNumberOfThreads() const noexcept
+    {
+        if (getParameter("Number of threads") == "max") {
+            return numberOfCores();
+        } else {
+            return getParameter<int>("Number of threads");
+        }
     }
 };
 
@@ -178,12 +189,12 @@ public:
         TripBased::MLData data(tripFile);
         data.printInfo();
 
-        std::vector<size_t> numLocalTransfers(data.numberOfLevels() + 1, 0);
-        std::vector<size_t> numLocalEvents(data.numberOfLevels() + 1, 0);
-        std::vector<size_t> numHopsPerLevel(data.numberOfLevels() + 1, 0);
+        std::vector<size_t> numLocalTransfers(data.getNumberOfLevels() + 1, 0);
+        std::vector<size_t> numLocalEvents(data.getNumberOfLevels() + 1, 0);
+        std::vector<size_t> numHopsPerLevel(data.getNumberOfLevels() + 1, 0);
 
-        std::vector<std::vector<size_t>> degreePerLevel(data.numberOfLevels() + 1);
-        for (size_t l(0); l < (size_t)data.numberOfLevels() + 1; ++l) {
+        std::vector<std::vector<size_t>> degreePerLevel(data.getNumberOfLevels() + 1);
+        for (size_t l(0); l < (size_t)data.getNumberOfLevels() + 1; ++l) {
             degreePerLevel[l].assign(data.stopEventGraph.numVertices(), 0);
         }
 
@@ -223,7 +234,7 @@ public:
         /* } */
 
         if (writeToCSV) {
-            for (size_t l(0); l < (size_t)data.numberOfLevels() + 1; ++l) {
+            for (size_t l(0); l < (size_t)data.getNumberOfLevels() + 1; ++l) {
                 std::ofstream outputfile(fileName + ".level" + std::to_string(l) + ".csv");
 
                 outputfile << "StopEventId,Degree\n";
@@ -377,7 +388,7 @@ public:
         data.printInfo();
 
         data.raptorData.writeCSV(output);
-        data.writePartitionToCSV(output + "partition.csv");
+        /* data.writePartitionToCSV(output + "partition.csv"); */
 
         Graph::toEdgeListCSV(output + "transfer", data.stopEventGraph);
     }

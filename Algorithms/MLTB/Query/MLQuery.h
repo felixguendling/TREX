@@ -103,6 +103,7 @@ public:
         , sourceDepartureTime(never)
         , transferPerLevel(data.getNumberOfLevels() + 1, 0)
         , numQueries(0)
+    /* , sourceTargetSIMD(_mm_set1_epi16(0)) */
     /* , irrelevantEvents(0) */
     {
         reverseTransferGraph.revert();
@@ -148,6 +149,7 @@ public:
         targetStop = target;
         sourceCellId = data.getCellIdOfStop(sourceStop);
         targetCellId = data.getCellIdOfStop(targetStop);
+        /* sourceTargetSIMD = _mm_set_epi16(targetCellId, sourceCellId, targetCellId, sourceCellId, targetCellId, sourceCellId, targetCellId, sourceCellId); */
         sourceDepartureTime = departureTime;
 
         computeInitialAndFinalTransfers();
@@ -349,34 +351,6 @@ private:
                 }
             }
 
-            /* for (size_t i = roundBegin; i < roundEnd; ++i) { */
-            /*     TripLabel& label = queue[i]; */
-            /*     for (StopEventId j = label.begin; j < label.end; j++) { */
-            /*         if (data.arrivalEvents[j].arrivalTime >= minArrivalTime) */
-            /*             break; */
-            /*         const StopId stop = data.arrivalEvents[j].stop; */
-
-            /*         uint8_t lcl = data.getLowestCommonLevel(stop, sourceStop, targetStop); */
-
-            /*         /1* irrelevantEvents += (data.getLocalLevelOfEvent(j) < lcl || data.stopEventGraph.outDegree(Vertex(j)) == 0); *1/ */
-
-            /*         for (const Edge transfer : data.stopEventGraph.edgesFrom(Vertex(j))) { */
-            /*             profiler.countMetric(METRIC_RELAXED_TRANSFERS); */
-
-            /*             const EdgeLabel& label = edgeLabels[transfer]; */
-
-            /*             if (label.localLevel < lcl) { */
-            /*                 profiler.countMetric(DISCARDED_EDGE); */
-            /*                 reachedIndex.update(label.trip, StopIndex(label.stopEvent - label.firstEvent)); */
-            /*                 continue; */
-            /*             } */
-
-            /*             ++transferPerLevel[lcl]; */
-            /*             enqueue(transfer, i); */
-            /*         } */
-            /*     } */
-            /* } */
-
             roundBegin = roundEnd;
             roundEnd = queueSize;
         }
@@ -403,13 +377,16 @@ private:
         if (reachedIndex.alreadyReached(label.trip, label.stopEvent)) [[likely]]
             return;
 
-        /* if (std::min((label.cellId ^ sourceCellId), (label.cellId ^ targetCellId)) >= (1ULL << label.localLevel)) [[likely]] { */
-        if (std::min((label.cellId ^ sourceCellId), (label.cellId ^ targetCellId)) >= (1 << label.localLevel)) [[likely]] {
+        /* if (std::min((label.cellId ^ sourceCellId), (label.cellId ^ targetCellId)) >= (1 << label.localLevel)) [[likely]] { */
+        /* __m128i xor_result = _mm_xor_si128(_mm_set1_epi16(label.cellId), sourceTargetSIMD); */
+        /* if (_mm_movemask_epi8(_mm_cmplt_epi16(xor_result, _mm_set1_epi16((1<<label.localLevel)))) == 0) { */
+        if ((label.cellId ^ sourceCellId) >= (1 << label.localLevel) && (label.cellId ^ targetCellId) >= (1 << label.localLevel)) [[likely]] {
             profiler.countMetric(DISCARDED_EDGE);
             reachedIndex.update(label.trip, StopIndex(label.stopEvent));
             return;
         }
 
+        /* AssertMsg(lcl < transferPerLevel.size(), "LCL: " << (int) lcl << "\nlabel.cellId: " << label.cellId << "\nsourceCellId: " << sourceCellId << "\ntargetCellId: " << targetCellId << "\n"); */
         /* ++transferPerLevel[lcl]; */
 
         queue[queueSize] = TripLabel(label.stopEvent + label.firstEvent, StopEventId(label.firstEvent + reachedIndex(label.trip)), parent);
@@ -506,6 +483,7 @@ private:
     std::vector<int> transferToTarget;
     StopId lastSource;
     StopId lastTarget;
+
     uint16_t sourceCellId;
     uint16_t targetCellId;
 
@@ -529,6 +507,8 @@ private:
     Profiler profiler;
     std::vector<uint64_t> transferPerLevel;
     size_t numQueries;
+
+    /* __m128i sourceTargetSIMD; */
 
     // STATS
     /* size_t irrelevantEvents; */

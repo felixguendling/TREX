@@ -64,6 +64,7 @@ using DynamicGraphWithWeightsAndCoordinates = DynamicGraph<WithWeightAndCoordina
 using DynamicGraphWithWeightsAndCoordinatesAndSize = DynamicGraph<WithWeightAndCoordinatesAndSize, WithWeight>;
 
 using StaticGraphWithWeightsAndCoordinates = StaticGraph<WithWeightAndCoordinates, WithWeight>;
+using StaticGraphWithWeightsAndCoordinatesAndSize = StaticGraph<WithWeightAndCoordinatesAndSize, WithWeight>;
 
 // New Attributes
 using WithARCFlag = List<Attribute<ARCFlag, std::vector<bool>>>;

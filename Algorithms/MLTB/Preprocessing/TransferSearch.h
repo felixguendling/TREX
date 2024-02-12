@@ -9,7 +9,6 @@
 #include "../../TripBased/Query/ReachedIndex.h"
 
 // NOTE: die Länge der extracted paths stimmt nicht, weil ich beim entpacken aufhöre sobald ich etwas sehe was ich vorher bereits schon entpackt habe
-// NOTE: hier werden keine shortcuts eingesammelt, das analog aus dem "...OLD.h" entnommen werden
 namespace TripBased {
 
 template <typename PROFILER = NoProfiler>
@@ -95,6 +94,7 @@ private:
 public:
     TransferSearch(MLData& data)
         : data(data)
+        , edgesToInsert()
         , queue(data.numberOfStopEvents())
         , edgeRanges(data.numberOfStopEvents())
         , queueSize(0)
@@ -107,6 +107,7 @@ public:
         , currentRun(0)
         , extractedPaths(0)
         , totalLengthPfExtractedPaths(0)
+        , numAddedShortcuts(0)
     {
         for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
             edgeLabels[edge].stopEvent = StopEventId(data.stopEventGraph.get(ToVertex, edge) + 1);
@@ -263,7 +264,7 @@ private:
             unpackStopEvent(index);
 
             // STATS
-            ++extractedPaths;
+            /* ++extractedPaths; */
         }
     }
 
@@ -274,11 +275,21 @@ private:
         TripLabel label = queue[index];
         Edge currentEdge = label.parentTransfer;
 
+        // new vertices for the shortcut
+        /* StopEventId toVertex = label.begin; */
+        /* StopEventId fromVertex = noStopEvent; // will be assigned */
+
+        /* uint8_t currentHopCounter(0); */
+
         while (currentEdge != noEdge) {
             // commented this out since I want to create shortcuts, hence i need to rewind all transfers, even if i have already seen it.
             if (lastExtractedRun[currentEdge] == currentRun)
                 return;
             lastExtractedRun[currentEdge] = currentRun;
+
+            /* // set the locallevel of the events */
+            /* fromVertex = fromStopEventId[currentEdge]; */
+            /* currentHopCounter += data.stopEventGraph.get(Hop, currentEdge); */
 
             data.stopEventGraph.set(LocalLevel, currentEdge, minLevel + 1);
 
@@ -291,10 +302,20 @@ private:
             currentEdge = label.parentTransfer;
 
             // STATS
-            ++totalLengthPfExtractedPaths;
+            /* ++totalLengthPfExtractedPaths; */
         }
 
         AssertMsg(index == 0, "The origin of the journey does not start with the incomming event!");
+
+        /* // only add a shortcut if we can skip at least 2 transfers */
+        /* if ((currentHopCounter / (minLevel+1)) >= 2) { */
+        /*     /1* AssertMsg(fromVertex != noStopEvent, "From StopEvent has not been assigned properly"); *1/ */
+        /*     /1* AssertMsg(fromVertex != toVertex, "From- and To StopEvent should not be the same"); *1/ */
+        /*     /1* edgesToInsert.emplace_back(fromVertex, toVertex, currentHopCounter); *1/ */
+
+        /*     // STATS */
+        /*     ++numAddedShortcuts; */
+        /* } */
     }
 
 public:
@@ -303,15 +324,22 @@ public:
         return (double)totalLengthPfExtractedPaths / (double)extractedPaths;
     }
 
+    inline uint64_t getNumberOfAddedShortcuts() noexcept
+    {
+        return numAddedShortcuts;
+    }
+
     inline void resetStats() noexcept
     {
         // STATS
         totalLengthPfExtractedPaths = 0;
         extractedPaths = 0;
+        numAddedShortcuts = 0;
     }
 
 private:
     MLData& data;
+    std::vector<ShortCutToInsert> edgesToInsert;
 
     std::vector<TripLabel> queue;
     std::vector<EdgeRange> edgeRanges;
@@ -342,6 +370,7 @@ private:
     // stats
     uint64_t extractedPaths;
     uint64_t totalLengthPfExtractedPaths;
+    uint64_t numAddedShortcuts;
 };
 
 } // namespace TripBased

@@ -662,27 +662,61 @@ public:
             std::cout << " done." << std::endl;
     }
 
-    inline void makeDirectTransfersByGeoDistance(const double maxDistance, const double speedInKMH,
-        const bool verbose = false) noexcept
+    /* inline void makeDirectTransfersByGeoDistance(const double maxDistance, const double speedInKMH, */
+    /*     const bool verbose = false) noexcept */
+    /* { */
+    /*     TransferGraph graph; */
+    /*     graph.addVertices(stops.size()); */
+    /*     Progress progress(stops.size(), verbose); */
+    /*     for (const StopId from : stopIds()) { */
+    /*         graph.set(Coordinates, from, stops[from].coordinates); */
+    /*         for (const StopId to : stopIds()) { */
+    /*             const Geometry::Point& a = transferGraph.get(Coordinates, from); */
+    /*             const Geometry::Point& b = graph.get(Coordinates, to); */
+    /*             const double distance = Geometry::geoDistanceInCM(a, b); */
+    /*             if (distance <= maxDistance) { */
+    /*                 const int travelTime = (distance / speedInKMH) * 0.036; */
+    /*                 graph.addEdge(from, to).set(TravelTime, travelTime); */
+    /*             } */
+    /*         } */
+    /*         progress++; */
+    /*     } */
+    /*     graph.packEdges(); */
+    /*     Graph::move(std::move(graph), transferGraph); */
+    /*     validate(); */
+    /*     if (verbose) */
+    /*         std::cout << " done." << std::endl; */
+    /* } */
+
+    inline void makeDirectTransfersByGeoDistance(const double maxConnectingDistanceInCM = 40000, const double speedInKMH = 5.1, const bool verbose = false) noexcept
     {
-        TransferGraph graph;
-        graph.addVertices(stops.size());
-        Progress progress(stops.size(), verbose);
-        for (const StopId from : stopIds()) {
-            graph.set(Coordinates, from, stops[from].coordinates);
-            for (const StopId to : stopIds()) {
-                const Geometry::Point& a = transferGraph.get(Coordinates, from);
-                const Geometry::Point& b = graph.get(Coordinates, to);
-                const double distance = Geometry::geoDistanceInCM(a, b);
-                if (distance <= maxDistance) {
-                    const int travelTime = (distance / speedInKMH) * 0.036;
-                    graph.addEdge(from, to).set(TravelTime, travelTime);
-                }
+        std::cout << "Creating transfers between all pairs of stops within the given distance." << std::endl;
+
+        DynamicTransferGraph dynamicTransferGraph;
+        dynamicTransferGraph.addVertices(transferGraph.numVertices());
+        Progress progress(transferGraph.numVertices(), verbose);
+
+        CoordinateTree<Geometry::GeoMetric> ct(Geometry::GeoMetric(), transferGraph[Coordinates]);
+        for (const Vertex stop : transferGraph.vertices()) {
+            dynamicTransferGraph.set(Coordinates, stop, transferGraph.get(Coordinates, stop));
+
+            for (const Vertex other : ct.getNeighbors(transferGraph.get(Coordinates, stop), maxConnectingDistanceInCM)) {
+                if (other == stop)
+                    continue;
+                const double distance = std::max(1.0, Geometry::geoDistanceInCM(transferGraph.get(Coordinates, stop), transferGraph.get(Coordinates, other)));
+                AssertMsg(distance <= maxConnectingDistanceInCM, "CoordinateTree returned a neighbor with distance " << distance << " > " << maxConnectingDistanceInCM << "!");
+                const double travelTime = (distance / speedInKMH) * 0.036;
+                dynamicTransferGraph.addEdge(other, Vertex(stop)).set(TravelTime, travelTime);
+                dynamicTransferGraph.addEdge(Vertex(stop), other).set(TravelTime, travelTime);
             }
+
             progress++;
         }
-        graph.packEdges();
-        Graph::move(std::move(graph), transferGraph);
+
+        progress.finished();
+
+        Graph::move(std::move(dynamicTransferGraph), transferGraph);
+        transferGraph.packEdges();
         validate();
         if (verbose)
             std::cout << " done." << std::endl;

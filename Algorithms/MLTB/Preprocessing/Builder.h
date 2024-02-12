@@ -65,6 +65,10 @@ public:
 
         collectUsingMasks(LEVELMASK, TARGETMASK);
 
+        /* std::sort(stopEvents.begin(), stopEvents.end(), [&](auto& left, auto& right) { */
+        /*     return data.getStopEvent(left.first, left.second).departureTime < data.getStopEvent(right.first, right.second).departureTime; */
+        /* }); */
+
         for (auto& element : stopEvents) {
             search.run(element.first, element.second, LEVELMASK, TARGETMASK);
         }

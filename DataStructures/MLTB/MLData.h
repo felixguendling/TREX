@@ -61,11 +61,18 @@ public:
             std::cerr << "Unable to open the file: " << fileName << std::endl;
         }
 
+        std::vector<Vertex> stopToVertexMapping(numberOfStops(), noVertex);
+
+        for (Vertex v : layoutGraph.vertices()) {
+            stopToVertexMapping[layoutGraph.get(Size, v)] = v;
+        }
+
         // now set the correct cellIds
         for (size_t i(0); i < numberOfStops(); ++i) {
-            AssertMsg((size_t)unionFind(i) < globalIds.size(), "unionFind[i] is out of bounds!");
+            AssertMsg((size_t)unionFind(i) < stopToVertexMapping.size(), "unionFind[i] is out of bounds!");
+            AssertMsg((size_t)stopToVertexMapping[unionFind(i)] < globalIds.size(), "stopToVertexMapping[unionFind[i]] is out of bounds!");
 
-            cellIds[i] = globalIds[unionFind(i)];
+            cellIds[i] = globalIds[stopToVertexMapping[unionFind(i)]];
         }
 
         AssertMsg(assertNoCutTransfers(), "Footpath has been cut!");
@@ -86,12 +93,14 @@ public:
             }
         }
 
-        DynamicGraphWithWeightsAndCoordinates dynamicLayoutGraph;
+        // size contains the original vertex
+        DynamicGraphWithWeightsAndCoordinatesAndSize dynamicLayoutGraph;
         dynamicLayoutGraph.clear();
         dynamicLayoutGraph.addVertices(numberOfStops());
 
         for (Vertex vertex : dynamicLayoutGraph.vertices()) {
-            dynamicLayoutGraph.set(Weight, vertex, 0);
+            dynamicLayoutGraph.set(Weight, vertex, 1);
+            dynamicLayoutGraph.set(Size, vertex, vertex);
             if (unionFind(vertex) == (int)vertex) {
                 dynamicLayoutGraph.set(Weight, vertex, weightOfNodes[vertex]);
             }
@@ -131,8 +140,7 @@ public:
 
         progress.finished();
 
-        AssertMsg(!(dynamicLayoutGraph.edges().size() & 1), "The number of edges is uneven, thus we check that every edge "
-                                                            "has a reverse edge in the graph!\n");
+        AssertMsg(!(dynamicLayoutGraph.edges().size() & 1), "The number of edges is uneven, thus we check that every edge has a reverse edge in the graph!\n");
 
         uint64_t totalEdgeWeight(0);
         for (Edge edge : dynamicLayoutGraph.edges()) {
@@ -142,15 +150,17 @@ public:
         if (totalEdgeWeight > UINT32_MAX)
             std::cout << "** The total sum of all edge weights exceeds 32 bits **" << std::endl;
 
+        dynamicLayoutGraph.deleteIsolatedVertices();
         dynamicLayoutGraph.packEdges();
         layoutGraph.clear();
         Graph::move(std::move(dynamicLayoutGraph), layoutGraph);
-        /* std::cout << "The Layout Graph looks like this:" << std::endl; */
-        /* layoutGraph.printAnalysis(); */
+        std::cout << "The Layout Graph looks like this:" << std::endl;
+        layoutGraph.printAnalysis();
     }
 
     inline void writeLayoutGraphToMETIS(const std::string fileName, const bool writeGRAPHML = true)
     {
+        std::cout << "Write Layout Graph to file " << fileName << std::endl;
         Progress progressWriting(layoutGraph.numVertices());
 
         unsigned long n = layoutGraph.numVertices();
@@ -259,6 +269,18 @@ public:
         stopEventGraph.readBinary(fileName + ".trip.graph");
     }
 
+    inline void writePartitionToCSV(const std::string& fileName) noexcept
+    {
+        std::ofstream file(fileName);
+
+        file << "StopID,CellId\n";
+
+        for (StopId stop(0); stop < cellIds.size(); ++stop) {
+            file << (int)stop << "," << (int)cellIds[stop] << "\n";
+        }
+        file.close();
+    }
+
     // Assert that no transfer is cut
     inline bool assertNoCutTransfers() noexcept
     {
@@ -281,13 +303,13 @@ public:
     int numberOfLevels;
     int numberOfCellsPerLevel;
     UnionFind unionFind;
-    StaticGraphWithWeightsAndCoordinates layoutGraph;
+    StaticGraphWithWeightsAndCoordinatesAndSize layoutGraph;
 
     // we also keep track of the highest locallevel of an event
     std::vector<uint8_t> localLevelOfEvent;
 
     // for the 2' cell ids
-    std::vector<uint64_t> cellIds;
+    std::vector<uint16_t> cellIds;
 };
 
 } // namespace TripBased

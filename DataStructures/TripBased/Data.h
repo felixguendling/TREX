@@ -6,6 +6,8 @@
 #include "../../Helpers/Console/Progress.h"
 #include "../RAPTOR/Data.h"
 
+#include "DynamicEventGraph.h"
+
 namespace TripBased {
 
 struct ArrivalEvent {
@@ -264,6 +266,47 @@ public:
     }
 
 public:
+    inline void convertStopEventGraphToDynamicEventGraph() noexcept
+    {
+        std::cout << "Converting StopEventGraph to the DynamicEventGraph" << std::endl;
+        dynamicEventGraph.clear();
+        Progress progress(numberOfTrips());
+
+        // allocate the space
+        dynamicEventGraph.getToAdjs().resize(numberOfTrips());
+        dynamicEventGraph.getTransfers().resize(numberOfTrips());
+
+        size_t event(0);
+        // now fill the PackedTransfers
+        for (TripId trip(0); trip < numberOfTrips(); ++trip) {
+            uint8_t numOfStopsInTrip = (uint8_t)raptorData.numberOfStopsInRoute(routeOfTrip[trip]);
+            dynamicEventGraph.getToAdjsOfTrip(trip).resize(numOfStopsInTrip + 1);
+
+            size_t runningSum(0);
+            for (uint8_t offset(0); offset < numOfStopsInTrip; ++offset) {
+                dynamicEventGraph.getToAdjsOfTrip(trip)[offset] = runningSum;
+
+                for (const Edge edge : stopEventGraph.edgesFrom(Vertex(event))) {
+                    const auto toVertex = stopEventGraph.get(ToVertex, edge);
+
+                    const TripId toTrip = tripOfStopEvent[toVertex];
+                    const StopIndex toStopIndex = StopIndex(toVertex - firstStopEventOfTrip[toTrip]);
+
+                    dynamicEventGraph.getTransfersOfTrip(trip).emplace_back((toTrip << 8) | toStopIndex);
+                    ++dynamicEventGraph.getNumEdges();
+                    ++runningSum;
+                }
+                ++event;
+            }
+
+            dynamicEventGraph.getToAdjsOfTrip(trip).back() = runningSum;
+            ++progress;
+        }
+
+        progress.finished();
+        std::cout << dynamicEventGraph.getNumEdges() << " many transfers were added!" << std::endl;
+    }
+
     inline Data reverseNetwork() const noexcept
     {
         Permutation dummy;
@@ -319,7 +362,7 @@ public:
     {
         raptorData.serialize(fileName + ".raptor");
         IO::serialize(fileName, firstTripOfRoute, routeOfTrip, firstStopIdOfTrip, firstStopEventOfTrip, tripOfStopEvent,
-            indexOfStopEvent, arrivalEvents);
+            indexOfStopEvent, arrivalEvents, dynamicEventGraph);
         stopEventGraph.writeBinary(fileName + ".graph");
     }
 
@@ -327,7 +370,7 @@ public:
     {
         raptorData.deserialize(fileName + ".raptor");
         IO::deserialize(fileName, firstTripOfRoute, routeOfTrip, firstStopIdOfTrip, firstStopEventOfTrip,
-            tripOfStopEvent, indexOfStopEvent, arrivalEvents);
+            tripOfStopEvent, indexOfStopEvent, arrivalEvents, dynamicEventGraph);
         stopEventGraph.readBinary(fileName + ".graph");
     }
 
@@ -389,6 +432,7 @@ public:
     std::vector<StopIndex> indexOfStopEvent;
 
     TransferGraphWithLocalLevelAndHop stopEventGraph;
+    DynamicEventGraph dynamicEventGraph;
 
     std::vector<ArrivalEvent> arrivalEvents;
 };

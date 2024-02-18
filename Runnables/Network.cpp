@@ -3,6 +3,7 @@
 #include "../Shell/Shell.h"
 #include "Commands/NetworkIO.h"
 #include "Commands/NetworkTools.h"
+
 using namespace Shell;
 
 int main(int argc, char** argv)
@@ -29,6 +30,7 @@ int main(int argc, char** argv)
     new ApplyBoundingBox(shell);
     new ApplyCustomBoundingBox(shell);
     new MakeOneHopTransfers(shell);
+    new MakeOneHopTransfersByGeoDistance(shell);
     new ApplyMaxTransferSpeed(shell);
     new ApplyConstantTransferSpeed(shell);
     new WriteIntermediateToCSV(shell);

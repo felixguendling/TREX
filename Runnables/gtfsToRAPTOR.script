@@ -1,7 +1,7 @@
-parseGTFS ../../Datasets/Germany/GTFS/ ../../Datasets/Germany/gtfs.binary
-gtfsToIntermediate ../../Datasets/Germany/gtfs.binary 20220315 20220316 true false ../../Datasets/Germany/intermediate.binary
-reduceGraph ../../Datasets/Germany/intermediate.binary ../../Datasets/Germany/intermediate.binary
-reduceToMaximumConnectedComponent ../../Datasets/Germany/intermediate.binary ../../Datasets/Germany/intermediate.binary
-reduceGraph ../../Datasets/Germany/intermediate.binary ../../Datasets/Germany/intermediate.binary
-makeOneHopTransfers ../../Datasets/Germany/intermediate.binary 86400 ../../Datasets/Germany/intermediate.binary true
-intermediateToRAPTOR ../../Datasets/Germany/intermediate.binary ../../Datasets/Germany/raptor.binary
+parseGTFS ../../Datasets/Europe/GTFS/ ../../Datasets/Europe/gtfs.binary
+gtfsToIntermediate ../../Datasets/Europe/gtfs.binary 20220315 20220316 true false ../../Datasets/Europe/intermediate.binary
+reduceGraph ../../Datasets/Europe/intermediate.binary ../../Datasets/Europe/intermediate.binary
+reduceToMaximumConnectedComponent ../../Datasets/Europe/intermediate.binary ../../Datasets/Europe/intermediate.binary
+reduceGraph ../../Datasets/Europe/intermediate.binary ../../Datasets/Europe/intermediate.binary
+makeOneHopTransfers ../../Datasets/Europe/intermediate.binary 86400 ../../Datasets/Europe/intermediate.binary true
+intermediateToRAPTOR ../../Datasets/Europe/intermediate.binary ../../Datasets/Europe/raptor.binary

@@ -1,3 +1,3 @@
-applyPartitionFile ../../Datasets/Swiss/MLTB/partition10_2.i20.txt ../../Datasets/Swiss/MLTB/mltb.binary true
-customize ../../Datasets/Swiss/MLTB/mltb.binary ../../Datasets/Swiss/MLTB/mltb.binary
-showInfoOfMLTB ../../Datasets/Swiss/MLTB/mltb.binary
+applyPartitionFile ../../Datasets/Germany/MLTB/partition10_2.i5.txt 10 ../../Datasets/Germany/MLTB/mltb.binary true
+customize ../../Datasets/Germany/MLTB/mltb.binary ../../Datasets/Germany/MLTB/mltb.binary
+showInfoOfMLTB ../../Datasets/Germany/MLTB/mltb.binary

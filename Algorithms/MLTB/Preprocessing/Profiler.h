@@ -157,7 +157,7 @@ public:
         std::cout << "Total time: " << String::musToString(totalTime / numQueries) << std::endl;
     }
 
-    inline void printStatisticsAsCSV() const noexcept 
+    inline void printStatisticsAsCSV() const noexcept
     {
         for (const Metric metric : metrics) {
             std::cout << "\"" << MetricNames[metric] << "\","

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../../Algorithms/MLTB/Preprocessing/Builder.h"
+#include "../../Algorithms/MLTB/Preprocessing/BuilderIBEs.h"
+/* #include "../../Algorithms/MLTB/Preprocessing/Builder.h" */
 #include "../../Algorithms/TripBased/Preprocessing/StopEventGraphBuilder.h"
 #include "../../Algorithms/TripBased/Preprocessing/ULTRABuilderTransitive.h"
 #include "../../DataStructures/Graph/Graph.h"
@@ -31,15 +32,18 @@ public:
         : ParameterizedCommand(shell, "applyPartitionFile", "Applies the given partition to the MLTB data. Also give the number of levels and the number of cells per level!")
     {
         addParameter("Input file (Partition File)");
+        addParameter("Input file (Number of levels)");
         addParameter("Input file (MLTB Data)");
     }
 
     virtual void execute() noexcept
     {
         const std::string raptorFile = getParameter("Input file (MLTB Data)");
+        const int numberOfLevels = getParameter<int>("Input file (Number of levels)");
         const std::string partitionFile = getParameter("Input file (Partition File)");
 
         TripBased::MLData data(raptorFile);
+        data.setNumberOfLevels(numberOfLevels);
         data.printInfo();
 
         data.createCompactLayoutGraph();
@@ -56,7 +60,6 @@ public:
         addParameter("Input file (RAPTOR Data)");
         addParameter("Output file (MLTB Data)");
         addParameter("Number of levels");
-        addParameter("Number of cells per level");
         addParameter("Route-based pruning?", "true");
         addParameter("Number of threads", "max");
         addParameter("Pin multiplier", "1");
@@ -67,13 +70,12 @@ public:
         const std::string raptorFile = getParameter("Input file (RAPTOR Data)");
         const std::string mltbFile = getParameter("Output file (MLTB Data)");
         const int numLevels = getParameter<int>("Number of levels");
-        const int numCellsPerLevel = getParameter<int>("Number of cells per level");
         const bool routeBasedPruning = getParameter<bool>("Route-based pruning?");
         const int numberOfThreads = getNumberOfThreads();
         const int pinMultiplier = getParameter<int>("Pin multiplier");
 
         RAPTOR::Data raptor(raptorFile);
-        TripBased::MLData data(raptor, numLevels, numCellsPerLevel);
+        TripBased::MLData data(raptor, numLevels);
 
         if (numberOfThreads == 0) {
             if (routeBasedPruning) {
@@ -89,6 +91,7 @@ public:
             }
         }
         data.addInformationToStopEventGraph();
+        /* data.convertStopEventGraphToDynamicEventGraph(); */
         data.printInfo();
         data.serialize(mltbFile);
     }
@@ -125,6 +128,7 @@ public:
 
         data.createCompactLayoutGraph();
         data.writeLayoutGraphToMETIS(metisFile, writeGRAPHML);
+        data.writeLayoutGraphToHypMETIS(metisFile);
         data.serialize(mltbFile);
     }
 };
@@ -136,7 +140,7 @@ public:
     {
         addParameter("Input file (MLTB Data)");
         addParameter("Output file (MLTB Data)");
-        addParameter("Verbose?", "true");
+        /* addParameter("Verbose?", "true"); */
         addParameter("Number of threads", "max");
         addParameter("Pin multiplier", "1");
     }
@@ -145,18 +149,22 @@ public:
     {
         const std::string mltbFile = getParameter("Input file (MLTB Data)");
         const std::string output = getParameter("Output file (MLTB Data)");
-        const bool verbose = getParameter<bool>("Verbose?");
+        /* const bool verbose = getParameter<bool>("Verbose?"); */
         const int numberOfThreads = getNumberOfThreads();
         const int pinMultiplier = getParameter<int>("Pin multiplier");
 
         TripBased::MLData data(mltbFile);
+        // reset
+        data.addInformationToStopEventGraph();
         data.printInfo();
 
-        if (numberOfThreads == 1)
-            TripBased::Customize(data, verbose);
-        else
-            TripBased::Customize(data, numberOfThreads, pinMultiplier, verbose);
+        TripBased::Builder bobTheBuilder(data);
 
+        if (numberOfThreads == 1) {
+            bobTheBuilder.run();
+        } else {
+            bobTheBuilder.run(numberOfThreads, pinMultiplier);
+        }
         data.serialize(output);
     }
 
@@ -178,7 +186,7 @@ public:
     {
         addParameter("Input file (MLTB Data)");
         addParameter("Write to csv?", "false");
-        addParameter("Output file (csv)", "levelDegree");
+        addParameter("Output file (csv)", "false");
     }
 
     virtual void execute() noexcept
@@ -190,26 +198,11 @@ public:
         data.printInfo();
 
         std::vector<size_t> numLocalTransfers(data.getNumberOfLevels() + 1, 0);
-        std::vector<size_t> numLocalEvents(data.getNumberOfLevels() + 1, 0);
         std::vector<size_t> numHopsPerLevel(data.getNumberOfLevels() + 1, 0);
 
-        std::vector<std::vector<size_t>> degreePerLevel(data.getNumberOfLevels() + 1);
-        for (size_t l(0); l < (size_t)data.getNumberOfLevels() + 1; ++l) {
-            degreePerLevel[l].assign(data.stopEventGraph.numVertices(), 0);
-        }
-
         for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
-            ++degreePerLevel[data.stopEventGraph.get(LocalLevel, edge)][from];
             ++numLocalTransfers[data.stopEventGraph.get(LocalLevel, edge)];
             numHopsPerLevel[data.stopEventGraph.get(LocalLevel, edge)] += data.stopEventGraph.get(Hop, edge);
-
-            /* for (int level(data.numberOfLevels() - 1); level >= 0; --level) { */
-            /*     if (data.stopEventGraph.get(LocalLevel, edge) >= level) { */
-            /*         ++numLocalTransfers[level]; */
-            /*         numHopsPerLevel[level] += data.stopEventGraph.get(Hop, edge); */
-            /*         break; */
-            /*     } */
-            /* } */
         }
 
         std::cout << "** Number of Local Transfers **" << std::endl;
@@ -224,24 +217,8 @@ public:
             std::cout << "Level " << level << ":      " << String::prettyDouble(numHopsPerLevel[level] / (double)numLocalTransfers[level]) << std::endl;
         }
 
-        /* for (StopEventId event(0); event < data.numberOfStopEvents(); ++event) { */
-        /*     ++numLocalEvents[data.getLocalLevelOfEvent(event)]; */
-        /* } */
-
-        /* std::cout << "** Number of local Events **" << std::endl; */
-        /* for (size_t level(0); level < numLocalTransfers.size(); ++level) { */
-        /*     std::cout << "Level " << level << ":       " << String::prettyInt(numLocalEvents[level]) << "    " << String::prettyDouble((100.0 * numLocalEvents[level] / data.numberOfStopEvents())) << " %" << std::endl; */
-        /* } */
-
-        if (writeToCSV) {
-            for (size_t l(0); l < (size_t)data.getNumberOfLevels() + 1; ++l) {
-                std::ofstream outputfile(fileName + ".level" + std::to_string(l) + ".csv");
-
-                outputfile << "StopEventId,Degree\n";
-                for (size_t i(0); i < degreePerLevel[l].size(); ++i)
-                    outputfile << i << "," << degreePerLevel[l][i] << "\n";
-            }
-        }
+        if (writeToCSV)
+            data.writeLocalLevelOfTripsToCSV(fileName);
     }
 };
 
@@ -388,7 +365,7 @@ public:
         data.printInfo();
 
         data.raptorData.writeCSV(output);
-        /* data.writePartitionToCSV(output + "partition.csv"); */
+        data.writePartitionToCSV(output + "partition.csv");
 
         Graph::toEdgeListCSV(output + "transfer", data.stopEventGraph);
     }

@@ -2,8 +2,9 @@ CC=g++ -fopenmp
 FLAGS=-std=c++17 -pipe
 OPTIMIZATION=-march=native -O3
 DEBUG=-rdynamic -Werror -Wpedantic -pedantic-errors -Wall -Wextra -Wparentheses -Wfatal-errors -D_GLIBCXX_DEBUG -g -fno-omit-frame-pointer
-RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG -fomit-frame-pointer -mtune=native -fno-stack-protector
+RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG -fomit-frame-pointer -mtune=native -fno-stack-protector -mavx2 -mno-avx256-split-unaligned-load -mno-avx256-split-unaligned-store -funroll-loops
 SPARSEHASH=-I ../ExternalLibs/sparsehash/include
+TBB=-ltbb
 
 all: MLTBRelease
 # all: TPDebug ArcTBDebug NetworkDebug ULTRADebug
@@ -33,13 +34,7 @@ TPRelease:
 	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) $(SPARSEHASH) -o TP TP.cpp
 
 MLTBDebug:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o MLTB MLTB.cpp
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o MLTB MLTB.cpp $(TBB)
 
 MLTBRelease:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o MLTB MLTB.cpp
-
-MLTB_COLLECT:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o MLTB MLTB.cpp -fprofile-generate
-
-MLTB_COMPILE_COLLECT:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o MLTB MLTB.cpp -fprofile-use -fprofile-correction
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o MLTB MLTB.cpp $(TBB)

@@ -14,10 +14,9 @@ namespace TripBased {
 
 class MLData : public Data {
 public:
-    MLData(const RAPTOR::Data& raptor, const int numLevels, const int numCellsPerLevel = 2)
+    MLData(const RAPTOR::Data& raptor, const int numLevels)
         : Data(raptor)
         , numberOfLevels(numLevels)
-        , numberOfCellsPerLevel(numCellsPerLevel)
         , unionFind(numberOfStops())
         , layoutGraph()
         , localLevelOfEvent(raptor.numberOfStopEvents(), 0)
@@ -198,6 +197,45 @@ public:
         layoutGraph.writeBinary(fileName);
     }
 
+    inline void writeLayoutGraphToHypMETIS(const std::string fileName)
+    {
+        std::cout << "Write Layout Graph to file " << fileName << std::endl;
+        Progress progressWriting(layoutGraph.numVertices() + layoutGraph.numEdges());
+
+        unsigned long n = layoutGraph.numVertices();
+        unsigned long m = layoutGraph.numEdges(); // halbieren weil METIS das braucht
+
+        std::ofstream file(fileName + ".hypmetis");
+
+        // see here https://course.ece.cmu.edu/~ee760/760docs/hMetisManual.pdf
+        // n [NUMBER of nodes]  m [NUMBER of edges]     f [int]
+        // f values:
+        /*
+                f values:
+        1 :     edge-weighted graph
+        10:     node-weighted graph
+        11:     edge & node - weighted graph
+         */
+
+        file << m << " " << n << " 11";
+
+        for (const auto [edge, from] : layoutGraph.edgesWithFromVertex()) {
+            file << "\n"
+                 << layoutGraph.get(Weight, edge) << " "
+                 << (int)(from + 1) << " " << (layoutGraph.get(ToVertex, edge).value() + 1);
+            progressWriting++;
+        }
+
+        for (Vertex vertex : layoutGraph.vertices()) {
+            file << "\n"
+                 << layoutGraph.get(Weight, vertex) << " ";
+            progressWriting++;
+        }
+
+        file.close();
+        progressWriting.finished();
+    }
+
     // Getter
     inline int getNumberOfLevels() const noexcept
     {
@@ -206,7 +244,7 @@ public:
 
     inline int getNumberOfCellsPerLevel() const noexcept
     {
-        return numberOfCellsPerLevel;
+        return 2;
     }
 
     inline uint64_t getCellIdOfStop(const StopId& stop) const noexcept
@@ -251,21 +289,21 @@ public:
     {
         Data::printInfo();
         std::cout << "   Number of Levels:         " << std::setw(12) << (int)numberOfLevels << std::endl;
-        std::cout << "   Cells per Level:          " << std::setw(12) << (int)numberOfCellsPerLevel << std::endl;
+        std::cout << "   Cells per Level:          " << std::setw(12) << "2" << std::endl;
     }
 
     // Serialization
     inline void serialize(const std::string& fileName) const noexcept
     {
         Data::serialize(fileName + ".trip");
-        IO::serialize(fileName, numberOfLevels, numberOfCellsPerLevel, unionFind, layoutGraph, localLevelOfEvent, cellIds);
+        IO::serialize(fileName, numberOfLevels, unionFind, layoutGraph, localLevelOfEvent, cellIds);
         stopEventGraph.writeBinary(fileName + ".trip.graph");
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
         Data::deserialize(fileName + ".trip");
-        IO::deserialize(fileName, numberOfLevels, numberOfCellsPerLevel, unionFind, layoutGraph, localLevelOfEvent, cellIds);
+        IO::deserialize(fileName, numberOfLevels, unionFind, layoutGraph, localLevelOfEvent, cellIds);
         stopEventGraph.readBinary(fileName + ".trip.graph");
     }
 
@@ -299,9 +337,54 @@ public:
         return level < numberOfLevels;
     }
 
+    inline void setNumberOfLevels(int level) noexcept
+    {
+        numberOfLevels = level;
+    }
+
+    inline void writeLocalLevelOfTripsToCSV(const std::string& fileName) const noexcept
+    {
+        std::vector<size_t> outgoingLocalLevelOfTrip(numberOfTrips(), 0);
+        std::vector<size_t> incomingLocalLevelOfTrip(numberOfTrips(), 0);
+        std::vector<std::vector<size_t>> numOfTransferPerLevel(numberOfTrips());
+
+        for (TripId trip(0); trip < numberOfTrips(); ++trip) {
+            numOfTransferPerLevel[trip].assign(numberOfLevels + 1, 0);
+
+            Edge start = stopEventGraph.beginEdgeFrom(Vertex(firstStopEventOfTrip[trip]));
+            Edge end = stopEventGraph.beginEdgeFrom(Vertex(firstStopEventOfTrip[trip + 1]));
+
+            for (Edge e(start); e < end; ++e) {
+                outgoingLocalLevelOfTrip[trip] = std::max(outgoingLocalLevelOfTrip[trip], (size_t)stopEventGraph.get(LocalLevel, e));
+
+                TripId toTrip = tripOfStopEvent[StopEventId(stopEventGraph.get(ToVertex, e))];
+                incomingLocalLevelOfTrip[toTrip] = std::max(incomingLocalLevelOfTrip[toTrip], (size_t)stopEventGraph.get(LocalLevel, e));
+
+                ++numOfTransferPerLevel[trip][stopEventGraph.get(LocalLevel, e)];
+            }
+        }
+
+        std::ofstream file(fileName);
+
+        file << "TripID,Outgoing LocalLevel,Incoming LocalLevel";
+
+        for (int l(0); l <= numberOfLevels; ++l) {
+            file << ",Level " << l;
+        }
+        file << "\n";
+
+        for (TripId trip(0); trip < numberOfTrips(); ++trip) {
+            file << (int)trip << "," << outgoingLocalLevelOfTrip[trip] << "," << incomingLocalLevelOfTrip[trip];
+            for (int l(0); l <= numberOfLevels; ++l) {
+                file << "," << numOfTransferPerLevel[trip][l];
+            }
+            file << "\n";
+        }
+        file.close();
+    }
+
 public:
     int numberOfLevels;
-    int numberOfCellsPerLevel;
     UnionFind unionFind;
     StaticGraphWithWeightsAndCoordinatesAndSize layoutGraph;
 

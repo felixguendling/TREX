@@ -24,6 +24,7 @@ public:
 
     void collectUsingMasks(const uint64_t LEVELMASK, const uint64_t TARGETMASK)
     {
+        /* profiler.startPhase(); */
         auto masksMatches = [&](StopId stop) {
             return (data.getCellIdOfStop(stop) & LEVELMASK) == TARGETMASK;
         };
@@ -48,15 +49,18 @@ public:
                 if (!masksMatches(data.raptorData.stopOfRouteSegment(neighbourSeg))) {
                     // add all stop events of this route
                     for (TripId trip : data.tripsOfRoute(route.routeId)) {
+                        /* profiler.countMetric(COLLECTED_STOPEVENTS); */
                         stopEvents.push_back(std::make_pair(trip, StopIndex(route.stopIndex - 1)));
                     }
                 }
             }
         }
+        /* profiler.donePhase(COLLECT_STOPEVENTS); */
     }
 
     void printInfo()
     {
+        /* profiler.printStatisticsAsCSV(); */
         search.getProfiler().printStatisticsAsCSV();
     }
 
@@ -65,25 +69,27 @@ public:
 
         collectUsingMasks(LEVELMASK, TARGETMASK);
 
-        /* std::sort(stopEvents.begin(), stopEvents.end(), [&](auto& left, auto& right) { */
-        /*     return data.getStopEvent(left.first, left.second).departureTime < data.getStopEvent(right.first, right.second).departureTime; */
-        /* }); */
-
+        /* profiler.startPhase(); */
         for (auto& element : stopEvents) {
             search.run(element.first, element.second, LEVELMASK, TARGETMASK);
         }
 
+        /* profiler.donePhase(SCAN_THE_CELL_INSIDE); */
         stopEvents.clear();
     }
 
     MLData& data;
     TransferSearch<TripBased::AggregateProfiler> search;
     std::vector<std::pair<TripId, StopIndex>> stopEvents;
+
+    /* AggregateProfiler profiler; */
 };
 
 inline void Customize(MLData& data, const bool verbose = true)
 {
     data.createCompactLayoutGraph();
+
+    data.addInformationToStopEventGraph();
 
     uint64_t LEVELMASK = (~0);
     uint64_t TARGETMASK = 0;
@@ -101,7 +107,6 @@ inline void Customize(MLData& data, const bool verbose = true)
         // get all valid TARGETMASKs
         for (int target(0); target < numberOfCellsOnThisLevel; ++target) {
             TARGETMASK = target << level;
-
             bobTheBuilder.run(LEVELMASK, TARGETMASK);
 
             ++progress;
@@ -124,6 +129,7 @@ inline void Customize(MLData& data, const bool verbose = true)
 inline void Customize(MLData& data, const int numberOfThreads, const int pinMultiplier = 1, const bool verbose = true)
 {
     data.createCompactLayoutGraph();
+    data.addInformationToStopEventGraph();
 
     uint64_t LEVELMASK = (~0);
     uint64_t TARGETMASK = 0;
@@ -151,7 +157,6 @@ inline void Customize(MLData& data, const int numberOfThreads, const int pinMult
 #pragma omp for schedule(dynamic, 1)
             for (int target = 0; target < numberOfCellsOnThisLevel; ++target) {
                 TARGETMASK = target << level;
-
                 bobTheBuilder.run(LEVELMASK, TARGETMASK);
                 ++progress;
             }

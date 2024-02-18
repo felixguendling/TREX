@@ -7,6 +7,7 @@
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../TripBased/Query/Profiler.h"
 #include "../../TripBased/Query/ReachedIndex.h"
+/* #include "../../TripBased/Query/TimestampedReachedIndex.h" */
 
 namespace TripBased {
 
@@ -493,6 +494,7 @@ private:
     std::vector<EdgeRange> edgeRanges;
     size_t queueSize;
     ReachedIndex reachedIndex;
+    /* TimestampedReachedIndex reachedIndex; */
 
     std::vector<TargetLabel> targetLabels;
     int minArrivalTime;

@@ -5,6 +5,7 @@ DEBUG=-rdynamic -Werror -Wpedantic -pedantic-errors -Wall -Wextra -Wparentheses 
 RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG -fomit-frame-pointer -mtune=native -fno-stack-protector -mavx2 -mno-avx256-split-unaligned-load -mno-avx256-split-unaligned-store -funroll-loops
 SPARSEHASH=-I ../ExternalLibs/sparsehash/include
 TBB=-ltbb
+IPSVIERO=-mcx16 -latomic
 
 all: MLTBRelease
 # all: TPDebug ArcTBDebug NetworkDebug ULTRADebug
@@ -34,7 +35,7 @@ TPRelease:
 	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) $(SPARSEHASH) -o TP TP.cpp
 
 MLTBDebug:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o MLTB MLTB.cpp $(TBB)
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o MLTB MLTB.cpp $(TBB) $(IPSVIERO)
 
 MLTBRelease:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o MLTB MLTB.cpp $(TBB)
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o MLTB MLTB.cpp $(TBB) $(IPSVIERO)

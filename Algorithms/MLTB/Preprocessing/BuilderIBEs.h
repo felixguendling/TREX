@@ -11,6 +11,7 @@
 #include <cmath>
 #include <execution>
 #include <omp.h>
+#include <tbb/global_control.h>
 #include <vector>
 
 namespace TripBased {
@@ -31,11 +32,17 @@ public:
         , search(data)
         , IBEs()
     {
+        profiler.registerPhases({
+            PHASE_TREX_PREPROCESSING,
+            PHASE_TREX_COLLECT_IBES,
+            PHASE_TREX_SORT_IBES,
+            PHASE_TREX_FILTER_IBES,
+        });
     }
 
     inline void collectAllIBEsOnLowestLevel() noexcept
     {
-        /* profiler.startPhase(); */
+        profiler.startPhase();
         IBEs.reserve(data.numberOfStopEvents());
 
         auto inSameCell = [&](auto a, auto b) {
@@ -61,7 +68,7 @@ public:
                 }
             }
         }
-        /* profiler.donePhase(COLLECT_STOPEVENTS); */
+        profiler.donePhase(PHASE_TREX_COLLECT_IBES);
     }
 
     inline void filterIrrelevantIBEs(uint8_t level)
@@ -69,6 +76,7 @@ public:
         // 'level' denotes the level, for which we filter the IBEs
         // ... in other word: after this method, IBEs should contain all IBEs which cross at this level, not lower levels
 
+        profiler.startPhase();
         IBEs.erase(
             std::remove_if(std::execution::par, IBEs.begin(), IBEs.end(), [&](PackedIBE ibe) {
                 auto trip = TripId(ibe >> TRIPOFFSET);
@@ -79,15 +87,20 @@ public:
                 return !((data.getCellIdOfStop(fromStop) ^ data.getCellIdOfStop(toStop)) >> level);
             }),
             IBEs.end());
+        profiler.donePhase(PHASE_TREX_FILTER_IBES);
     }
 
     template <bool SORT_IBES = true, bool VERBOSE = true>
     inline void run() noexcept
     {
+        profiler.start();
         collectAllIBEsOnLowestLevel();
 
-        if (SORT_IBES)
+        if (SORT_IBES) {
+            profiler.startPhase();
             std::sort(std::execution::par, IBEs.begin(), IBEs.end());
+            profiler.donePhase(PHASE_TREX_SORT_IBES);
+        }
 
         // now for every level, we have an invariant: IBEs contains exactly the IBEs we need on this level
         for (uint8_t level(0); level < data.getNumberOfLevels(); ++level) {
@@ -115,23 +128,32 @@ public:
                 search.getProfiler().printStatisticsAsCSV();
             }
         }
+        profiler.done();
     }
 
     template <bool SORT_IBES = true, bool VERBOSE = true>
     inline void run(const int numberOfThreads, const int pinMultiplier = 1) noexcept
     {
+        tbb::global_control c(tbb::global_control::max_allowed_parallelism, numberOfThreads);
+        profiler.start();
         collectAllIBEsOnLowestLevel();
 
-        if (SORT_IBES)
+        if (SORT_IBES) {
+            profiler.startPhase();
             std::sort(std::execution::par, IBEs.begin(), IBEs.end());
+            profiler.donePhase(PHASE_TREX_SORT_IBES);
+        }
 
         // TODO can be optimised
+        profiler.startPhase();
         std::vector<TransferSearch<TripBased::AggregateProfiler>> seekers;
 
         seekers.reserve(numberOfThreads);
 
         for (int i = 0; i < numberOfThreads; ++i)
             seekers.emplace_back(data);
+
+        profiler.donePhase(PHASE_TREX_PREPROCESSING);
 
         const int numCores = numberOfCores();
         omp_set_num_threads(numberOfThreads);
@@ -154,7 +176,7 @@ public:
 
                     auto& values = IBEs[i];
                     seekers[threadId].run(TripId(values >> TRIPOFFSET), StopIndex(values & STOPINDEX_MASK), level);
-                    ++progress;
+                    /* ++progress; */
                 }
             }
 
@@ -166,10 +188,17 @@ public:
             if (VERBOSE)
                 std::cout << "done!\n";
         }
+        profiler.done();
+    }
+
+    inline AggregateProfiler& getProfiler() noexcept
+    {
+        return profiler;
     }
 
     MLData& data;
     TransferSearch<TripBased::AggregateProfiler> search;
     std::vector<PackedIBE> IBEs;
+    AggregateProfiler profiler;
 };
 }

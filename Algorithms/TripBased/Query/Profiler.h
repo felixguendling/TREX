@@ -17,6 +17,10 @@ typedef enum {
     PHASE_COLLECT_DEPTIMES,
     PHASE_GET_JOURNEYS,
     PHASE_ENQUEUE_COLLECTED_DEP_TIMES,
+    PHASE_TREX_PREPROCESSING,
+    PHASE_TREX_COLLECT_IBES,
+    PHASE_TREX_SORT_IBES,
+    PHASE_TREX_FILTER_IBES,
     NUM_PHASES,
 } Phase;
 
@@ -30,6 +34,10 @@ constexpr const char* PhaseNames[] = {
     "Get Journeys",
     "Enqueue the collected departure times",
     "Collect departure times",
+    "T-REX Preprocessing",
+    "Collect IBEs",
+    "Sort IBEs",
+    "Filter IBEs",
 };
 
 typedef enum {

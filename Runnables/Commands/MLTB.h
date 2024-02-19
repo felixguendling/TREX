@@ -165,6 +165,9 @@ public:
         } else {
             bobTheBuilder.run(numberOfThreads, pinMultiplier);
         }
+
+        std::cout << "******* Stats *******\n";
+        bobTheBuilder.getProfiler().printStatistics();
         data.serialize(output);
     }
 

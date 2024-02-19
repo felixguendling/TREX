@@ -158,13 +158,9 @@ public:
         data.addInformationToStopEventGraph();
         data.printInfo();
 
-        TripBased::Builder bobTheBuilder(data);
+        TripBased::Builder bobTheBuilder(data, numberOfThreads, pinMultiplier);
 
-        if (numberOfThreads == 1) {
-            bobTheBuilder.run();
-        } else {
-            bobTheBuilder.run(numberOfThreads, pinMultiplier);
-        }
+        bobTheBuilder.run();
 
         std::cout << "******* Stats *******\n";
         bobTheBuilder.getProfiler().printStatistics();

@@ -27,13 +27,23 @@ constexpr uint32_t STOPINDEX_MASK = ((1 << 8) - 1);
 
 class Builder {
 public:
-    Builder(MLData& data)
+    Builder(MLData& data, const int numberOfThreads = 1, const int pinMultiplier = 1)
         : data(data)
-        , search(data)
+        , numberOfThreads(numberOfThreads)
+        , pinMultiplier(pinMultiplier)
+        , seekers()
         , IBEs()
     {
+        // set number of threads
+        tbb::global_control c(tbb::global_control::max_allowed_parallelism, numberOfThreads);
+        omp_set_num_threads(numberOfThreads);
+
+        seekers.reserve(numberOfThreads);
+        for (int i = 0; i < numberOfThreads; ++i)
+            seekers.emplace_back(data);
+
+        profiler.registerMetrics({ METRIC_TREX_COLLECTED_IBES });
         profiler.registerPhases({
-            PHASE_TREX_PREPROCESSING,
             PHASE_TREX_COLLECT_IBES,
             PHASE_TREX_SORT_IBES,
             PHASE_TREX_FILTER_IBES,
@@ -45,8 +55,18 @@ public:
         profiler.startPhase();
         IBEs.reserve(data.numberOfStopEvents());
 
+        // TODO to only allow 'time range based' IBE
+        /* int minTime = 10 * 60 * 60; */
+        /* int maxTime = 11 * 60 * 60; */
+
         auto inSameCell = [&](auto a, auto b) {
             return (data.getCellIdOfStop(a) == data.getCellIdOfStop(b));
+        };
+
+        auto inTimeRange = [&](auto trip, auto stopIndex) {
+            /* auto& event = data.getStopEvent(trip, stopIndex); */
+            /* return minTime <= event.departureTime && event.departureTime <= maxTime; */
+            return true;
         };
 
         for (StopId stop(0); stop < data.numberOfStops(); ++stop) {
@@ -62,7 +82,9 @@ public:
                 if (!inSameCell(stop, data.raptorData.stopOfRouteSegment(neighbourSeg))) {
                     // add all stop events of this route
                     for (TripId trip : data.tripsOfRoute(route.routeId)) {
-                        /* profiler.countMetric(COLLECTED_STOPEVENTS); */
+                        if (!inTimeRange(trip, StopIndex(route.stopIndex - 1)))
+                            continue;
+                        profiler.countMetric(METRIC_TREX_COLLECTED_IBES);
                         IBEs.push_back((trip << TRIPOFFSET) | (route.stopIndex - 1));
                     }
                 }
@@ -102,61 +124,7 @@ public:
             profiler.donePhase(PHASE_TREX_SORT_IBES);
         }
 
-        // now for every level, we have an invariant: IBEs contains exactly the IBEs we need on this level
-        for (uint8_t level(0); level < data.getNumberOfLevels(); ++level) {
-            if (VERBOSE)
-                std::cout << "Starting Level " << (int)level << " [IBEs: " << IBEs.size() << "]... " << std::endl;
-
-            Progress progress(IBEs.size());
-
-            for (size_t i = 0; i < IBEs.size(); ++i) {
-                auto& values = IBEs[i];
-
-                search.run(TripId(values >> TRIPOFFSET), StopIndex(values & STOPINDEX_MASK), level);
-
-                ++progress;
-            }
-
-            progress.finished();
-
-            if (level < data.getNumberOfLevels() - 1) {
-                filterIrrelevantIBEs(level + 1);
-            }
-
-            if (VERBOSE) {
-                std::cout << "done!\n***** Stats *****\n";
-                search.getProfiler().printStatisticsAsCSV();
-            }
-        }
-        profiler.done();
-    }
-
-    template <bool SORT_IBES = true, bool VERBOSE = true>
-    inline void run(const int numberOfThreads, const int pinMultiplier = 1) noexcept
-    {
-        tbb::global_control c(tbb::global_control::max_allowed_parallelism, numberOfThreads);
-        profiler.start();
-        collectAllIBEsOnLowestLevel();
-
-        if (SORT_IBES) {
-            profiler.startPhase();
-            std::sort(std::execution::par, IBEs.begin(), IBEs.end());
-            profiler.donePhase(PHASE_TREX_SORT_IBES);
-        }
-
-        // TODO can be optimised
-        profiler.startPhase();
-        std::vector<TransferSearch<TripBased::AggregateProfiler>> seekers;
-
-        seekers.reserve(numberOfThreads);
-
-        for (int i = 0; i < numberOfThreads; ++i)
-            seekers.emplace_back(data);
-
-        profiler.donePhase(PHASE_TREX_PREPROCESSING);
-
         const int numCores = numberOfCores();
-        omp_set_num_threads(numberOfThreads);
 
         // now for every level, we have an invariant: IBEs contains exactly the IBEs we need on this level
         for (uint8_t level(0); level < data.getNumberOfLevels(); ++level) {
@@ -176,7 +144,7 @@ public:
 
                     auto& values = IBEs[i];
                     seekers[threadId].run(TripId(values >> TRIPOFFSET), StopIndex(values & STOPINDEX_MASK), level);
-                    /* ++progress; */
+                    ++progress;
                 }
             }
 
@@ -197,7 +165,10 @@ public:
     }
 
     MLData& data;
-    TransferSearch<TripBased::AggregateProfiler> search;
+    const int numberOfThreads;
+    const int pinMultiplier;
+
+    std::vector<TransferSearch<TripBased::NoProfiler>> seekers;
     std::vector<PackedIBE> IBEs;
     AggregateProfiler profiler;
 };

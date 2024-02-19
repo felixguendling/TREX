@@ -17,7 +17,6 @@ typedef enum {
     PHASE_COLLECT_DEPTIMES,
     PHASE_GET_JOURNEYS,
     PHASE_ENQUEUE_COLLECTED_DEP_TIMES,
-    PHASE_TREX_PREPROCESSING,
     PHASE_TREX_COLLECT_IBES,
     PHASE_TREX_SORT_IBES,
     PHASE_TREX_FILTER_IBES,
@@ -34,7 +33,6 @@ constexpr const char* PhaseNames[] = {
     "Get Journeys",
     "Enqueue the collected departure times",
     "Collect departure times",
-    "T-REX Preprocessing",
     "Collect IBEs",
     "Sort IBEs",
     "Filter IBEs",
@@ -50,6 +48,7 @@ typedef enum {
     METRIC_COUNT_DISTANCE,
     NUMBER_OF_RUNS,
     DISCARDED_EDGE,
+    METRIC_TREX_COLLECTED_IBES,
     NUM_METRICS
 } Metric;
 
@@ -62,7 +61,8 @@ constexpr const char* MetricNames[] = {
     "Added journeys",
     "Distance / MaxSpeed",
     "Number of Runs",
-    "Number of discarded edges"
+    "Number of discarded edges",
+    "Number of collected IBEs"
 };
 
 class NoProfiler {

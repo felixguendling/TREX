@@ -1,3 +1,3 @@
-applyPartitionFile ../../Datasets/Swiss/MLTB/partition10_2.i5.txt 10 ../../Datasets/Swiss/MLTB/mltb.binary true
-customize ../../Datasets/Swiss/MLTB/mltb.binary ../../Datasets/Swiss/MLTB/mltb.binary
-showInfoOfMLTB ../../Datasets/Swiss/MLTB/mltb.binary
+applyPartitionFile ../../Datasets/italy_bus/MLTB/kahypar/compact_layout.graph.metis.part256.epsilon0.25.seed0.KaHyPar 8 ../../Datasets/italy_bus/MLTB/mltb.binary true
+customize ../../Datasets/italy_bus/MLTB/mltb.binary ../../Datasets/italy_bus/MLTB/mltb.binary
+showInfoOfMLTB ../../Datasets/italy_bus/MLTB/mltb.binary

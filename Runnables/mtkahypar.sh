@@ -1,0 +1,14 @@
+./../ExternalLibs/mt-kahypar/build/mt-kahypar/application/MtKaHyPar \
+    -h ~/Documents/Datasets/italy_bus/MLTB/compact_layout.graph.metis \
+    -k 256 \
+    -e 0.25 \
+    -o cut \
+    -m rb \
+    -t 6 \
+    --write-partition-file true \
+    --partition-output-folder /home/patrick/Documents/Datasets/italy_bus/MLTB/kahypar \
+    --input-file-format metis \
+    --instance-type=graph \
+    --preset-type highest_quality \
+    --i-r-flow-algo flow_cutter \
+    --i-r-refine-until-no-improvement true

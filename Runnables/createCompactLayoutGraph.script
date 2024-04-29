@@ -1,2 +1,2 @@
-raptorToMLTB ../../Datasets/Swiss/MLTB/raptor.binary ../../Datasets/Swiss/MLTB/mltb.binary 10
-createCompactLayoutGraph ../../Datasets/Swiss/MLTB/mltb.binary ../../Datasets/Swiss/MLTB/compact_layout.graph true
+raptorToMLTB ../../Datasets/italy_bus/raptor.binary ../../Datasets/italy_bus/MLTB/mltb.binary 8
+createCompactLayoutGraph ../../Datasets/italy_bus/MLTB/mltb.binary ../../Datasets/italy_bus/MLTB/compact_layout.graph true

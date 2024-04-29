@@ -7,6 +7,15 @@ using namespace Shell;
 
 int main(int argc, char** argv)
 {
+
+    std::cout << std::endl;
+    std::cout << "░        ░░       ░░░        ░░  ░░░░  ░\n";
+    std::cout << "▒▒▒▒  ▒▒▒▒▒  ▒▒▒▒  ▒▒  ▒▒▒▒▒▒▒▒▒  ▒▒  ▒▒\n";
+    std::cout << "▓▓▓▓  ▓▓▓▓▓       ▓▓▓      ▓▓▓▓▓▓    ▓▓▓\n";
+    std::cout << "████  █████  ███  ███  █████████  ██  ██\n";
+    std::cout << "████  █████  ████  ██        ██  ████  █\n";
+    std::cout << std::endl;
+
     CommandLineParser clp(argc, argv);
     pinThreadToCoreId(clp.value<int>("core", 1));
     checkAsserts();
@@ -18,6 +27,7 @@ int main(int argc, char** argv)
     new Customization(shell);
     new ShowInfoOfMLTB(shell);
     new WriteMLTBToCSV(shell);
+    new EventDistributionOverTime(shell);
     new RunMLQuery(shell);
     new RunTransitiveProfileTripBasedQueries(shell);
 

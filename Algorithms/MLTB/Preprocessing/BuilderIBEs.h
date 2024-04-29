@@ -56,17 +56,23 @@ public:
         IBEs.reserve(data.numberOfStopEvents());
 
         // TODO to only allow 'time range based' IBE
-        /* int minTime = 10 * 60 * 60; */
-        /* int maxTime = 11 * 60 * 60; */
+        /* int minTime = 7 * 60 * 60; */
+        /* int maxTime = 8 * 60 * 60; */
 
         auto inSameCell = [&](auto a, auto b) {
             return (data.getCellIdOfStop(a) == data.getCellIdOfStop(b));
         };
 
-        auto inTimeRange = [&](auto trip, auto stopIndex) {
+        auto tripTooEarly = [&]([[maybe_unused]] auto trip, [[maybe_unused]] auto stopIndex) {
             /* auto& event = data.getStopEvent(trip, stopIndex); */
-            /* return minTime <= event.departureTime && event.departureTime <= maxTime; */
-            return true;
+            /* return minTime > event.departureTime; */
+            return false;
+        };
+
+        auto tripTooLate = [&]([[maybe_unused]] auto trip, [[maybe_unused]] auto stopIndex) {
+            /* auto& event = data.getStopEvent(trip, stopIndex); */
+            /* return event.departureTime > maxTime; */
+            return false;
         };
 
         for (StopId stop(0); stop < data.numberOfStops(); ++stop) {
@@ -82,8 +88,10 @@ public:
                 if (!inSameCell(stop, data.raptorData.stopOfRouteSegment(neighbourSeg))) {
                     // add all stop events of this route
                     for (TripId trip : data.tripsOfRoute(route.routeId)) {
-                        if (!inTimeRange(trip, StopIndex(route.stopIndex - 1)))
+                        if (tripTooEarly(trip, StopIndex(route.stopIndex - 1)))
                             continue;
+                        if (tripTooLate(trip, StopIndex(route.stopIndex - 1)))
+                            break;
                         profiler.countMetric(METRIC_TREX_COLLECTED_IBES);
                         IBEs.push_back((trip << TRIPOFFSET) | (route.stopIndex - 1));
                     }

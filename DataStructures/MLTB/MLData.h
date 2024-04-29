@@ -60,6 +60,11 @@ public:
             std::cerr << "Unable to open the file: " << fileName << std::endl;
         }
 
+        applyGlobalIDs(globalIds);
+    }
+
+    inline void applyGlobalIDs(std::vector<uint64_t>& globalIds) noexcept
+    {
         std::vector<Vertex> stopToVertexMapping(numberOfStops(), noVertex);
 
         for (Vertex v : layoutGraph.vertices()) {

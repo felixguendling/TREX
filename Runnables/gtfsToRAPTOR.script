@@ -1,7 +1,7 @@
-parseGTFS ../../Datasets/Europe/GTFS/ ../../Datasets/Europe/gtfs.binary
-gtfsToIntermediate ../../Datasets/Europe/gtfs.binary 20220315 20220316 true false ../../Datasets/Europe/intermediate.binary
-reduceGraph ../../Datasets/Europe/intermediate.binary ../../Datasets/Europe/intermediate.binary
-reduceToMaximumConnectedComponent ../../Datasets/Europe/intermediate.binary ../../Datasets/Europe/intermediate.binary
-reduceGraph ../../Datasets/Europe/intermediate.binary ../../Datasets/Europe/intermediate.binary
-makeOneHopTransfers ../../Datasets/Europe/intermediate.binary 86400 ../../Datasets/Europe/intermediate.binary true
-intermediateToRAPTOR ../../Datasets/Europe/intermediate.binary ../../Datasets/Europe/raptor.binary
+parseGTFS ../../Datasets/GTFS/italy_bus/ ../../Datasets/italy_bus/gtfs.binary
+gtfsToIntermediate ../../Datasets/italy_bus/gtfs.binary 20220315 20220316 true false ../../Datasets/italy_bus/intermediate.binary
+reduceGraph ../../Datasets/italy_bus/intermediate.binary ../../Datasets/italy_bus/intermediate.binary
+reduceToMaximumConnectedComponent ../../Datasets/italy_bus/intermediate.binary ../../Datasets/italy_bus/intermediate.binary
+reduceGraph ../../Datasets/italy_bus/intermediate.binary ../../Datasets/italy_bus/intermediate.binary
+makeOneHopTransfers ../../Datasets/italy_bus/intermediate.binary 86400 ../../Datasets/italy_bus/intermediate.binary true
+intermediateToRAPTOR ../../Datasets/italy_bus/intermediate.binary ../../Datasets/italy_bus/raptor.binary

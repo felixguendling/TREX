@@ -7,7 +7,6 @@
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../TripBased/Query/Profiler.h"
 #include "../../TripBased/Query/ReachedIndex.h"
-/* #include "../../TripBased/Query/TimestampedReachedIndex.h" */
 
 namespace TripBased {
 
@@ -104,8 +103,6 @@ public:
         , sourceDepartureTime(never)
         , transferPerLevel(data.getNumberOfLevels() + 1, 0)
         , numQueries(0)
-    /* , sourceTargetSIMD(_mm_set1_epi16(0)) */
-    /* , irrelevantEvents(0) */
     {
         reverseTransferGraph.revert();
 
@@ -114,7 +111,6 @@ public:
             edgeLabels[edge].firstEvent = data.firstStopEventOfTrip[edgeLabels[edge].trip];
             edgeLabels[edge].stopEvent = StopEventId(data.stopEventGraph.get(ToVertex, edge) + 1) - edgeLabels[edge].firstEvent;
             edgeLabels[edge].localLevel = data.stopEventGraph.get(LocalLevel, edge);
-            /* edgeLabels[edge].localLevel = data.stopEventGraph.get(LocalLevel, edge); */
             edgeLabels[edge].cellId = (uint16_t)data.getCellIdOfStop(data.getStopOfStopEvent(StopEventId(from)));
         }
 
@@ -150,7 +146,6 @@ public:
         targetStop = target;
         sourceCellId = data.getCellIdOfStop(sourceStop);
         targetCellId = data.getCellIdOfStop(targetStop);
-        /* sourceTargetSIMD = _mm_set_epi16(targetCellId, sourceCellId, targetCellId, sourceCellId, targetCellId, sourceCellId, targetCellId, sourceCellId); */
         sourceDepartureTime = departureTime;
 
         computeInitialAndFinalTransfers();
@@ -378,17 +373,11 @@ private:
         if (reachedIndex.alreadyReached(label.trip, label.stopEvent)) [[likely]]
             return;
 
-        /* if (std::min((label.cellId ^ sourceCellId), (label.cellId ^ targetCellId)) >= (1 << label.localLevel)) [[likely]] { */
-        /* __m128i xor_result = _mm_xor_si128(_mm_set1_epi16(label.cellId), sourceTargetSIMD); */
-        /* if (_mm_movemask_epi8(_mm_cmplt_epi16(xor_result, _mm_set1_epi16((1<<label.localLevel)))) == 0) { */
         if ((label.cellId ^ sourceCellId) >= (1 << label.localLevel) && (label.cellId ^ targetCellId) >= (1 << label.localLevel)) [[likely]] {
             profiler.countMetric(DISCARDED_EDGE);
             reachedIndex.update(label.trip, StopIndex(label.stopEvent));
             return;
         }
-
-        /* AssertMsg(lcl < transferPerLevel.size(), "LCL: " << (int) lcl << "\nlabel.cellId: " << label.cellId << "\nsourceCellId: " << sourceCellId << "\ntargetCellId: " << targetCellId << "\n"); */
-        /* ++transferPerLevel[lcl]; */
 
         queue[queueSize] = TripLabel(label.stopEvent + label.firstEvent, StopEventId(label.firstEvent + reachedIndex(label.trip)), parent);
         ++queueSize;
@@ -494,7 +483,6 @@ private:
     std::vector<EdgeRange> edgeRanges;
     size_t queueSize;
     ReachedIndex reachedIndex;
-    /* TimestampedReachedIndex reachedIndex; */
 
     std::vector<TargetLabel> targetLabels;
     int minArrivalTime;
@@ -509,11 +497,6 @@ private:
     Profiler profiler;
     std::vector<uint64_t> transferPerLevel;
     size_t numQueries;
-
-    /* __m128i sourceTargetSIMD; */
-
-    // STATS
-    /* size_t irrelevantEvents; */
 };
 
 } // namespace TripBased

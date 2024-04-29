@@ -4,3 +4,6 @@
 [submodule "ExternalLibs/KaHIP"]
 	path = ExternalLibs/KaHIP
 	url = https://github.com/KaHIP/KaHIP.git
+[submodule "ExternalLibs/mt-kahypar"]
+	path = ExternalLibs/mt-kahypar
+	url = https://github.com/kahypar/mt-kahypar.git

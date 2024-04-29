@@ -129,6 +129,7 @@ public:
         data.createCompactLayoutGraph();
         data.writeLayoutGraphToMETIS(metisFile, writeGRAPHML);
         data.writeLayoutGraphToHypMETIS(metisFile);
+
         data.serialize(mltbFile);
     }
 };
@@ -282,7 +283,7 @@ public:
         }
         algorithm.getProfiler().printStatistics();
         std::cout << "Avg. Journeys: " << String::prettyDouble(numberOfJourneys / (float)queries.size()) << std::endl;
-        algorithm.showTransferLevels();
+        /* algorithm.showTransferLevels(); */
 
         if (eval) {
             size_t wrongQueries = 0;
@@ -367,5 +368,44 @@ public:
         data.writePartitionToCSV(output + "partition.csv");
 
         Graph::toEdgeListCSV(output + "transfer", data.stopEventGraph);
+    }
+};
+
+class EventDistributionOverTime : public ParameterizedCommand {
+public:
+    EventDistributionOverTime(BasicShell& shell)
+        : ParameterizedCommand(shell, "eventDistribution", "Shows the distribution of events over time. Each bucket contains the number of events in this bucket.")
+    {
+        addParameter("Input file (MLTB Data)");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string mltb = getParameter("Input file (MLTB Data)");
+        const int numBuckets = 24;
+
+        TripBased::MLData data(mltb);
+        data.printInfo();
+
+        std::vector<size_t> buckets(numBuckets, 0);
+
+        size_t offset = 60 * 60;
+
+        for (size_t eventId(0); eventId < data.numberOfStopEvents(); ++eventId) {
+            auto& depTime = data.departureTime(StopEventId(eventId));
+
+            if ((24 * 60 * 60) <= depTime)
+                continue;
+
+            // this is due to our implicit representation
+            if (depTime < 0) {
+                depTime = 0;
+            }
+            buckets[(int)depTime / offset]++;
+        }
+
+        for (int i(0); i < numBuckets; ++i) {
+            std::cout << i << "," << buckets[i] << std::endl;
+        }
     }
 };

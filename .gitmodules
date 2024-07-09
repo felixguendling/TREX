@@ -7,3 +7,6 @@
 [submodule "ExternalLibs/mt-kahypar"]
 	path = ExternalLibs/mt-kahypar
 	url = https://github.com/kahypar/mt-kahypar.git
+[submodule "ExternalLibs/ips4o"]
+	path = ExternalLibs/ips4o
+	url = https://github.com/SaschaWitt/ips4o.git

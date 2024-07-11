@@ -33,8 +33,8 @@ public:
         std::vector<uint8_t> zeroLevels(stopEventGraph.numEdges(), 0);
         stopEventGraph.get(LocalLevel).swap(zeroLevels);
 
-        std::vector<uint8_t> initHops(stopEventGraph.numEdges(), 1);
-        stopEventGraph.get(Hop).swap(initHops);
+        /* std::vector<uint8_t> initHops(stopEventGraph.numEdges(), 1); */
+        /* stopEventGraph.get(Hop).swap(initHops); */
     }
 
     inline void readPartitionFile(const std::string& fileName)
@@ -108,18 +108,17 @@ public:
 
         // size contains the original vertex
         // TODO remove size attribute
-        DynamicGraphWithWeightsAndCoordinatesAndSize dynamicLayoutGraph;
+        DynamicGraphWithWeightsAndCoordinates dynamicLayoutGraph;
         dynamicLayoutGraph.clear();
         dynamicLayoutGraph.addVertices(numberOfStops());
 
         for (Vertex vertex : dynamicLayoutGraph.vertices()) {
             dynamicLayoutGraph.set(Weight, vertex, 0);
-            dynamicLayoutGraph.set(Size, vertex, vertex);
+            /* dynamicLayoutGraph.set(Size, vertex, vertex); */
             if (unionFind(vertex) == (int)vertex) {
                 dynamicLayoutGraph.set(Weight, vertex, weightOfNodes[vertex]);
             }
-            dynamicLayoutGraph.set(Coordinates, vertex,
-                raptorData.stopData[vertex].coordinates);
+            dynamicLayoutGraph.set(Coordinates, vertex, raptorData.stopData[vertex].coordinates);
         }
 
         Progress progress(raptorData.numberOfRoutes() + raptorData.transferGraph.numEdges());
@@ -418,7 +417,7 @@ public:
 public:
     int numberOfLevels;
     UnionFind unionFind;
-    StaticGraphWithWeightsAndCoordinatesAndSize layoutGraph;
+    StaticGraphWithWeightsAndCoordinates layoutGraph;
 
     // we also keep track of the highest locallevel of an event
     std::vector<uint8_t> localLevelOfEvent;

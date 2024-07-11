@@ -83,11 +83,12 @@ using WithTravelTimeAndLocalLevelAndFromVertex = List<Attribute<TravelTime, int>
     Attribute<FromVertex, Vertex>>;
 
 using WithLocalLevelAndHop = List<Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>>;
-using WithTravelTimeAndLocalLevelAndHop = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>,
-    Attribute<Hop, uint8_t>>;
+using WithTravelTimeAndLocalLevel = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>>;
+using WithTravelTimeAndLocalLevelAndHop = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>>;
 using WithTravelTimeAndLocalLevelAndHopAndFromVertex = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>,
     Attribute<Hop, uint8_t>, Attribute<FromVertex, Vertex>>;
 
+using TransferGraphWithLocalLevel = StaticGraph<NoVertexAttributes, WithTravelTimeAndLocalLevel>;
 using TransferGraphWithLocalLevelAndHop = StaticGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHop>;
 using DynamicTransferGraphWithLocalLevelAndHop = DynamicGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHop>;
 using DynamicTransferGraphWithLocalLevelAndHopAndFromVertex = DynamicGraph<NoVertexAttributes,

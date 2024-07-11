@@ -213,7 +213,7 @@ public:
 
         for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
             ++numLocalTransfers[data.stopEventGraph.get(LocalLevel, edge)];
-            numHopsPerLevel[data.stopEventGraph.get(LocalLevel, edge)] += data.stopEventGraph.get(Hop, edge);
+            /* numHopsPerLevel[data.stopEventGraph.get(LocalLevel, edge)] += data.stopEventGraph.get(Hop, edge); */
         }
 
         std::cout << "** Number of Local Transfers **" << std::endl;
@@ -225,13 +225,13 @@ public:
                       << " %" << std::endl;
         }
 
-        std::cout << "** Avg # of hops per Level **" << std::endl;
+        /*         std::cout << "** Avg # of hops per Level **" << std::endl; */
 
-        for (size_t level(0); level < numLocalTransfers.size(); ++level) {
-            std::cout << "Level " << level << ":      "
-                      << String::prettyDouble(numHopsPerLevel[level] / (double)numLocalTransfers[level])
-                      << std::endl;
-        }
+        /*         for (size_t level(0); level < numLocalTransfers.size(); ++level) { */
+        /*             std::cout << "Level " << level << ":      " */
+        /*                       << String::prettyDouble(numHopsPerLevel[level] / (double)numLocalTransfers[level]) */
+        /*                       << std::endl; */
+        /*         } */
 
         if (writeToCSV)
             data.writeLocalLevelOfTripsToCSV(fileName);

@@ -1,6 +1,6 @@
 ./../ExternalLibs/mt-kahypar/build/mt-kahypar/application/MtKaHyPar \
     -h ~/Documents/Datasets/Germany/MLTB/compact_layout.graph.metis \
-    -k 1024\
+    -k 1024 \
     -e 0.05 \
     -o cut \
     -m rb \

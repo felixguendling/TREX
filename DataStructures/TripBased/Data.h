@@ -449,7 +449,7 @@ public:
     std::vector<TripId> tripOfStopEvent;
     std::vector<StopIndex> indexOfStopEvent;
 
-    TransferGraphWithLocalLevelAndHop stopEventGraph;
+    TransferGraphWithLocalLevel stopEventGraph;
     DynamicEventGraph dynamicEventGraph;
 
     std::vector<ArrivalEvent> arrivalEvents;

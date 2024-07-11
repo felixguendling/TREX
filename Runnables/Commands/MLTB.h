@@ -28,418 +28,428 @@ using namespace Shell;
 
 class ApplyPartitionFile : public ParameterizedCommand {
 public:
-  ApplyPartitionFile(BasicShell &shell)
-      : ParameterizedCommand(
+    ApplyPartitionFile(BasicShell& shell)
+        : ParameterizedCommand(
             shell, "applyPartitionFile",
             "Applies the given partition to the MLTB data. Also give the "
-            "number of levels and the number of cells per level!") {
-    addParameter("Input file (Partition File)");
-    addParameter("Input file (Number of levels)");
-    addParameter("Input file (MLTB Data)");
-  }
+            "number of levels and the number of cells per level!")
+    {
+        addParameter("Input file (Partition File)");
+        addParameter("Input file (Number of levels)");
+        addParameter("Input file (MLTB Data)");
+    }
 
-  virtual void execute() noexcept {
-    const std::string raptorFile = getParameter("Input file (MLTB Data)");
-    const int numberOfLevels =
-        getParameter<int>("Input file (Number of levels)");
-    const std::string partitionFile =
-        getParameter("Input file (Partition File)");
+    virtual void execute() noexcept
+    {
+        const std::string raptorFile = getParameter("Input file (MLTB Data)");
+        const int numberOfLevels = getParameter<int>("Input file (Number of levels)");
+        const std::string partitionFile = getParameter("Input file (Partition File)");
 
-    TripBased::MLData data(raptorFile);
-    data.setNumberOfLevels(numberOfLevels);
-    data.printInfo();
+        TripBased::MLData data(raptorFile);
+        data.setNumberOfLevels(numberOfLevels);
+        data.printInfo();
 
-    data.createCompactLayoutGraph();
-    data.readPartitionFile(partitionFile);
-    data.serialize(raptorFile);
-  }
+        data.createCompactLayoutGraph();
+        data.readPartitionFile(partitionFile);
+        data.serialize(raptorFile);
+    }
 };
 
 class RAPTORToMLTB : public ParameterizedCommand {
 public:
-  RAPTORToMLTB(BasicShell &shell)
-      : ParameterizedCommand(shell, "raptorToMLTB",
-                             "Reads RAPTOR Data, Number of Levels and Number "
-                             "of Cells per Level and saves it to a MLTB Data") {
-    addParameter("Input file (RAPTOR Data)");
-    addParameter("Output file (MLTB Data)");
-    addParameter("Number of levels");
-    addParameter("Route-based pruning?", "true");
-    addParameter("Number of threads", "max");
-    addParameter("Pin multiplier", "1");
-  }
-
-  virtual void execute() noexcept {
-    const std::string raptorFile = getParameter("Input file (RAPTOR Data)");
-    const std::string mltbFile = getParameter("Output file (MLTB Data)");
-    const int numLevels = getParameter<int>("Number of levels");
-    const bool routeBasedPruning = getParameter<bool>("Route-based pruning?");
-    const int numberOfThreads = getNumberOfThreads();
-    const int pinMultiplier = getParameter<int>("Pin multiplier");
-
-    RAPTOR::Data raptor(raptorFile);
-    TripBased::MLData data(raptor, numLevels);
-
-    if (numberOfThreads == 0) {
-      if (routeBasedPruning) {
-        TripBased::ComputeStopEventGraphRouteBased(data);
-      } else {
-        TripBased::ComputeStopEventGraph(data);
-      }
-    } else {
-      if (routeBasedPruning) {
-        TripBased::ComputeStopEventGraphRouteBased(data, numberOfThreads,
-                                                   pinMultiplier);
-      } else {
-        TripBased::ComputeStopEventGraph(data, numberOfThreads, pinMultiplier);
-      }
+    RAPTORToMLTB(BasicShell& shell)
+        : ParameterizedCommand(shell, "raptorToMLTB",
+            "Reads RAPTOR Data, Number of Levels and Number "
+            "of Cells per Level and saves it to a MLTB Data")
+    {
+        addParameter("Input file (RAPTOR Data)");
+        addParameter("Output file (MLTB Data)");
+        addParameter("Number of levels");
+        addParameter("Route-based pruning?", "true");
+        addParameter("Number of threads", "max");
+        addParameter("Pin multiplier", "1");
     }
-    data.addInformationToStopEventGraph();
-    /* data.convertStopEventGraphToDynamicEventGraph(); */
-    data.printInfo();
-    data.serialize(mltbFile);
-  }
+
+    virtual void execute() noexcept
+    {
+        const std::string raptorFile = getParameter("Input file (RAPTOR Data)");
+        const std::string mltbFile = getParameter("Output file (MLTB Data)");
+        const int numLevels = getParameter<int>("Number of levels");
+        const bool routeBasedPruning = getParameter<bool>("Route-based pruning?");
+        const int numberOfThreads = getNumberOfThreads();
+        const int pinMultiplier = getParameter<int>("Pin multiplier");
+
+        RAPTOR::Data raptor(raptorFile);
+        TripBased::MLData data(raptor, numLevels);
+
+        if (numberOfThreads == 0) {
+            if (routeBasedPruning) {
+                TripBased::ComputeStopEventGraphRouteBased(data);
+            } else {
+                TripBased::ComputeStopEventGraph(data);
+            }
+        } else {
+            if (routeBasedPruning) {
+                TripBased::ComputeStopEventGraphRouteBased(data, numberOfThreads,
+                    pinMultiplier);
+            } else {
+                TripBased::ComputeStopEventGraph(data, numberOfThreads, pinMultiplier);
+            }
+        }
+        data.addInformationToStopEventGraph();
+        /* data.convertStopEventGraphToDynamicEventGraph(); */
+        data.printInfo();
+        data.serialize(mltbFile);
+    }
 
 private:
-  inline int getNumberOfThreads() const noexcept {
-    if (getParameter("Number of threads") == "max") {
-      return numberOfCores();
-    } else {
-      return getParameter<int>("Number of threads");
+    inline int getNumberOfThreads() const noexcept
+    {
+        if (getParameter("Number of threads") == "max") {
+            return numberOfCores();
+        } else {
+            return getParameter<int>("Number of threads");
+        }
     }
-  }
 };
 
 class CreateCompactLayoutGraph : public ParameterizedCommand {
 public:
-  CreateCompactLayoutGraph(BasicShell &shell)
-      : ParameterizedCommand(
+    CreateCompactLayoutGraph(BasicShell& shell)
+        : ParameterizedCommand(
             shell, "createCompactLayoutGraph",
             "Creates the compact layout graph of the given MLTB data, it "
             "writes the Compact Layout Graph into METIS Format. If wanted, "
-            "write a GRAPHML file.") {
-    addParameter("Input file (MLTB Data)");
-    addParameter("Output file (METIS File)");
-    addParameter("Write GRAPHML?", "false");
-  }
+            "write a GRAPHML file.")
+    {
+        addParameter("Input file (MLTB Data)");
+        addParameter("Output file (METIS File)");
+        addParameter("Write GRAPHML?", "false");
+    }
 
-  virtual void execute() noexcept {
-    const std::string mltbFile = getParameter("Input file (MLTB Data)");
-    const std::string metisFile = getParameter("Output file (METIS File)");
-    const bool writeGRAPHML = getParameter<bool>("Write GRAPHML?");
+    virtual void execute() noexcept
+    {
+        const std::string mltbFile = getParameter("Input file (MLTB Data)");
+        const std::string metisFile = getParameter("Output file (METIS File)");
+        const bool writeGRAPHML = getParameter<bool>("Write GRAPHML?");
 
-    TripBased::MLData data(mltbFile);
-    data.printInfo();
+        TripBased::MLData data(mltbFile);
+        data.printInfo();
 
-    data.createCompactLayoutGraph();
-    data.writeLayoutGraphToMETIS(metisFile, writeGRAPHML);
-    data.writeLayoutGraphToHypMETIS(metisFile);
+        data.createCompactLayoutGraph();
+        data.writeLayoutGraphToMETIS(metisFile, writeGRAPHML);
 
-    data.serialize(mltbFile);
-  }
+        data.serialize(mltbFile);
+    }
 };
 
 class Customization : public ParameterizedCommand {
 public:
-  Customization(BasicShell &shell)
-      : ParameterizedCommand(shell, "customize",
-                             "Computes the customization of MLTB") {
-    addParameter("Input file (MLTB Data)");
-    addParameter("Output file (MLTB Data)");
-    /* addParameter("Verbose?", "true"); */
-    addParameter("Number of threads", "max");
-    addParameter("Pin multiplier", "1");
-  }
+    Customization(BasicShell& shell)
+        : ParameterizedCommand(shell, "customize",
+            "Computes the customization of MLTB")
+    {
+        addParameter("Input file (MLTB Data)");
+        addParameter("Output file (MLTB Data)");
+        /* addParameter("Verbose?", "true"); */
+        addParameter("Number of threads", "max");
+        addParameter("Pin multiplier", "1");
+    }
 
-  virtual void execute() noexcept {
-    const std::string mltbFile = getParameter("Input file (MLTB Data)");
-    const std::string output = getParameter("Output file (MLTB Data)");
-    /* const bool verbose = getParameter<bool>("Verbose?"); */
-    const int numberOfThreads = getNumberOfThreads();
-    const int pinMultiplier = getParameter<int>("Pin multiplier");
+    virtual void execute() noexcept
+    {
+        const std::string mltbFile = getParameter("Input file (MLTB Data)");
+        const std::string output = getParameter("Output file (MLTB Data)");
+        /* const bool verbose = getParameter<bool>("Verbose?"); */
+        const int numberOfThreads = getNumberOfThreads();
+        const int pinMultiplier = getParameter<int>("Pin multiplier");
 
-    TripBased::MLData data(mltbFile);
-    // reset
-    data.addInformationToStopEventGraph();
-    data.printInfo();
+        TripBased::MLData data(mltbFile);
+        // reset
+        data.addInformationToStopEventGraph();
+        data.printInfo();
 
-    TripBased::Builder bobTheBuilder(data, numberOfThreads, pinMultiplier);
+        TripBased::Builder bobTheBuilder(data, numberOfThreads, pinMultiplier);
 
-    bobTheBuilder.run();
+        bobTheBuilder.run();
 
-    std::cout << "******* Stats *******\n";
-    bobTheBuilder.getProfiler().printStatistics();
-    data.serialize(output);
-  }
+        std::cout << "******* Stats *******\n";
+        bobTheBuilder.getProfiler().printStatistics();
+        data.serialize(output);
+    }
 
 private:
-  inline int getNumberOfThreads() const noexcept {
-    if (getParameter("Number of threads") == "max") {
-      return numberOfCores();
-    } else {
-      return getParameter<int>("Number of threads");
+    inline int getNumberOfThreads() const noexcept
+    {
+        if (getParameter("Number of threads") == "max") {
+            return numberOfCores();
+        } else {
+            return getParameter<int>("Number of threads");
+        }
     }
-  }
 };
 
 class ShowInfoOfMLTB : public ParameterizedCommand {
 public:
-  ShowInfoOfMLTB(BasicShell &shell)
-      : ParameterizedCommand(shell, "showInfoOfMLTB",
-                             "Shows Information about the given MLTB file.") {
-    addParameter("Input file (MLTB Data)");
-    addParameter("Write to csv?", "false");
-    addParameter("Output file (csv)", "false");
-  }
-
-  virtual void execute() noexcept {
-    const std::string tripFile = getParameter("Input file (MLTB Data)");
-    const bool writeToCSV = getParameter<bool>("Write to csv?");
-    const std::string fileName = getParameter("Output file (csv)");
-    TripBased::MLData data(tripFile);
-    data.printInfo();
-
-    std::vector<size_t> numLocalTransfers(data.getNumberOfLevels() + 1, 0);
-    std::vector<size_t> numHopsPerLevel(data.getNumberOfLevels() + 1, 0);
-
-    for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
-      ++numLocalTransfers[data.stopEventGraph.get(LocalLevel, edge)];
-      numHopsPerLevel[data.stopEventGraph.get(LocalLevel, edge)] +=
-          data.stopEventGraph.get(Hop, edge);
+    ShowInfoOfMLTB(BasicShell& shell)
+        : ParameterizedCommand(shell, "showInfoOfMLTB",
+            "Shows Information about the given MLTB file.")
+    {
+        addParameter("Input file (MLTB Data)");
+        addParameter("Write to csv?", "false");
+        addParameter("Output file (csv)", "false");
     }
 
-    std::cout << "** Number of Local Transfers **" << std::endl;
+    virtual void execute() noexcept
+    {
+        const std::string tripFile = getParameter("Input file (MLTB Data)");
+        const bool writeToCSV = getParameter<bool>("Write to csv?");
+        const std::string fileName = getParameter("Output file (csv)");
+        TripBased::MLData data(tripFile);
+        data.printInfo();
 
-    for (size_t level(0); level < numLocalTransfers.size(); ++level) {
-      std::cout << "Level " << level << ":       "
-                << String::prettyInt(numLocalTransfers[level]) << "    "
-                << String::prettyDouble((100.0 * numLocalTransfers[level] /
-                                         data.stopEventGraph.numEdges()))
-                << " %" << std::endl;
+        std::vector<size_t> numLocalTransfers(data.getNumberOfLevels() + 1, 0);
+        std::vector<size_t> numHopsPerLevel(data.getNumberOfLevels() + 1, 0);
+
+        for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
+            ++numLocalTransfers[data.stopEventGraph.get(LocalLevel, edge)];
+            numHopsPerLevel[data.stopEventGraph.get(LocalLevel, edge)] += data.stopEventGraph.get(Hop, edge);
+        }
+
+        std::cout << "** Number of Local Transfers **" << std::endl;
+
+        for (size_t level(0); level < numLocalTransfers.size(); ++level) {
+            std::cout << "Level " << level << ":       "
+                      << String::prettyInt(numLocalTransfers[level]) << "    "
+                      << String::prettyDouble((100.0 * numLocalTransfers[level] / data.stopEventGraph.numEdges()))
+                      << " %" << std::endl;
+        }
+
+        std::cout << "** Avg # of hops per Level **" << std::endl;
+
+        for (size_t level(0); level < numLocalTransfers.size(); ++level) {
+            std::cout << "Level " << level << ":      "
+                      << String::prettyDouble(numHopsPerLevel[level] / (double)numLocalTransfers[level])
+                      << std::endl;
+        }
+
+        if (writeToCSV)
+            data.writeLocalLevelOfTripsToCSV(fileName);
     }
-
-    std::cout << "** Avg # of hops per Level **" << std::endl;
-
-    for (size_t level(0); level < numLocalTransfers.size(); ++level) {
-      std::cout << "Level " << level << ":      "
-                << String::prettyDouble(numHopsPerLevel[level] /
-                                        (double)numLocalTransfers[level])
-                << std::endl;
-    }
-
-    if (writeToCSV)
-      data.writeLocalLevelOfTripsToCSV(fileName);
-  }
 };
 
 class RunMLQuery : public ParameterizedCommand {
 public:
-  RunMLQuery(BasicShell &shell)
-      : ParameterizedCommand(
+    RunMLQuery(BasicShell& shell)
+        : ParameterizedCommand(
             shell, "runMLTBQueries",
-            "Runs the given number of random MultiLevel TB queries.") {
-    addParameter("Input file (MLTB Data)");
-    addParameter("Number of queries");
-    addParameter("Compare to TB?");
-    addParameter("TB Input for eval");
-  }
-
-  virtual void execute() noexcept {
-    const std::string tripFile = getParameter("Input file (MLTB Data)");
-    const bool eval = getParameter<bool>("Compare to TB?");
-    const std::string evalFile = getParameter("TB Input for eval");
-
-    TripBased::MLData data(tripFile);
-    data.printInfo();
-    TripBased::MLQuery<TripBased::AggregateProfiler> algorithm(data);
-
-    const size_t n = getParameter<size_t>("Number of queries");
-    const std::vector<StopQuery> queries =
-        generateRandomStopQueries(data.numberOfStops(), n);
-
-    std::vector<std::vector<std::pair<int, int>>> result;
-    result.assign(n, {});
-
-    size_t numberOfJourneys = 0;
-
-    size_t i(0);
-    for (const StopQuery &query : queries) {
-      algorithm.run(query.source, query.departureTime, query.target);
-      numberOfJourneys += algorithm.getJourneys().size();
-      result[i].reserve(algorithm.getArrivals().size());
-
-      /*             std::cout << "MLTB Query" << std::endl; */
-      /*             for (auto& journey : algorithm.getJourneys()) { */
-      /*                 std::cout << query << std::endl; */
-      /*                 for (auto& leg : journey) { */
-      /*                     std::cout << (int)leg.from << " -> " << (int)leg.to
-       * << " @ " << leg.departureTime << " -> " << leg.arrivalTime <<
-       * (leg.usesRoute ? ", route: " : ", transfer: ") << (int)leg.routeId; */
-      /*                     if (!leg.usesRoute && Edge(leg.routeId) != noEdge)
-       * { */
-      /*                         uint8_t lcl = std::min( */
-      /*                             data.getLowestCommonLevel(StopId(leg.from),
-       * query.source), */
-      /*                             data.getLowestCommonLevel(StopId(leg.from),
-       * query.target)); */
-      /*                         std::cout << " LocalLevel: " <<
-       * (int)data.stopEventGraph.get(LocalLevel, Edge(leg.routeId)) << " and
-       * lcl: " << (int)lcl; */
-      /*                     } */
-
-      /*                     std::cout << std::endl; */
-      /*                 } */
-      /*                 std::cout << std::endl; */
-      /*             } */
-
-      for (auto &arr : algorithm.getArrivals()) {
-        result[i].push_back(std::make_pair(arr.numberOfTrips, arr.arrivalTime));
-      }
-
-      i += 1;
+            "Runs the given number of random MultiLevel TB queries.")
+    {
+        addParameter("Input file (MLTB Data)");
+        addParameter("Number of queries");
+        addParameter("Compare to TB?");
+        addParameter("TB Input for eval");
     }
-    algorithm.getProfiler().printStatistics();
-    std::cout << "Avg. Journeys: "
-              << String::prettyDouble(numberOfJourneys / (float)queries.size())
-              << std::endl;
-    /* algorithm.showTransferLevels(); */
 
-    if (eval) {
-      size_t wrongQueries = 0;
-      std::cout << "Evaluation against TB:" << std::endl;
-      TripBased::Data trip(evalFile);
-      trip.printInfo();
-      TripBased::TransitiveQuery<TripBased::AggregateProfiler> tripAlgorithm(
-          trip);
-      std::vector<std::vector<std::pair<int, int>>> tripResult;
-      tripResult.assign(n, {});
+    virtual void execute() noexcept
+    {
+        const std::string tripFile = getParameter("Input file (MLTB Data)");
+        const bool eval = getParameter<bool>("Compare to TB?");
+        const std::string evalFile = getParameter("TB Input for eval");
 
-      numberOfJourneys = 0;
-      i = 0;
-      for (const StopQuery &query : queries) {
-        tripAlgorithm.run(query.source, query.departureTime, query.target);
-        numberOfJourneys += tripAlgorithm.getJourneys().size();
+        TripBased::MLData data(tripFile);
+        data.printInfo();
+        TripBased::MLQuery<TripBased::AggregateProfiler> algorithm(data);
 
-        /*                 std::cout << "TB Query" << std::endl; */
-        /*                 for (auto& journey : tripAlgorithm.getJourneys()) {
-         */
-        /*                     std::cout << query << std::endl; */
-        /*                     for (auto& leg : journey) { */
-        /*                         std::cout << (int)leg.from << " -> " <<
-         * (int)leg.to << " @ " << leg.departureTime << " -> " <<
-         * leg.arrivalTime << (leg.usesRoute ? ", route: " : ", transfer: ") <<
-         * (int)leg.routeId; */
-        /*                         if (!leg.usesRoute && Edge(leg.routeId) !=
-         * noEdge) { */
-        /*                             uint8_t lcl = std::min( */
-        /*                                 data.getLowestCommonLevel(StopId(leg.from),
-         * query.source), */
-        /*                                 data.getLowestCommonLevel(StopId(leg.from),
-         * query.target)); */
-        /*                             std::cout << " LocalLevel: " <<
-         * (int)data.stopEventGraph.get(LocalLevel, Edge(leg.routeId)) << " and
-         * lcl: " << (int)lcl; */
-        /*                         } */
+        const size_t n = getParameter<size_t>("Number of queries");
+        const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);
 
-        /*                         std::cout << std::endl; */
-        /*                     } */
-        /*                     std::cout << std::endl; */
-        /*                 } */
+        std::vector<std::vector<std::pair<int, int>>> result;
+        result.assign(n, {});
 
-        tripResult[i].reserve(tripAlgorithm.getArrivals().size());
+        size_t numberOfJourneys = 0;
 
-        for (auto &arr : tripAlgorithm.getArrivals()) {
-          tripResult[i].push_back(
-              std::make_pair(arr.numberOfTrips, arr.arrivalTime));
+        size_t i(0);
+        for (const StopQuery& query : queries) {
+            algorithm.run(query.source, query.departureTime, query.target);
+            numberOfJourneys += algorithm.getJourneys().size();
+            result[i].reserve(algorithm.getArrivals().size());
+
+            /*             std::cout << "MLTB Query" << std::endl; */
+            /*             for (auto& journey : algorithm.getJourneys()) { */
+            /*                 std::cout << query << std::endl; */
+            /*                 for (auto& leg : journey) { */
+            /*                     std::cout << (int)leg.from << " -> " << (int)leg.to
+             * << " @ " << leg.departureTime << " -> " << leg.arrivalTime <<
+             * (leg.usesRoute ? ", route: " : ", transfer: ") << (int)leg.routeId; */
+            /*                     if (!leg.usesRoute && Edge(leg.routeId) != noEdge)
+             * { */
+            /*                         uint8_t lcl = std::min( */
+            /*                             data.getLowestCommonLevel(StopId(leg.from),
+             * query.source), */
+            /*                             data.getLowestCommonLevel(StopId(leg.from),
+             * query.target)); */
+            /*                         std::cout << " LocalLevel: " <<
+             * (int)data.stopEventGraph.get(LocalLevel, Edge(leg.routeId)) << " and
+             * lcl: " << (int)lcl; */
+            /*                     } */
+
+            /*                     std::cout << std::endl; */
+            /*                 } */
+            /*                 std::cout << std::endl; */
+            /*             } */
+
+            for (auto& arr : algorithm.getArrivals()) {
+                result[i].push_back(std::make_pair(arr.numberOfTrips, arr.arrivalTime));
+            }
+
+            i += 1;
         }
+        algorithm.getProfiler().printStatistics();
+        std::cout << "Avg. Journeys: "
+                  << String::prettyDouble(numberOfJourneys / (float)queries.size())
+                  << std::endl;
+        /* algorithm.showTransferLevels(); */
 
-        i += 1;
-      }
-      tripAlgorithm.getProfiler().printStatistics();
-      std::cout << "Avg. Journeys: "
-                << String::prettyDouble(numberOfJourneys /
-                                        (float)queries.size())
-                << std::endl;
+        if (eval) {
+            size_t wrongQueries = 0;
+            std::cout << "Evaluation against TB:" << std::endl;
+            TripBased::Data trip(evalFile);
+            trip.printInfo();
+            TripBased::TransitiveQuery<TripBased::AggregateProfiler> tripAlgorithm(
+                trip);
+            std::vector<std::vector<std::pair<int, int>>> tripResult;
+            tripResult.assign(n, {});
 
-      for (size_t i(0); i < queries.size(); ++i) {
-        // computes the results from TB, which are not in MLTB
-        std::set<std::pair<int, int>> set1(tripResult[i].begin(),
-                                           tripResult[i].end());
-        std::set<std::pair<int, int>> set2(result[i].begin(), result[i].end());
-        std::set<std::pair<int, int>> difference;
-        std::set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(),
-                            std::inserter(difference, difference.begin()));
+            numberOfJourneys = 0;
+            i = 0;
+            for (const StopQuery& query : queries) {
+                tripAlgorithm.run(query.source, query.departureTime, query.target);
+                numberOfJourneys += tripAlgorithm.getJourneys().size();
 
-        if (difference.size() > 0) {
-          ++wrongQueries;
-          std::cout << "Query: " << queries[i] << std::endl;
+                /*                 std::cout << "TB Query" << std::endl; */
+                /*                 for (auto& journey : tripAlgorithm.getJourneys()) {
+                 */
+                /*                     std::cout << query << std::endl; */
+                /*                     for (auto& leg : journey) { */
+                /*                         std::cout << (int)leg.from << " -> " <<
+                 * (int)leg.to << " @ " << leg.departureTime << " -> " <<
+                 * leg.arrivalTime << (leg.usesRoute ? ", route: " : ", transfer: ") <<
+                 * (int)leg.routeId; */
+                /*                         if (!leg.usesRoute && Edge(leg.routeId) !=
+                 * noEdge) { */
+                /*                             uint8_t lcl = std::min( */
+                /*                                 data.getLowestCommonLevel(StopId(leg.from),
+                 * query.source), */
+                /*                                 data.getLowestCommonLevel(StopId(leg.from),
+                 * query.target)); */
+                /*                             std::cout << " LocalLevel: " <<
+                 * (int)data.stopEventGraph.get(LocalLevel, Edge(leg.routeId)) << " and
+                 * lcl: " << (int)lcl; */
+                /*                         } */
+
+                /*                         std::cout << std::endl; */
+                /*                     } */
+                /*                     std::cout << std::endl; */
+                /*                 } */
+
+                tripResult[i].reserve(tripAlgorithm.getArrivals().size());
+
+                for (auto& arr : tripAlgorithm.getArrivals()) {
+                    tripResult[i].push_back(
+                        std::make_pair(arr.numberOfTrips, arr.arrivalTime));
+                }
+
+                i += 1;
+            }
+            tripAlgorithm.getProfiler().printStatistics();
+            std::cout << "Avg. Journeys: "
+                      << String::prettyDouble(numberOfJourneys / (float)queries.size())
+                      << std::endl;
+
+            for (size_t i(0); i < queries.size(); ++i) {
+                // computes the results from TB, which are not in MLTB
+                std::set<std::pair<int, int>> set1(tripResult[i].begin(),
+                    tripResult[i].end());
+                std::set<std::pair<int, int>> set2(result[i].begin(), result[i].end());
+                std::set<std::pair<int, int>> difference;
+                std::set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(),
+                    std::inserter(difference, difference.begin()));
+
+                if (difference.size() > 0) {
+                    ++wrongQueries;
+                    std::cout << "Query: " << queries[i] << std::endl;
+                }
+            }
+
+            std::cout << "Wrong queries: " << wrongQueries << std::endl;
         }
-      }
-
-      std::cout << "Wrong queries: " << wrongQueries << std::endl;
     }
-  }
 };
 
 class WriteMLTBToCSV : public ParameterizedCommand {
 public:
-  WriteMLTBToCSV(BasicShell &shell)
-      : ParameterizedCommand(shell, "writeMLTBToCSV",
-                             "Writes MLTB Data to csv files") {
-    addParameter("Input file (MLTB Data)");
-    addParameter("Output file (CSV files)");
-  }
+    WriteMLTBToCSV(BasicShell& shell)
+        : ParameterizedCommand(shell, "writeMLTBToCSV",
+            "Writes MLTB Data to csv files")
+    {
+        addParameter("Input file (MLTB Data)");
+        addParameter("Output file (CSV files)");
+    }
 
-  virtual void execute() noexcept {
-    const std::string mltb = getParameter("Input file (MLTB Data)");
-    const std::string output = getParameter("Output file (CSV files)");
+    virtual void execute() noexcept
+    {
+        const std::string mltb = getParameter("Input file (MLTB Data)");
+        const std::string output = getParameter("Output file (CSV files)");
 
-    TripBased::MLData data(mltb);
-    data.printInfo();
+        TripBased::MLData data(mltb);
+        data.printInfo();
 
-    data.raptorData.writeCSV(output);
-    data.writePartitionToCSV(output + "partition.csv");
+        data.raptorData.writeCSV(output);
+        data.writePartitionToCSV(output + "partition.csv");
 
-    Graph::toEdgeListCSV(output + "transfer", data.stopEventGraph);
-  }
+        Graph::toEdgeListCSV(output + "transfer", data.stopEventGraph);
+    }
 };
 
 class EventDistributionOverTime : public ParameterizedCommand {
 public:
-  EventDistributionOverTime(BasicShell &shell)
-      : ParameterizedCommand(
+    EventDistributionOverTime(BasicShell& shell)
+        : ParameterizedCommand(
             shell, "eventDistribution",
             "Shows the distribution of events over time. Each bucket contains "
-            "the number of events in this bucket.") {
-    addParameter("Input file (MLTB Data)");
-  }
-
-  virtual void execute() noexcept {
-    const std::string mltb = getParameter("Input file (MLTB Data)");
-    const int numBuckets = 24;
-
-    TripBased::MLData data(mltb);
-    data.printInfo();
-
-    std::vector<size_t> buckets(numBuckets, 0);
-
-    size_t offset = 60 * 60;
-
-    for (size_t eventId(0); eventId < data.numberOfStopEvents(); ++eventId) {
-      auto &depTime = data.departureTime(StopEventId(eventId));
-
-      if ((24 * 60 * 60) <= depTime)
-        continue;
-
-      // this is due to our implicit representation
-      if (depTime < 0) {
-        depTime = 0;
-      }
-      buckets[(int)depTime / offset]++;
+            "the number of events in this bucket.")
+    {
+        addParameter("Input file (MLTB Data)");
     }
 
-    for (int i(0); i < numBuckets; ++i) {
-      std::cout << i << "," << buckets[i] << std::endl;
+    virtual void execute() noexcept
+    {
+        const std::string mltb = getParameter("Input file (MLTB Data)");
+        const int numBuckets = 24;
+
+        TripBased::MLData data(mltb);
+        data.printInfo();
+
+        std::vector<size_t> buckets(numBuckets, 0);
+
+        size_t offset = 60 * 60;
+
+        for (size_t eventId(0); eventId < data.numberOfStopEvents(); ++eventId) {
+            auto& depTime = data.departureTime(StopEventId(eventId));
+
+            if ((24 * 60 * 60) <= depTime)
+                continue;
+
+            // this is due to our implicit representation
+            if (depTime < 0) {
+                depTime = 0;
+            }
+            buckets[(int)depTime / offset]++;
+        }
+
+        for (int i(0); i < numBuckets; ++i) {
+            std::cout << i << "," << buckets[i] << std::endl;
+        }
     }
-  }
 };

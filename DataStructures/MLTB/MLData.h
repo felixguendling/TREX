@@ -64,20 +64,26 @@ public:
 
     inline void applyGlobalIDs(std::vector<uint64_t>& globalIds) noexcept
     {
+        /*
         std::vector<Vertex> stopToVertexMapping(numberOfStops(), noVertex);
 
         for (Vertex v : layoutGraph.vertices()) {
             stopToVertexMapping[layoutGraph.get(Size, v)] = v;
         }
+        */
 
         // now set the correct cellIds
         for (size_t i(0); i < numberOfStops(); ++i) {
+            /*
             AssertMsg((size_t)unionFind(i) < stopToVertexMapping.size(),
                 "unionFind[i] is out of bounds!");
             AssertMsg((size_t)stopToVertexMapping[unionFind(i)] < globalIds.size(),
                 "stopToVertexMapping[unionFind[i]] is out of bounds!");
-
             cellIds[i] = globalIds[stopToVertexMapping[unionFind(i)]];
+            */
+            AssertMsg(static_cast<size_t>(unionFind(i)) < globalIds.size(), "unionFind is out of bounds!");
+            AssertMsg(layoutGraph.get(Weight, Vertex(unionFind(i))) > 0, "The corresponding vertex weight is zero?");
+            cellIds[i] = globalIds[unionFind(i)];
         }
 
         AssertMsg(assertNoCutTransfers(), "Footpath has been cut!");
@@ -101,12 +107,13 @@ public:
         }
 
         // size contains the original vertex
+        // TODO remove size attribute
         DynamicGraphWithWeightsAndCoordinatesAndSize dynamicLayoutGraph;
         dynamicLayoutGraph.clear();
         dynamicLayoutGraph.addVertices(numberOfStops());
 
         for (Vertex vertex : dynamicLayoutGraph.vertices()) {
-            dynamicLayoutGraph.set(Weight, vertex, 1);
+            dynamicLayoutGraph.set(Weight, vertex, 0);
             dynamicLayoutGraph.set(Size, vertex, vertex);
             if (unionFind(vertex) == (int)vertex) {
                 dynamicLayoutGraph.set(Weight, vertex, weightOfNodes[vertex]);
@@ -169,8 +176,8 @@ public:
             std::cout << "** The total sum of all edge weights exceeds 32 bits **"
                       << std::endl;
 
-        dynamicLayoutGraph.deleteIsolatedVertices();
-        dynamicLayoutGraph.packEdges();
+        /* dynamicLayoutGraph.deleteIsolatedVertices(); */
+        /* dynamicLayoutGraph.packEdges(); */
         layoutGraph.clear();
         Graph::move(std::move(dynamicLayoutGraph), layoutGraph);
         std::cout << "The Layout Graph looks like this:" << std::endl;
@@ -181,6 +188,7 @@ public:
         const bool writeGRAPHML = true)
     {
         std::cout << "Write Layout Graph to file " << fileName << std::endl;
+        std::cout << "[Num Vertices: " << layoutGraph.numVertices() << ", Num Edges: " << layoutGraph.numEdges() << "]" << std::endl;
         Progress progressWriting(layoutGraph.numVertices());
 
         unsigned long n = layoutGraph.numVertices();

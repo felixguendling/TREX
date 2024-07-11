@@ -1,12 +1,12 @@
 ./../ExternalLibs/mt-kahypar/build/mt-kahypar/application/MtKaHyPar \
-    -h ~/Documents/Datasets/Europe/MLTB/compact_layout.graph.metis \
-    -k 65536\
+    -h ~/Documents/Datasets/Germany/MLTB/compact_layout.graph.metis \
+    -k 1024\
     -e 0.05 \
     -o cut \
     -m rb \
     -t 6 \
     --write-partition-file true \
-    --partition-output-folder /home/patrick/Documents/Datasets/Europe/MLTB/kahypar \
+    --partition-output-folder /home/patrick/Documents/Datasets/Germany/MLTB/kahypar \
     --input-file-format metis \
     --instance-type=graph \
     --preset-type highest_quality \

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -1073,9 +1074,17 @@ public:
     inline void writeCSV(const std::string& fileBaseName) const noexcept
     {
         writeStopCSV(fileBaseName + "stops.csv");
-        writeLineCSV(fileBaseName + "lines.csv");
-        writeTripCSV(fileBaseName + "trips.csv");
-        writeFootpathCSV(fileBaseName + "footpaths.csv");
+        /* writeLineCSV(fileBaseName + "lines.csv"); */
+        /* writeTripCSV(fileBaseName + "trips.csv"); */
+        /* writeFootpathCSV(fileBaseName + "footpaths.csv"); */
+    }
+
+    // Function to remove all quotation marks from a string
+    std::string removeQuotations(const std::string& input) const
+    {
+        std::string result = input;
+        result.erase(std::remove(result.begin(), result.end(), '"'), result.end());
+        return result;
     }
 
     inline void writeStopCSV(const std::string& fileName) const noexcept
@@ -1086,13 +1095,13 @@ public:
         file << "StopId,StopName,Latitude,Longitude,MinChangeTime\n";
         if (hasImplicitBufferTimes()) {
             for (const StopId stop : stops()) {
-                file << stop.value() << ",\"" << stopData[stop].name << "\","
+                file << stop.value() << ",\"" << removeQuotations(stopData[stop].name) << "\","
                      << stopData[stop].coordinates.latitude << ","
                      << stopData[stop].coordinates.longitude << ",0\n";
             }
         } else {
             for (const StopId stop : stops()) {
-                file << stop.value() << ",\"" << stopData[stop].name << "\","
+                file << stop.value() << ",\"" << removeQuotations(stopData[stop].name) << "\","
                      << stopData[stop].coordinates.latitude << ","
                      << stopData[stop].coordinates.longitude << ","
                      << stopData[stop].minTransferTime << "\n";
@@ -1110,7 +1119,7 @@ public:
         for (const RouteId route : routes()) {
             const StopId* stops = stopArrayOfRoute(route);
             for (size_t i = 0; i < numberOfStopsInRoute(route); i++) {
-                file << route.value() << ",\"" << routeData[route].name << "\"," << i
+                file << route.value() << ",\"" << removeQuotations(routeData[route].name) << "\"," << i
                      << "," << stops[i].value() << "\n";
             }
         }

@@ -10,3 +10,6 @@
 [submodule "ExternalLibs/ips4o"]
 	path = ExternalLibs/ips4o
 	url = https://github.com/SaschaWitt/ips4o.git
+[submodule "ExternalLibs/CoordRecSplitter"]
+	path = ExternalLibs/CoordRecSplitter
+	url = https://github.com/PatrickSteil/CoordRecSplitter.git

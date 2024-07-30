@@ -159,7 +159,7 @@ public:
         currentCellId = data.getCellIdOfStop(data.getStop(trip, StopIndex(stopIndex + 1)));
 
         enqueue(trip, stopIndex);
-        scanTrips();
+        scanTrips(16);
         unpack();
         profiler.done();
     }
@@ -179,13 +179,13 @@ private:
         ++currentRun;
     }
 
-    inline void scanTrips() noexcept
+    inline void scanTrips(const uint8_t MAX_ROUNDS = 16) noexcept
     {
         profiler.startPhase();
         u_int8_t currentRoundNumber = 0;
         size_t roundBegin = 0;
         size_t roundEnd = queueSize;
-        while (roundBegin < roundEnd && currentRoundNumber < 15) {
+        while (roundBegin < roundEnd && currentRoundNumber < MAX_ROUNDS) {
             ++currentRoundNumber;
             profiler.countMetric(METRIC_ROUNDS);
 
@@ -404,8 +404,8 @@ private:
 
     // like a timestamp, used to check in which run the stop event has already
     // been extracted
-    std::vector<size_t> lastExtractedRun;
-    size_t currentRun;
+    std::vector<uint32_t> lastExtractedRun;
+    uint32_t currentRun;
 
     // stats
     /* uint64_t extractedPaths; */

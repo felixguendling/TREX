@@ -13,6 +13,8 @@
 
 namespace Graph {
 
+constexpr int dimacs_scale = 1000000;
+
 template <typename GRAPH>
 inline void fromDimacs(const std::string& fileBaseName, GRAPH& graph) noexcept
 {
@@ -46,8 +48,8 @@ inline void toDimacs(const std::string& fileBaseName, const GRAPH& graph,
             "Cannot open output stream for " << fileBaseName << ".co");
         coOs << "p aux sp co " << graph.numVertices() << std::endl;
         for (const Vertex vertex : graph.vertices()) {
-            coOs << "v " << (vertex + 1) << " " << graph.get(Coordinates, vertex).x
-                 << " " << graph.get(Coordinates, vertex).y << std::endl;
+            coOs << "v " << (vertex + 1) << " " << static_cast<long long>(graph.get(Coordinates, vertex).x * dimacs_scale)
+                 << " " << static_cast<long long>(graph.get(Coordinates, vertex).y * dimacs_scale) << std::endl;
         }
         coOs.close();
     }

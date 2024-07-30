@@ -231,6 +231,9 @@ protected:
                 std::string departureTime;
                 while (in.readRow(stopTime.tripId, arrivalTime, departureTime,
                     stopTime.stopId, stopTime.stopSequence)) {
+                    if (arrivalTime.empty() || departureTime.empty() || stopTime.stopId.empty()) {
+                        continue;
+                    }
                     stopTime.arrivalTime = String::parseSeconds(arrivalTime);
                     stopTime.departureTime = String::parseSeconds(departureTime);
                     if (stopTime.validate())
@@ -284,6 +287,7 @@ protected:
                     trip.name)) {
                     if (trip.validate())
                         trips.emplace_back(trip);
+                    count++;
                 }
                 return count;
             },

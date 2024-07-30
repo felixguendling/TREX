@@ -237,6 +237,7 @@ public:
     inline void reset() noexcept { clear<true>(); }
 
     inline const Profiler& getProfiler() const noexcept { return profiler; }
+    inline Profiler& getProfiler() noexcept { return profiler; }
 
     inline int getArrivalTime(const StopId stop,
         const size_t numberOfTrips) const noexcept

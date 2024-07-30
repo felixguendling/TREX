@@ -124,6 +124,7 @@ public:
     {
         addParameter("Input file (MLTB Data)");
         addParameter("Output file (METIS File)");
+        addParameter("Write Dimacs?", "false");
         addParameter("Write GRAPHML?", "false");
     }
 
@@ -131,6 +132,7 @@ public:
     {
         const std::string mltbFile = getParameter("Input file (MLTB Data)");
         const std::string metisFile = getParameter("Output file (METIS File)");
+        const bool writeDimacs = getParameter<bool>("Write Dimacs?");
         const bool writeGRAPHML = getParameter<bool>("Write GRAPHML?");
 
         TripBased::MLData data(mltbFile);
@@ -138,6 +140,10 @@ public:
 
         data.createCompactLayoutGraph();
         data.writeLayoutGraphToMETIS(metisFile, writeGRAPHML);
+
+        if (writeDimacs) {
+            Graph::toDimacs(metisFile, data.layoutGraph, data.layoutGraph.getEdgeAttributes().get(Weight));
+        }
 
         data.serialize(mltbFile);
     }
@@ -213,7 +219,8 @@ public:
 
         for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
             ++numLocalTransfers[data.stopEventGraph.get(LocalLevel, edge)];
-            /* numHopsPerLevel[data.stopEventGraph.get(LocalLevel, edge)] += data.stopEventGraph.get(Hop, edge); */
+            /* numHopsPerLevel[data.stopEventGraph.get(LocalLevel, edge)] +=
+             * data.stopEventGraph.get(Hop, edge); */
         }
 
         std::cout << "** Number of Local Transfers **" << std::endl;
@@ -227,9 +234,11 @@ public:
 
         /*         std::cout << "** Avg # of hops per Level **" << std::endl; */
 
-        /*         for (size_t level(0); level < numLocalTransfers.size(); ++level) { */
+        /*         for (size_t level(0); level < numLocalTransfers.size(); ++level)
+         * { */
         /*             std::cout << "Level " << level << ":      " */
-        /*                       << String::prettyDouble(numHopsPerLevel[level] / (double)numLocalTransfers[level]) */
+        /*                       << String::prettyDouble(numHopsPerLevel[level] /
+         * (double)numLocalTransfers[level]) */
         /*                       << std::endl; */
         /*         } */
 
@@ -450,6 +459,104 @@ public:
 
         for (int i(0); i < numBuckets; ++i) {
             std::cout << i << "," << buckets[i] << std::endl;
+        }
+    }
+};
+
+class RunGeoRankedMLTBQueries : public ParameterizedCommand {
+public:
+    RunGeoRankedMLTBQueries(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "runGeoRankedMLTBQueries",
+            "Runs MLTB queries to the 2^r th stop, where r is the geo rank. "
+            "Source stops are chosen randomly.")
+    {
+        addParameter("MLTB input file");
+        addParameter("Number of source stops");
+        addParameter("Output csv file");
+        addParameter("Lowest r");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string file = getParameter("Output csv file");
+        TripBased::MLData data(getParameter("MLTB input file"));
+        data.printInfo();
+        TripBased::MLQuery<TripBased::AggregateProfiler> algorithm(data);
+
+        const size_t n = getParameter<size_t>("Number of source stops");
+        const int minR = getParameter<int>("Lowest r");
+
+        std::mt19937 randomGenerator(42);
+        std::uniform_int_distribution<> stopDistribution(0, data.numberOfStops() - 1);
+        std::uniform_int_distribution<> timeDistribution(0, (24 * 60 * 60) - 1);
+
+        std::vector<StopId> sources;
+        sources.reserve(n);
+
+        for (size_t i = 0; i < n; i++) {
+            sources.emplace_back(stopDistribution(randomGenerator));
+        }
+
+        int maxR = std::floor(std::log2(data.numberOfStops()));
+
+        if (maxR <= minR) {
+            std::cout << "Too few stops; maxR <= minR!" << std::endl;
+            return;
+        }
+
+        std::vector<double> queryRunTimes;
+        queryRunTimes.reserve(n * (maxR - minR + 1));
+
+        for (auto& source : sources) {
+            std::vector<size_t> allStopsSorted(data.numberOfStops());
+            std::iota(allStopsSorted.begin(), allStopsSorted.end(), 0);
+
+            std::sort(allStopsSorted.begin(), allStopsSorted.end(),
+                [&](int i1, int i2) {
+                    return data.raptorData.stopData[i1].dist(data.raptorData.stopData[source]) < data.raptorData.stopData[i2].dist(data.raptorData.stopData[source]);
+                });
+
+            for (int r = minR; r <= maxR; ++r) {
+                if (static_cast<size_t>(1 << r) >= allStopsSorted.size()) {
+                    std::cout << "TOOO MUCH!! r: " << r << " vs " << allStopsSorted.size()
+                              << std::endl;
+                    break;
+                }
+                auto target = allStopsSorted[(1 << r)];
+
+                int depTime = timeDistribution(randomGenerator);
+
+                algorithm.run(static_cast<StopId>(source), depTime,
+                    static_cast<StopId>(target));
+                queryRunTimes.emplace_back(algorithm.getProfiler().getTotalTime());
+                algorithm.getProfiler().reset();
+            }
+        }
+
+        std::ofstream csv(file);
+        AssertMsg(csv, "Cannot create output stream for " << file);
+        AssertMsg(csv.is_open(), "Cannot open output stream for " << file);
+
+        csv << "Index";
+
+        for (int r = minR; r <= maxR; ++r) {
+            csv << "," << r;
+        }
+        csv << "\n";
+
+        size_t i = 0;
+
+        auto it = queryRunTimes.begin();
+
+        while (i < n) {
+            csv << i;
+            for (int r = minR; r <= maxR; ++r, ++it) {
+                assert(it != queryRunTimes.end());
+                csv << "," << (*it);
+            }
+            csv << "\n";
+            ++i;
         }
     }
 };

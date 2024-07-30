@@ -1095,14 +1095,14 @@ public:
         file << "StopId,StopName,Latitude,Longitude,MinChangeTime\n";
         if (hasImplicitBufferTimes()) {
             for (const StopId stop : stops()) {
-                file << stop.value() << ",\"" << removeQuotations(stopData[stop].name) << "\","
-                     << stopData[stop].coordinates.latitude << ","
+                file << stop.value() << ",\"" << removeQuotations(stopData[stop].name)
+                     << "\"," << stopData[stop].coordinates.latitude << ","
                      << stopData[stop].coordinates.longitude << ",0\n";
             }
         } else {
             for (const StopId stop : stops()) {
-                file << stop.value() << ",\"" << removeQuotations(stopData[stop].name) << "\","
-                     << stopData[stop].coordinates.latitude << ","
+                file << stop.value() << ",\"" << removeQuotations(stopData[stop].name)
+                     << "\"," << stopData[stop].coordinates.latitude << ","
                      << stopData[stop].coordinates.longitude << ","
                      << stopData[stop].minTransferTime << "\n";
             }
@@ -1119,8 +1119,9 @@ public:
         for (const RouteId route : routes()) {
             const StopId* stops = stopArrayOfRoute(route);
             for (size_t i = 0; i < numberOfStopsInRoute(route); i++) {
-                file << route.value() << ",\"" << removeQuotations(routeData[route].name) << "\"," << i
-                     << "," << stops[i].value() << "\n";
+                file << route.value() << ",\""
+                     << removeQuotations(routeData[route].name) << "\"," << i << ","
+                     << stops[i].value() << "\n";
             }
         }
         file.close();

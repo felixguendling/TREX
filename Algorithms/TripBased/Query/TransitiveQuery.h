@@ -307,7 +307,7 @@ private:
         u_int8_t currentRoundNumber = 0;
         size_t roundBegin = 0;
         size_t roundEnd = queueSize;
-        while (roundBegin < roundEnd && currentRoundNumber < 15) {
+        while (roundBegin < roundEnd && currentRoundNumber < 16) {
             ++currentRoundNumber;
             profiler.countMetric(METRIC_ROUNDS);
             targetLabels.emplace_back(targetLabels.back());

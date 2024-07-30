@@ -81,8 +81,10 @@ public:
                 "stopToVertexMapping[unionFind[i]] is out of bounds!");
             cellIds[i] = globalIds[stopToVertexMapping[unionFind(i)]];
             */
-            AssertMsg(static_cast<size_t>(unionFind(i)) < globalIds.size(), "unionFind is out of bounds!");
-            AssertMsg(layoutGraph.get(Weight, Vertex(unionFind(i))) > 0, "The corresponding vertex weight is zero?");
+            AssertMsg(static_cast<size_t>(unionFind(i)) < globalIds.size(),
+                "unionFind is out of bounds!");
+            AssertMsg(layoutGraph.get(Weight, Vertex(unionFind(i))) > 0,
+                "The corresponding vertex weight is zero?");
             cellIds[i] = globalIds[unionFind(i)];
         }
 
@@ -118,7 +120,8 @@ public:
             if (unionFind(vertex) == (int)vertex) {
                 dynamicLayoutGraph.set(Weight, vertex, weightOfNodes[vertex]);
             }
-            dynamicLayoutGraph.set(Coordinates, vertex, raptorData.stopData[vertex].coordinates);
+            dynamicLayoutGraph.set(Coordinates, vertex,
+                raptorData.stopData[vertex].coordinates);
         }
 
         Progress progress(raptorData.numberOfRoutes() + raptorData.transferGraph.numEdges());
@@ -187,7 +190,8 @@ public:
         const bool writeGRAPHML = true)
     {
         std::cout << "Write Layout Graph to file " << fileName << std::endl;
-        std::cout << "[Num Vertices: " << layoutGraph.numVertices() << ", Num Edges: " << layoutGraph.numEdges() << "]" << std::endl;
+        std::cout << "[Num Vertices: " << layoutGraph.numVertices()
+                  << ", Num Edges: " << layoutGraph.numEdges() << "]" << std::endl;
         Progress progressWriting(layoutGraph.numVertices());
 
         unsigned long n = layoutGraph.numVertices();

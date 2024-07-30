@@ -138,6 +138,8 @@ public:
         profiler.start();
         collectAllIBEsOnLowestLevel();
 
+        assert(!IBEs.empty());
+
         if (SORT_IBES) {
             profiler.startPhase();
             /* std::sort(std::execution::par, IBEs.begin(), IBEs.end()); */

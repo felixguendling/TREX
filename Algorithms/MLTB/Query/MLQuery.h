@@ -171,7 +171,7 @@ public:
 
         computeInitialAndFinalTransfers();
         evaluateInitialTransfers();
-        scanTrips();
+        scanTrips(16);
         profiler.done();
     }
 
@@ -341,13 +341,13 @@ private:
         profiler.donePhase(PHASE_EVALUATE_INITIAL);
     }
 
-    inline void scanTrips() noexcept
+    inline void scanTrips(const uint8_t MAX_ROUNDS = 16) noexcept
     {
         profiler.startPhase();
         u_int8_t currentRoundNumber = 0;
         size_t roundBegin = 0;
         size_t roundEnd = queueSize;
-        while (roundBegin < roundEnd && currentRoundNumber < 15) {
+        while (roundBegin < roundEnd && currentRoundNumber < MAX_ROUNDS) {
             ++currentRoundNumber;
             profiler.countMetric(METRIC_ROUNDS);
             targetLabels.emplace_back(targetLabels.back());

@@ -35,6 +35,9 @@ int main(int argc, char** argv)
     new RunTransitiveProfileTripBasedQueries(shell);
 
     new RunGeoRankedRAPTORQueries(shell);
+    new RunGeoRankedTripBasedQueries(shell);
+
+    new RunGeoRankedMLTBQueries(shell);
 
     shell.run();
     return 0;

@@ -452,6 +452,18 @@ public:
     {
     }
 
+    inline void reset() noexcept
+    {
+        totalTime = 0.0;
+        roundData.clear();
+        std::vector<RoundData>(NUM_EXTRA_ROUNDS).swap(extraRoundData);
+        currentRoundData = NULL;
+        inExtraRound = false;
+        numQueries = 0;
+        numRounds = 0;
+        totalNumRounds = 0;
+    }
+
     inline void registerExtraRounds(
         const std::initializer_list<ExtraRound>& extraRoundList) noexcept
     {

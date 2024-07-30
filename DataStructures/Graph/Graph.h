@@ -19,8 +19,7 @@ using WithReverseEdges = List<Attribute<ReverseEdge, Edge>>;
 using WithCapacity = List<Attribute<Capacity, int>>;
 using WithWeight = List<Attribute<Weight, int>>;
 using WithWeightAndCoordinates = List<Attribute<Weight, int>, Attribute<Coordinates, Geometry::Point>>;
-using WithWeightAndCoordinatesAndSize = List<Attribute<Weight, int>, Attribute<Coordinates, Geometry::Point>,
-    Attribute<Size, size_t>>;
+using WithWeightAndCoordinatesAndSize = List<Attribute<Weight, int>, Attribute<Coordinates, Geometry::Point>, Attribute<Size, size_t>>;
 using WithViaVertex = List<Attribute<ViaVertex, Vertex>>;
 using WithViaVertexAndWeight = List<Attribute<ViaVertex, Vertex>, Attribute<Weight, int>>;
 using WithReverseEdgesAndViaVertex = List<Attribute<ReverseEdge, Edge>, Attribute<ViaVertex, Vertex>>;
@@ -79,20 +78,17 @@ using SimpleEdgeListWithARCFlag = EdgeList<NoVertexAttributes, WithARCFlag>;
 // MLTB
 using WithLocalLevel = List<Attribute<LocalLevel, uint8_t>>;
 using WithTravelTimeAndLocalLevel = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>>;
-using WithTravelTimeAndLocalLevelAndFromVertex = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>,
-    Attribute<FromVertex, Vertex>>;
+using WithTravelTimeAndLocalLevelAndFromVertex = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<FromVertex, Vertex>>;
 
 using WithLocalLevelAndHop = List<Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>>;
 using WithTravelTimeAndLocalLevel = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>>;
 using WithTravelTimeAndLocalLevelAndHop = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>>;
-using WithTravelTimeAndLocalLevelAndHopAndFromVertex = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>,
-    Attribute<Hop, uint8_t>, Attribute<FromVertex, Vertex>>;
+using WithTravelTimeAndLocalLevelAndHopAndFromVertex = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>, Attribute<FromVertex, Vertex>>;
 
 using TransferGraphWithLocalLevel = StaticGraph<NoVertexAttributes, WithTravelTimeAndLocalLevel>;
 using TransferGraphWithLocalLevelAndHop = StaticGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHop>;
 using DynamicTransferGraphWithLocalLevelAndHop = DynamicGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHop>;
-using DynamicTransferGraphWithLocalLevelAndHopAndFromVertex = DynamicGraph<NoVertexAttributes,
-    WithTravelTimeAndLocalLevelAndHopAndFromVertex>;
+using DynamicTransferGraphWithLocalLevelAndHopAndFromVertex = DynamicGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHopAndFromVertex>;
 using SimpleDynamicGraphWithLocalLevel = DynamicGraph<NoVertexAttributes, WithLocalLevel>;
 using SimpleEdgeListWithLocalLevel = EdgeList<NoVertexAttributes, WithLocalLevel>;
 

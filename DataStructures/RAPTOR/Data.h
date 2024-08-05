@@ -1074,9 +1074,9 @@ public:
     inline void writeCSV(const std::string& fileBaseName) const noexcept
     {
         writeStopCSV(fileBaseName + "stops.csv");
-        /* writeLineCSV(fileBaseName + "lines.csv"); */
-        /* writeTripCSV(fileBaseName + "trips.csv"); */
-        /* writeFootpathCSV(fileBaseName + "footpaths.csv"); */
+        writeLineCSV(fileBaseName + "lines.csv");
+        writeTripCSV(fileBaseName + "trips.csv");
+        writeFootpathCSV(fileBaseName + "footpaths.csv");
     }
 
     // Function to remove all quotation marks from a string

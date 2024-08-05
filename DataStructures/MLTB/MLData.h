@@ -352,6 +352,19 @@ public:
         file.close();
     }
 
+    inline void writeUnionFindToFile(const std::string& fileName) noexcept
+    {
+        std::ofstream file(fileName);
+
+        file << "StopID,CorrespondingStopID\n";
+
+        for (StopId stop(0); stop < numberOfStops(); ++stop) {
+            assert(unionFind(stop) < numberOfStops());
+            file << (int)stop << "," << (int)unionFind(stop) << "\n";
+        }
+        file.close();
+    }
+
     // Assert that no transfer is cut
     inline bool assertNoCutTransfers() noexcept
     {

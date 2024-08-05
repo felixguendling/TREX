@@ -4,6 +4,7 @@
 
 #include "../../../DataStructures/MLTB/MLData.h"
 #include "../../../ExternalLibs/ips4o/ips4o.hpp"
+#include "../../../ExternalLibs/parlaylib/include/parlay/parallel.h"
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/String/String.h"
@@ -160,7 +161,7 @@ public:
 
 #pragma omp parallel
             {
-#pragma omp for
+#pragma omp for schedule(dynamic)
                 for (size_t i = 0; i < IBEs.size(); ++i) {
                     int threadId = omp_get_thread_num();
                     pinThreadToCoreId((threadId * pinMultiplier) % numCores);

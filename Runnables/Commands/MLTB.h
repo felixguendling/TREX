@@ -416,6 +416,7 @@ public:
 
         data.raptorData.writeCSV(output);
         data.writePartitionToCSV(output + "partition.csv");
+        data.writeUnionFindToFile(output + "unionFind.csv");
 
         Graph::toEdgeListCSV(output + "transfer", data.stopEventGraph);
     }

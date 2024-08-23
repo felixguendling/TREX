@@ -14,7 +14,8 @@
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/Vector/Vector.h"
 
-#include <google/dense_hash_map>
+/* #include <google/dense_hash_map> */
+#include <unordered_map>
 
 namespace TransferPattern {
 
@@ -36,7 +37,7 @@ public:
         , minDep(0)
         , maxDep(24 * 60 * 60 - 1)
     {
-        seenPrefix.set_empty_key({ noStop });
+        /* seenPrefix.set_empty_key({ noStop }); */
         clear();
     }
 
@@ -145,17 +146,17 @@ public:
         for (const Vertex vertex : dynamicDAG.vertices()) {
             dynamicDAG.set(ViaVertex, vertex, vertex);
         }
-
-        seenPrefix.resize(1 << 6);
-        seenPrefix.clear_no_resize();
+        seenPrefix.clear();
+        /* seenPrefix.resize(1 << 6); */
+        /* seenPrefix.clear_no_resize(); */
     }
 
-    inline std::vector<int> getMinTravelTimes() noexcept
+    inline std::vector<int>& getMinTravelTimes() noexcept
     {
         return query.getMinTravelTimes();
     }
 
-    inline std::vector<uint8_t> getMinNumberOfTransfers() noexcept
+    inline std::vector<uint8_t>& getMinNumberOfTransfers() noexcept
     {
         return query.getMinNumberOfTransfers();
     }
@@ -182,8 +183,8 @@ private:
 
     DynamicDAGTransferPattern dynamicDAG;
 
-    google::dense_hash_map<std::vector<StopId>, Vertex, std::VectorHasher<StopId>,
-        eqVecStopid>
+    /* google::dense_hash_map<std::vector<StopId>, Vertex, std::VectorHasher<StopId>, eqVecStopid> */
+    std::unordered_map<std::vector<StopId>, Vertex, std::VectorHasher<StopId>, eqVecStopid>
         seenPrefix;
     const int minDep;
     const int maxDep;

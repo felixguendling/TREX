@@ -29,7 +29,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../../DataStructures/TripBased/Data.h"
 #include "../../../Helpers/String/String.h"
-#include "../../TripBased/Query/ProfileReachedIndex.h"
+#include "../../TripBased/Query/ProfileReachedIndexSIMD.h"
 #include "../../TripBased/Query/Profiler.h"
 
 #include <numeric>
@@ -261,7 +261,7 @@ public:
         return bestTravelTime;
     }
 
-    inline std::vector<uint8_t> getMinNumberOfTransfers() noexcept
+    inline std::vector<uint8_t>& getMinNumberOfTransfers() noexcept
     {
         return bestMinTransfers;
     }
@@ -670,7 +670,7 @@ private:
     std::vector<TripLabel> queue;
     std::vector<EdgeRange> edgeRanges;
     size_t queueSize;
-    ProfileReachedIndex reachedIndex;
+    ProfileReachedIndexSIMD reachedIndex;
 
     // for every stop
     std::vector<std::vector<TargetLabel>> targetLabels;

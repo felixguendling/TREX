@@ -20,6 +20,16 @@ public:
     {
     }
 
+    // Copy Assignment Operator
+    DijkstraBag& operator=(const DijkstraBag& other) {
+        if (this != &other) {
+            labels = other.labels;
+            nonHeapLabels = other.nonHeapLabels;
+            // If ExternalKHeapElement has any members to copy, ensure they are copied here.
+        }
+        return *this;
+    }
+
     template <typename OTHER_LABEL>
     inline bool dominates(const OTHER_LABEL& newLabel) const noexcept
     {
@@ -60,7 +70,10 @@ public:
         AssertMsg(!empty(), "An empty heap has no front!");
 
         nonHeapLabels.push_back(labels[0]);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
         labels[0] = labels.back();
+        #pragma GCC diagnostic pop
         labels.pop_back();
         // fix heap prop
         if (labels.size() > 1)
@@ -78,14 +91,20 @@ public:
                 ++removedLabels;
                 continue;
             }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
             labels[i - removedLabels] = labels[i];
+#pragma GCC diagnostic pop
         }
         for (size_t i = 0; i < nonHeapLabels.size(); ++i) {
             if (nonHeapLabels[i].dominates(newLabel))
                 return false;
         }
         labels.resize(labels.size() - removedLabels + 1);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
         labels.back() = newLabel;
+        #pragma GCC diagnostic pop
         heapify();
         return true;
     }

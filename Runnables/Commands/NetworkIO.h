@@ -8,6 +8,7 @@
 #include "../../DataStructures/Intermediate/Data.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
+#include "../../DataStructures/TimeDep/Data.h"
 #include "../../DataStructures/TripBased/MultimodalData.h"
 #include "../../Shell/Shell.h"
 
@@ -129,6 +130,33 @@ public:
         data.printInfo();
         Graph::printInfo(data.transferGraph);
         data.transferGraph.printAnalysis();
+        data.serialize(outputFile);
+    }
+};
+
+class IntermediateToTDD : public ParameterizedCommand {
+public:
+    IntermediateToTDD(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "intermediateToTDD",
+            "Converts binary intermediate data to TDD format.")
+    {
+        addParameter("Input file");
+        addParameter("Output file");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string inputFile = getParameter("Input file");
+        const std::string outputFile = getParameter("Output file");
+
+        Intermediate::Data inter = Intermediate::Data::FromBinary(inputFile);
+        inter.printInfo();
+
+        TDD::Data data = TDD::Data::FromIntermediate(inter);
+        data.printInfo();
+        Graph::printInfo(data.graph);
+
         data.serialize(outputFile);
     }
 };

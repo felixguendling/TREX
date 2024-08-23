@@ -359,7 +359,7 @@ public:
         file << "StopID,CorrespondingStopID\n";
 
         for (StopId stop(0); stop < numberOfStops(); ++stop) {
-            assert(unionFind(stop) < numberOfStops());
+            assert(static_cast<size_t>(unionFind(stop)) < numberOfStops());
             file << (int)stop << "," << (int)unionFind(stop) << "\n";
         }
         file.close();

@@ -100,5 +100,10 @@ using StaticDAGTransferPattern = StaticGraph<WithViaVertex, WithTravelTime>;
 // @todo check which type of graph
 using DynamicQueryGraph = DynamicGraph<NoVertexAttributes, WithTravelTime>;
 
+// TDD
+using WithTravelTimeAndIndex = List<Attribute<TravelTime, int>, Attribute<Index, size_t>>;
+using DynamicTDDGraph = DynamicGraph<NoVertexAttributes, WithTravelTimeAndIndex>;
+using TDDGraph = StaticGraph<NoVertexAttributes, WithTravelTimeAndIndex>;
+
 #include "Utils/Conversion.h"
 #include "Utils/IO.h"

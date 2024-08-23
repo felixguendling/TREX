@@ -102,7 +102,8 @@ using ARCFlag = AttributeNameWrapper<28>;
 using LocalLevel = AttributeNameWrapper<29>;
 using Hop = AttributeNameWrapper<30>;
 
-using UnknownType = AttributeNameWrapper<31>;
+using Index = AttributeNameWrapper<31>;
+using UnknownType = AttributeNameWrapper<32>;
 // Ensure that Unknown is the last entry!
 
 } // namespace ImplementationDetail
@@ -138,6 +139,7 @@ constexpr ImplementationDetail::BundleSizeType BundleSize;
 constexpr ImplementationDetail::ARCFlag ARCFlag;
 constexpr ImplementationDetail::LocalLevel LocalLevel;
 constexpr ImplementationDetail::Hop Hop;
+constexpr ImplementationDetail::Index Index;
 constexpr ImplementationDetail::UnknownType Unknown;
 // Ensure that Unknown is the last entry!
 
@@ -175,7 +177,8 @@ constexpr const char* AttributeNameStrings[] = {
     /* 28 */ "ARCFlag",
     /* 29 */ "LocalLevel",
     /* 30 */ "Hop",
-    /* 31 */ "Unknown"
+    /* 31 */ "Index",
+    /* 32 */ "Unknown"
     // Ensure that Unknown is the last entry!
 };
 

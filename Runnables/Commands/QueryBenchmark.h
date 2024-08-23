@@ -27,6 +27,7 @@
 #include "../../Algorithms/RAPTOR/ULTRABounded/UBMRAPTOR.h"
 #include "../../Algorithms/RAPTOR/ULTRAMcRAPTOR.h"
 #include "../../Algorithms/RAPTOR/ULTRARAPTOR.h"
+#include "../../Algorithms/TimeDep/Query.h"
 #include "../../Algorithms/TripBased/BoundedMcQuery/BoundedMcQuery.h"
 #include "../../Algorithms/TripBased/Query/McQuery.h"
 #include "../../Algorithms/TripBased/Query/ProfileOneToAllQuery.h"
@@ -37,6 +38,7 @@
 #include "../../DataStructures/Queries/Queries.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
+#include "../../DataStructures/TimeDep/Data.h"
 #include "../../DataStructures/TripBased/Data.h"
 #include "../../DataStructures/TripBased/MultimodalData.h"
 #include "../../Shell/Shell.h"
@@ -1394,5 +1396,33 @@ public:
             csv << "\n";
             ++i;
         }
+    }
+};
+
+class RunTDDijkstraQueries : public ParameterizedCommand {
+public:
+    RunTDDijkstraQueries(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "runTDDijkstraQueries",
+            "Runs the given number of random TDD queries.")
+    {
+        addParameter("TDD input file");
+        addParameter("Number of queries");
+    }
+
+    virtual void execute() noexcept
+    {
+        TDD::Data data = TDD::Data::FromBinary(getParameter("TDD input file"));
+        data.printInfo();
+        // true <=> debug
+        TDD::TDDijkstra<TDDGraph, true> algorithm(data.getGraph(), data.getEdgeWeights());
+
+        const size_t n = getParameter<size_t>("Number of queries");
+        const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);
+
+        for (const StopQuery& query : queries) {
+            algorithm.run(query.source, query.departureTime, query.target);
+        }
+        /* algorithm.getProfiler().printStatistics(); */
     }
 };

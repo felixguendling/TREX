@@ -1,6 +1,7 @@
 #include "Commands/MLTB.h"
 #include "../Helpers/Console/CommandLineParser.h"
 #include "../Shell/Shell.h"
+#include "Commands/NetworkIO.h"
 #include "Commands/QueryBenchmark.h"
 
 using namespace Shell;
@@ -36,8 +37,10 @@ int main(int argc, char** argv)
 
     new RunGeoRankedRAPTORQueries(shell);
     new RunGeoRankedTripBasedQueries(shell);
-
     new RunGeoRankedMLTBQueries(shell);
+
+    new IntermediateToTDD(shell);
+    new RunTDDijkstraQueries(shell);
 
     shell.run();
     return 0;

@@ -4,7 +4,7 @@ OPTIMIZATION=-march=native -O3
 DEBUG=-rdynamic -Werror -Wpedantic -pedantic-errors -Wall -Wextra -Wparentheses -Wfatal-errors -D_GLIBCXX_DEBUG -g -fno-omit-frame-pointer
 RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG -fomit-frame-pointer -mtune=native -fno-stack-protector -mavx2 -mno-avx256-split-unaligned-load -mno-avx256-split-unaligned-store -funroll-loops
 PREFETCH=-DENABLE_PREFETCH -DUSE_SIMD
-SPARSEHASH=-I ../ExternalLibs/sparsehash/include
+# SPARSEHASH=-I ../ExternalLibs/sparsehash/include
 
 all: MLTBRelease ULTRARelease NetworkRelease
 # all: TPDebug ArcTBDebug NetworkDebug ULTRADebug

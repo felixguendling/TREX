@@ -101,9 +101,11 @@ using StaticDAGTransferPattern = StaticGraph<WithViaVertex, WithTravelTime>;
 using DynamicQueryGraph = DynamicGraph<NoVertexAttributes, WithTravelTime>;
 
 // TDD
-using WithTravelTimeAndIndex = List<Attribute<TravelTime, int>, Attribute<Index, size_t>>;
-using DynamicTDDGraph = DynamicGraph<NoVertexAttributes, WithTravelTimeAndIndex>;
-using TDDGraph = StaticGraph<NoVertexAttributes, WithTravelTimeAndIndex>;
+using WithDurationFunctionAndTravelTimeAndTransferCost = List<Attribute<DurationFunction, std::vector<std::pair<uint32_t, uint32_t>>>, Attribute<TravelTime, int>, Attribute<TransferCost, uint8_t>>;
+using WithRouteVertex = List<Attribute<RouteVertex, RouteId>>;
+
+using DynamicTimeDependentRouteGraph = DynamicGraph<WithRouteVertex, WithDurationFunctionAndTravelTimeAndTransferCost>;
+using TimeDependentRouteGraph = StaticGraph<WithRouteVertex, WithDurationFunctionAndTravelTimeAndTransferCost>;
 
 #include "Utils/Conversion.h"
 #include "Utils/IO.h"

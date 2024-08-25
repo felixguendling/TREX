@@ -8,7 +8,7 @@
 #include "../../DataStructures/Intermediate/Data.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
-#include "../../DataStructures/TimeDep/Data.h"
+#include "../../DataStructures/TD/Data.h"
 #include "../../DataStructures/TripBased/MultimodalData.h"
 #include "../../Shell/Shell.h"
 
@@ -134,12 +134,12 @@ public:
     }
 };
 
-class IntermediateToTDD : public ParameterizedCommand {
+class IntermediateToTD : public ParameterizedCommand {
 public:
-    IntermediateToTDD(BasicShell& shell)
+    IntermediateToTD(BasicShell& shell)
         : ParameterizedCommand(
-            shell, "intermediateToTDD",
-            "Converts binary intermediate data to TDD format.")
+            shell, "intermediateToTD",
+            "Converts binary intermediate data to TD format.")
     {
         addParameter("Input file");
         addParameter("Output file");
@@ -153,10 +153,9 @@ public:
         Intermediate::Data inter = Intermediate::Data::FromBinary(inputFile);
         inter.printInfo();
 
-        TDD::Data data = TDD::Data::FromIntermediate(inter);
+        TD::Data data = TD::Data::FromIntermediate(inter);
         data.printInfo();
-        Graph::printInfo(data.graph);
-
+        Graph::printInfo(data.timeDependentGraph);
         data.serialize(outputFile);
     }
 };

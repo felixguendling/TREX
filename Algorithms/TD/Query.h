@@ -14,7 +14,7 @@
 #include "../../Helpers/Types.h"
 #include "../../Helpers/Vector/Vector.h"
 
-namespace TDD {
+namespace TD {
 
 template <typename GRAPH, bool DEBUG = false>
 class TDDijkstra {

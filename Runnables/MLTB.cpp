@@ -39,8 +39,8 @@ int main(int argc, char** argv)
     new RunGeoRankedTripBasedQueries(shell);
     new RunGeoRankedMLTBQueries(shell);
 
-    new IntermediateToTDD(shell);
-    new RunTDDijkstraQueries(shell);
+    new IntermediateToTD(shell);
+    /* new RunTDDijkstraQueries(shell); */
 
     shell.run();
     return 0;

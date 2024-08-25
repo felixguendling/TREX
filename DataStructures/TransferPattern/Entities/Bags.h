@@ -21,7 +21,8 @@ public:
     }
 
     // Copy Assignment Operator
-    DijkstraBag& operator=(const DijkstraBag& other) {
+    DijkstraBag& operator=(const DijkstraBag& other)
+    {
         if (this != &other) {
             labels = other.labels;
             nonHeapLabels = other.nonHeapLabels;
@@ -73,7 +74,7 @@ public:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
         labels[0] = labels.back();
-        #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
         labels.pop_back();
         // fix heap prop
         if (labels.size() > 1)
@@ -104,7 +105,7 @@ public:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
         labels.back() = newLabel;
-        #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
         heapify();
         return true;
     }

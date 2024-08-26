@@ -27,7 +27,7 @@
 #include "../../Algorithms/RAPTOR/ULTRABounded/UBMRAPTOR.h"
 #include "../../Algorithms/RAPTOR/ULTRAMcRAPTOR.h"
 #include "../../Algorithms/RAPTOR/ULTRARAPTOR.h"
-/* #include "../../Algorithms/TD/Query.h" */
+#include "../../Algorithms/TD/Query.h"
 #include "../../Algorithms/TripBased/BoundedMcQuery/BoundedMcQuery.h"
 #include "../../Algorithms/TripBased/Query/McQuery.h"
 #include "../../Algorithms/TripBased/Query/ProfileOneToAllQuery.h"
@@ -1399,30 +1399,29 @@ public:
     }
 };
 
-/* class RunTDDijkstraQueries : public ParameterizedCommand { */
-/* public: */
-/*     RunTDDijkstraQueries(BasicShell& shell) */
-/*         : ParameterizedCommand( */
-/*             shell, "runTDDijkstraQueries", */
-/*             "Runs the given number of random TDD queries.") */
-/*     { */
-/*         addParameter("TDD input file"); */
-/*         addParameter("Number of queries"); */
-/*     } */
+class RunTDDijkstraQueries : public ParameterizedCommand {
+public:
+    RunTDDijkstraQueries(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "runTDDijkstraQueries",
+            "Runs the given number of random TDD queries.")
+    {
+        addParameter("TD input file");
+        addParameter("Number of queries");
+    }
 
-/*     virtual void execute() noexcept */
-/*     { */
-/*         TDD::Data data = TDD::Data::FromBinary(getParameter("TDD input file")); */
-/*         data.printInfo(); */
-/*         // true <=> debug */
-/*         TDD::TDDijkstra<TDDGraph, true> algorithm(data.getGraph(), data.getEdgeWeights()); */
+    virtual void execute() noexcept
+    {
+        TD::Data data = TD::Data::FromBinary(getParameter("TD input file"));
+        data.printInfo();
+        TD::EADijkstra<TimeDependentRouteGraph, TD::AggregateProfiler> algorithm(data.timeDependentGraph, DurationFunction);
 
-/*         const size_t n = getParameter<size_t>("Number of queries"); */
-/*         const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n); */
+        const size_t n = getParameter<size_t>("Number of queries");
+        const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);
 
-/*         for (const StopQuery& query : queries) { */
-/*             algorithm.run(query.source, query.departureTime, query.target); */
-/*         } */
-/*         /1* algorithm.getProfiler().printStatistics(); *1/ */
-/*     } */
-/* }; */
+        for (const StopQuery& query : queries) {
+            algorithm.run(query.source, query.departureTime, query.target);
+        }
+        algorithm.getProfiler().printStatistics();
+    }
+};

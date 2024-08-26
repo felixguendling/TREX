@@ -14,14 +14,17 @@
 #include "../../Helpers/Types.h"
 #include "../../Helpers/Vector/Vector.h"
 
+#include "Profiler.h"
+
 namespace TD {
 
-template <typename GRAPH, bool DEBUG = false>
-class TDDijkstra {
+template <typename GRAPH, typename PROFILER = NoProfiler, bool DEBUG = false>
+class EADijkstra {
 public:
     using Graph = GRAPH;
+    using Profiler = PROFILER;
     static constexpr bool Debug = DEBUG;
-    using Type = TDDijkstra<Graph, Debug>;
+    using Type = EADijkstra<Graph, Profiler, Debug>;
 
 public:
     struct VertexLabel : public ExternalKHeapElement {
@@ -49,7 +52,7 @@ public:
     };
 
 public:
-    TDDijkstra(const GRAPH& graph, const std::vector<std::vector<std::pair<uint32_t, uint32_t>>>& times)
+    EADijkstra(const GRAPH& graph, const std::vector<std::vector<std::pair<uint32_t, uint32_t>>>& times)
         : graph(graph)
         , times(times)
         , Q(graph.numVertices())
@@ -57,22 +60,37 @@ public:
         , timeStamp(0)
         , settleCount(0)
     {
+        profiler.registerPhases({ PHASE_CLEAR, PHASE_PQ });
+        profiler.registerMetrics({ METRIC_SEETLED_VERTICES, METRIC_RELAXED_TRANSFER_EDGES, METRIC_RELAXED_ROUTE_EDGES, METRIC_FOUND_SOLUTIONS });
     }
 
-    TDDijkstra(const GRAPH&&, const std::vector<int>&) = delete;
-    TDDijkstra(const GRAPH&, const std::vector<int>&&) = delete;
-    TDDijkstra(const GRAPH&&) = delete;
+    template <AttributeNameType ATTRIBUTE_NAME>
+    EADijkstra(const GRAPH& graph, const AttributeNameWrapper<ATTRIBUTE_NAME> weight)
+        : EADijkstra(graph, graph[weight])
+    {
+    }
+
+    EADijkstra(const GRAPH&&, const std::vector<int>&) = delete;
+    EADijkstra(const GRAPH&, const std::vector<int>&&) = delete;
+    EADijkstra(const GRAPH&&) = delete;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    TDDijkstra(const GRAPH&&, const AttributeNameWrapper<ATTRIBUTE_NAME>) = delete;
+    EADijkstra(const GRAPH&&, const AttributeNameWrapper<ATTRIBUTE_NAME>) = delete;
 
     template <typename SETTLE = NO_OPERATION, typename STOP = NO_OPERATION, typename PRUNE_EDGE = NO_OPERATION>
     inline void run(const Vertex source, const int departureTime = 0, const Vertex target = noVertex, const SETTLE& settle = NoOperation,
         const STOP& stop = NoOperation, const PRUNE_EDGE& pruneEdge = NoOperation) noexcept
     {
+        profiler.start();
+
         clear();
         addSource(source, departureTime);
         run(target, settle, stop, pruneEdge);
+
+        profiler.done();
+
+        if (getDistance(target) != intMax)
+            profiler.countMetric(METRIC_FOUND_SOLUTIONS);
     }
 
     template <typename SETTLE = NO_OPERATION, typename STOP = NO_OPERATION, typename PRUNE_EDGE = NO_OPERATION>
@@ -104,12 +122,16 @@ public:
 
     inline void clear() noexcept
     {
+        profiler.startPhase();
+
         if constexpr (Debug) {
             timer.restart();
             settleCount = 0;
         }
         Q.clear();
         timeStamp++;
+
+        profiler.donePhase(PHASE_CLEAR);
     }
 
     inline void addSource(const Vertex source, const int arrivalTime = 0) noexcept
@@ -129,6 +151,8 @@ public:
     inline void run(const Vertex target, const SETTLE& settle, const STOP& stop = NoOperation,
         const PRUNE_EDGE& pruneEdge = NoOperation) noexcept
     {
+        profiler.startPhase();
+
         while (!Q.empty()) {
             if (stop())
                 break;
@@ -145,10 +169,12 @@ public:
                 int arrivalTime = uLabel->arrivalTime;
 
                 if (graph.get(TravelTime, edge) != -1) {
+                    profiler.countMetric(METRIC_RELAXED_TRANSFER_EDGES);
                     arrivalTime += graph.get(TravelTime, edge);
                 } else {
-                    assert(graph.get(Index, edge) < times.size());
-                    arrivalTime += evaluateEdge(graph.get(Index, edge), arrivalTime);
+                    profiler.countMetric(METRIC_RELAXED_ROUTE_EDGES);
+                    assert(!graph.get(DurationFunction, edge).empty());
+                    arrivalTime += evaluateEdge(graph.get(DurationFunction, edge), arrivalTime);
                 }
                 if (vLabel.arrivalTime > arrivalTime) {
                     vLabel.arrivalTime = arrivalTime;
@@ -156,6 +182,8 @@ public:
                     Q.update(&vLabel);
                 }
             }
+            profiler.countMetric(METRIC_SEETLED_VERTICES);
+
             settle(u);
             if constexpr (Debug)
                 settleCount++;
@@ -164,6 +192,8 @@ public:
             std::cout << "Settled Vertices = " << String::prettyInt(settleCount) << std::endl;
             std::cout << "Time = " << String::msToString(timer.elapsedMilliseconds()) << std::endl;
         }
+
+        profiler.donePhase(PHASE_PQ);
     }
 
     inline bool reachable(const Vertex vertex) const noexcept
@@ -233,6 +263,11 @@ public:
         return settleCount;
     }
 
+    inline const Profiler& getProfiler() const noexcept
+    {
+        return profiler;
+    }
+
 private:
     inline VertexLabel& getLabel(const Vertex vertex) noexcept
     {
@@ -242,16 +277,14 @@ private:
         return result;
     }
 
-    int evaluateEdge(const size_t index, const int arrivalTime) const
+    inline int evaluateEdge(const auto& times, const int arrivalTime) const
     {
-        AssertMsg(index < times.size(), "Index " << index << " is out of bounds (" << times.size() << ")!");
-
         size_t i = 0;
 
-        while (times[index][i].first < static_cast<uint32_t>(arrivalTime))
+        while (times[i].first < static_cast<uint32_t>(arrivalTime))
             ++i;
 
-        return times[index][i].second;
+        return times[i].second;
     }
 
 private:
@@ -265,5 +298,7 @@ private:
 
     int settleCount;
     Timer timer;
+
+    Profiler profiler;
 };
 }

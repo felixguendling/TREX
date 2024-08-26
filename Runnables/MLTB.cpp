@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     new RunGeoRankedMLTBQueries(shell);
 
     new IntermediateToTD(shell);
-    /* new RunTDDijkstraQueries(shell); */
+    new RunTDDijkstraQueries(shell);
 
     shell.run();
     return 0;

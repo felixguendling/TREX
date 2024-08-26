@@ -158,24 +158,29 @@ public:
                 break;
             VertexLabel* uLabel = Q.extractFront();
             const Vertex u = Vertex(uLabel - &(label[0]));
-            if (u == target)
+            if (u == target) [[unlikely]]
                 break;
-            for (const Edge edge : graph.edgesFrom(u)) {
+            for (const Edge& edge : graph.edgesFrom(u)) {
                 const Vertex v = graph.get(ToVertex, edge);
                 VertexLabel& vLabel = getLabel(v);
                 if (pruneEdge(u, edge))
                     continue;
                 // duration != -1 => footpath
                 int arrivalTime = uLabel->arrivalTime;
+                int durationToAdd = 0;
 
                 if (graph.get(TravelTime, edge) != -1) {
                     profiler.countMetric(METRIC_RELAXED_TRANSFER_EDGES);
-                    arrivalTime += graph.get(TravelTime, edge);
+                    durationToAdd = graph.get(TravelTime, edge);
                 } else {
                     profiler.countMetric(METRIC_RELAXED_ROUTE_EDGES);
                     assert(!graph.get(DurationFunction, edge).empty());
-                    arrivalTime += evaluateEdge(graph.get(DurationFunction, edge), arrivalTime);
+                    durationToAdd = evaluateEdge(graph.get(DurationFunction, edge), arrivalTime);
                 }
+                if (durationToAdd == intMax) [[unlikely]] {
+                    continue;
+                }
+                arrivalTime += durationToAdd;
                 if (vLabel.arrivalTime > arrivalTime) {
                     vLabel.arrivalTime = arrivalTime;
                     vLabel.parent = u;
@@ -279,11 +284,16 @@ private:
 
     inline int evaluateEdge(const auto& times, const int arrivalTime) const
     {
+        AssertMsg(!times.empty(), "Given DurationFunction is empty?");
+        AssertMsg(times.back().first == intMax, "The end should contain a sentinel!");
+        AssertMsg(times.back().second == intMax, "The end should contain a sentinel!");
+        AssertMsg(arrivalTime < intMax, "ArrivalTime is infinity?");
         size_t i = 0;
 
-        while (times[i].first < static_cast<uint32_t>(arrivalTime))
+        while (i < times.size() && times[i].first < static_cast<uint32_t>(arrivalTime))
             ++i;
-
+        
+        assert(i < times.size());
         return times[i].second;
     }
 

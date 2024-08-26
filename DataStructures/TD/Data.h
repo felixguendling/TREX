@@ -97,8 +97,6 @@ public:
                     durationFunction.emplace_back(trip.stopEvents[j - 1].departureTime, trip.stopEvents[j].arrivalTime - trip.stopEvents[j - 1].departureTime);
                 }
 
-                durationFunction.emplace_back(INFTY, INFTY);
-
                 auto newEdge = builderGraph.addEdge(Vertex(currentVertex + j - 1), Vertex(currentVertex + j));
 
                 newEdge.set(DurationFunction, durationFunction);
@@ -122,6 +120,10 @@ public:
 
         for (const auto [edge, from] : inter.transferGraph.edgesWithFromVertex()) {
             builderGraph.addEdge(from, inter.transferGraph.get(ToVertex, edge)).set(TravelTime, inter.transferGraph.get(TravelTime, edge));
+        }
+
+        for (auto& val : builderGraph[DurationFunction]) {
+            val.emplace_back(intMax, intMax);
         }
 
         builderGraph.sortEdges(ToVertex);

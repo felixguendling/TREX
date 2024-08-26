@@ -166,7 +166,7 @@ public:
             totalNumOfEntries += timeDependentGraph.get(DurationFunction, edge).size();
             maxNumOfEntries = std::max(maxNumOfEntries, timeDependentGraph.get(DurationFunction, edge).size());
 
-            totalNumOfRouteEdges += (timeDependentGraph.get(DurationFunction, edge).size() > 0);
+            totalNumOfRouteEdges += (timeDependentGraph.get(DurationFunction, edge).size() > 1);
         }
 
         std::cout << "TD public transit data:" << std::endl;

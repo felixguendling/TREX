@@ -175,7 +175,7 @@ public:
                 } else {
                     profiler.countMetric(METRIC_RELAXED_ROUTE_EDGES);
                     assert(!graph.get(DurationFunction, edge).empty());
-                    durationToAdd = evaluateEdge(graph.get(DurationFunction, edge), arrivalTime);
+                    durationToAdd = evaluateEdgeBinary(graph.get(DurationFunction, edge), arrivalTime);
                 }
                 if (durationToAdd == intMax) [[unlikely]] {
                     continue;
@@ -282,7 +282,7 @@ private:
         return result;
     }
 
-    inline int evaluateEdge(const auto& times, const int arrivalTime) const
+    inline int evaluateEdgeLinear(const auto& times, const int arrivalTime) const
     {
         AssertMsg(!times.empty(), "Given DurationFunction is empty?");
         AssertMsg(times.back().first == intMax, "The end should contain a sentinel!");
@@ -292,9 +292,27 @@ private:
 
         while (i < times.size() && times[i].first < static_cast<uint32_t>(arrivalTime))
             ++i;
-        
+
         assert(i < times.size());
         return times[i].second;
+    }
+
+    inline int evaluateEdgeBinary(const auto& times, const int arrivalTime) const
+    {
+        AssertMsg(!times.empty(), "Given DurationFunction is empty?");
+        AssertMsg(times.back().first == intMax, "The end should contain a sentinel!");
+        AssertMsg(times.back().second == intMax, "The end should contain a sentinel!");
+        AssertMsg(arrivalTime < intMax, "ArrivalTime is infinity?");
+
+        // Use std::lower_bound to find the first element that is not less than arrivalTime
+        auto it = std::lower_bound(times.begin(), times.end(), arrivalTime,
+            [](const auto& pair, const int value) {
+                return pair.first < static_cast<uint32_t>(value);
+            });
+
+        // We assume that the last element is the sentinel, so it should always find a valid iterator.
+        assert(it != times.end());
+        return it->second;
     }
 
 private:

@@ -5,31 +5,31 @@
 #include "../../Helpers/String/String.h"
 #include "../../Helpers/Timer.h"
 
-namespace TD {
+namespace TE {
 
 typedef enum {
     PHASE_CLEAR,
+    PHASE_FIND_FIRST_VERTEX,
     PHASE_RUN,
     NUM_PHASES
 } Phase;
 
 constexpr const char* PhaseNames[] = {
     "Clear Dijkstra               ",
-    "Work in PQ                   "
+    "Find first reachable Vertex  ",
+    "Run Query                    "
 };
 
 typedef enum {
     METRIC_SEETLED_VERTICES,
-    METRIC_RELAXED_TRANSFER_EDGES,
-    METRIC_RELAXED_ROUTE_EDGES,
+    METRIC_RELAXED_EDGES,
     METRIC_FOUND_SOLUTIONS,
     NUM_METRICS
 } Metric;
 
 constexpr const char* MetricNames[] = {
     "# Settled Vertices           ",
-    "# Relaxed Transfer Edges     ",
-    "# Relaxed Route Edges        ",
+    "# Relaxed Edges              ",
     "# Solutions                  ",
     "# Added Labels into bags     "
 };

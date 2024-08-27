@@ -8,6 +8,7 @@
 #include "../../DataStructures/Attributes/AttributeNames.h"
 #include "../../DataStructures/Container/ExternalKHeap.h"
 #include "../../DataStructures/Container/Set.h"
+#include "../../DataStructures/TD/Data.h"
 #include "../../Helpers/Meta.h"
 #include "../../Helpers/String/String.h"
 #include "../../Helpers/Timer.h"
@@ -60,7 +61,7 @@ public:
         , timeStamp(0)
         , settleCount(0)
     {
-        profiler.registerPhases({ PHASE_CLEAR, PHASE_PQ });
+        profiler.registerPhases({ PHASE_CLEAR, PHASE_RUN });
         profiler.registerMetrics({ METRIC_SEETLED_VERTICES, METRIC_RELAXED_TRANSFER_EDGES, METRIC_RELAXED_ROUTE_EDGES, METRIC_FOUND_SOLUTIONS });
     }
 
@@ -198,7 +199,7 @@ public:
             std::cout << "Time = " << String::msToString(timer.elapsedMilliseconds()) << std::endl;
         }
 
-        profiler.donePhase(PHASE_PQ);
+        profiler.donePhase(PHASE_RUN);
     }
 
     inline bool reachable(const Vertex vertex) const noexcept

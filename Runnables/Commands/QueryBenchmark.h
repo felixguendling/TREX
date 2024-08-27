@@ -28,6 +28,7 @@
 #include "../../Algorithms/RAPTOR/ULTRAMcRAPTOR.h"
 #include "../../Algorithms/RAPTOR/ULTRARAPTOR.h"
 #include "../../Algorithms/TD/Query.h"
+#include "../../Algorithms/TE/Query.h"
 #include "../../Algorithms/TripBased/BoundedMcQuery/BoundedMcQuery.h"
 #include "../../Algorithms/TripBased/Query/McQuery.h"
 #include "../../Algorithms/TripBased/Query/ProfileOneToAllQuery.h"
@@ -39,6 +40,7 @@
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
 #include "../../DataStructures/TD/Data.h"
+#include "../../DataStructures/TE/Data.h"
 #include "../../DataStructures/TripBased/Data.h"
 #include "../../DataStructures/TripBased/MultimodalData.h"
 #include "../../Shell/Shell.h"
@@ -1423,5 +1425,37 @@ public:
             algorithm.run(query.source, query.departureTime, query.target);
         }
         algorithm.getProfiler().printStatistics();
+    }
+};
+
+class RunTEDijkstraQueries : public ParameterizedCommand {
+public:
+    RunTEDijkstraQueries(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "runTEDijkstraQueries",
+            "Runs the given number of random TDD queries.")
+    {
+        addParameter("TE input file");
+        addParameter("Number of queries");
+    }
+
+    virtual void execute() noexcept
+    {
+        TE::Data data = TE::Data::FromBinary(getParameter("TE input file"));
+        data.printInfo();
+        TE::Query<TE::AggregateProfiler, false> algorithm(data);
+        TE::Query<TE::AggregateProfiler, true> algorithmNodeBlocking(data);
+
+        const size_t n = getParameter<size_t>("Number of queries");
+        const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);
+
+        for (const StopQuery& query : queries) {
+            algorithm.run(query.source, query.departureTime, query.target);
+            algorithmNodeBlocking.run(query.source, query.departureTime, query.target);
+        }
+        std::cout << "** Reached Trip disabled:" << std::endl;
+        algorithm.getProfiler().printStatistics();
+        std::cout << "** Reached Trip active:" << std::endl;
+        algorithmNodeBlocking.getProfiler().printStatistics();
     }
 };

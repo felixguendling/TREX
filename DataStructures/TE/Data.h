@@ -45,6 +45,7 @@ public:
         }
 
         data.stopsOfRoute.assign(routes.size(), {});
+        data.numTrips = 0;
 
         size_t numStopEvents = 0;
 
@@ -62,6 +63,7 @@ public:
 
         data.stopEventData.reserve(numStopEvents);
         data.stopEventIdsOfStop.assign(data.stopData.size(), {});
+        data.tripOfEvent.assign(numStopEvents, noTripId);
 
         DynamicTimeExpandedGraph builderGraph;
         size_t numberOfVerticesToAdd = numStopEvents * 3;
@@ -74,6 +76,7 @@ public:
         std::cout << "Adding the event vertices with all information like StopId, RouteId, ..." << std::endl;
         Progress progress(numStopEvents);
         Vertex currentVertex(0);
+        TripId tripId(0);
 
         for (RouteId i = RouteId(0); i < routes.size(); i++) {
             const auto& route = routes[i];
@@ -89,32 +92,38 @@ public:
                     data.stopEventData.emplace_back(event);
 
                     data.stopEventIdsOfStop[event.stopId].emplace_back(currentVertex);
+                    data.tripOfEvent[currentVertex] = tripId;
 
                     // transfer
                     builderGraph.set(StopVertex, data.getTransferVertexOfEvent(currentVertex), event.stopId);
+                    builderGraph.set(StopVertex, data.getArrivalVertexOfEvent(currentVertex), event.stopId);
+                    builderGraph.set(StopVertex, data.getDepartureVertexOfEvent(currentVertex), event.stopId);
+
                     // arr & dep
                     builderGraph.set(RouteVertex, data.getArrivalVertexOfEvent(currentVertex), i);
                     builderGraph.set(RouteVertex, data.getDepartureVertexOfEvent(currentVertex), i);
 
                     // add edges
                     builderGraph.addEdge(data.getArrivalVertexOfEvent(currentVertex), data.getDepartureVertexOfEvent(currentVertex)).set(TravelTime, event.departureTime - event.arrivalTime);
-                    builderGraph.addEdge(data.getTransferVertexOfEvent(currentVertex), data.getTransferVertexOfEvent(currentVertex)).set(TravelTime, inter.stops[event.stopId].minTransferTime);
                     builderGraph.addEdge(data.getTransferVertexOfEvent(currentVertex), data.getDepartureVertexOfEvent(currentVertex)).set(TravelTime, 0);
+                    builderGraph.addEdge(data.getArrivalVertexOfEvent(currentVertex), data.getTransferVertexOfEvent(currentVertex)).set(TravelTime, 0);
 
                     ++currentVertex;
                     ++progress;
                 }
+                ++tripId;
             }
         }
         progress.finished();
         std::cout << "Done!" << std::endl;
 
+        AssertMsg(tripId == inter.numberOfTrips(), "Number of trips do not align, " << tripId << " vs " << inter.numberOfTrips() << "!");
         // add transfer edges and transfer chains
 
         // this is to keep track which stop events we already added to which stop
-        std::unordered_map<size_t, size_t> earliestReachedStopEventOfEachStop;
+        std::unordered_map<size_t, size_t> reachableEvent(data.numberOfStops());
 
-        std::cout << "Adding the transfers and the footpaths between transfer vertices ..." << std::endl;
+        std::cout << "Adding the transferchain " << (extractFootpaths ? "and the footpaths between transfer vertices " : "") << "..." << std::endl;
         Progress progress2(data.stopData.size());
 
         for (StopId stop = StopId(0); stop < data.stopData.size(); ++stop) {
@@ -138,7 +147,7 @@ public:
 
             if (extractFootpaths) {
                 for (const auto edge : inter.transferGraph.edgesFrom(stop)) {
-                    earliestReachedStopEventOfEachStop[static_cast<size_t>(inter.transferGraph.get(ToVertex, edge))] = data.stopEventData.size();
+                    reachableEvent[inter.transferGraph.get(ToVertex, edge)] = static_cast<size_t>(data.stopEventData.size());
                 }
 
                 // in reverse order, since we don't want to create any dubious duplicate footpaths
@@ -151,19 +160,17 @@ public:
                         size_t earliestEvent = data.getFirstReachableStopEventAtStop(StopId(toStop), timeAtStop);
 
                         // no improvement?
-                        if (earliestEvent >= earliestReachedStopEventOfEachStop[toStop]) {
+                        if (earliestEvent >= reachableEvent[toStop]) {
                             continue;
                         }
-
                         AssertMsg(earliestEvent < data.stopEventData.size(), "Reached Event is not valid!");
-
-                        earliestReachedStopEventOfEachStop[toStop] = earliestEvent;
+                        reachableEvent[toStop] = earliestEvent;
 
                         // otherwise we can reach a better / earlier event, hence add the footpath
                         builderGraph.addEdge(data.getTransferVertexOfEvent(values[i - 1]), data.getTransferVertexOfEvent(earliestEvent)).set(TravelTime, inter.transferGraph.get(TravelTime, edge));
                     }
                 }
-                earliestReachedStopEventOfEachStop.clear();
+                reachableEvent.clear();
             }
 
             ++progress2;
@@ -223,7 +230,7 @@ public:
         return Vertex(2 * numberOfStopEvents() + event);
     }
 
-    inline int getTimeOfVertex(Vertex vertex, StopId stop) noexcept
+    inline int getTimeOfVertex(Vertex vertex, StopId stop) const noexcept
     {
         AssertMsg(vertex < 3 * numberOfStopEvents(), "Vertex " << vertex << " is not valid!");
         AssertMsg(isStop(stop), "Stop is not a stop!");
@@ -243,7 +250,7 @@ public:
         }
     }
 
-    inline size_t getFirstReachableStopEventAtStop(const StopId stop, const int time) noexcept
+    inline size_t getFirstReachableStopEventAtStop(const StopId stop, const int time) const noexcept
     {
         AssertMsg(isStop(stop), "Stop is not a stop!");
 
@@ -282,13 +289,13 @@ public:
 
     inline void serialize(const std::string& fileName) const noexcept
     {
-        IO::serialize(fileName, stopData, routeData, stopEventData, stopEventIdsOfStop, stopsOfRoute, numTrips);
+        IO::serialize(fileName, stopData, routeData, stopEventData, stopEventIdsOfStop, stopsOfRoute, tripOfEvent, numTrips);
         timeExpandedGraph.writeBinary(fileName + ".graph");
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
-        IO::deserialize(fileName, stopData, routeData, stopEventData, stopEventIdsOfStop, stopsOfRoute, numTrips);
+        IO::deserialize(fileName, stopData, routeData, stopEventData, stopEventIdsOfStop, stopsOfRoute, tripOfEvent, numTrips);
         timeExpandedGraph.readBinary(fileName + ".graph");
     }
 
@@ -299,6 +306,7 @@ public:
         result += Vector::byteSize(stopEventData);
         result += Vector::byteSize(stopEventIdsOfStop);
         result += Vector::byteSize(stopsOfRoute);
+        result += Vector::byteSize(tripOfEvent);
         result += sizeof(numTrips);
         result += timeExpandedGraph.byteSize();
         return result;
@@ -310,6 +318,7 @@ public:
     std::vector<RAPTOR::StopEvent> stopEventData;
     std::vector<std::vector<size_t>> stopEventIdsOfStop;
     std::vector<std::vector<StopId>> stopsOfRoute;
+    std::vector<TripId> tripOfEvent;
     size_t numTrips;
 
     // event == transfer node

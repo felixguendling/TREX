@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "../../DataStructures/TE/Data.h"
+/* #include "../../Helpers/Vector/TimestampedVector.h" */
 #include "../Dijkstra/Dijkstra.h"
 #include "Profiler.h"
 
@@ -15,6 +16,7 @@ public:
 
     Query(const Data& data)
         : data(data)
+        , reachedTrip(data.numberOfRoutes(), TripId(data.numberOfTrips()))
         , dijkstra(data.timeExpandedGraph, TravelTime)
     {
         profiler.registerPhases({ PHASE_CLEAR, PHASE_FIND_FIRST_VERTEX, PHASE_RUN });
@@ -47,7 +49,7 @@ public:
         dijkstra.clear();
 
         if constexpr (NODE_BLOCKING) {
-            reachedTrip.assign(data.numberOfRoutes(), TripId(data.numberOfTrips()));
+            std::fill(reachedTrip.begin(), reachedTrip.end(), TripId(data.numberOfTrips()));
         }
         profiler.donePhase(PHASE_CLEAR);
 
@@ -71,19 +73,14 @@ public:
                 if (toVertex < data.numberOfStopEvents())
                     return false;
 
-                RouteId toRoute = data.timeExpandedGraph.get(RouteVertex, toVertex);
-                AssertMsg(toRoute != noRouteId, "Route is not valid!");
+                TripId toTrip = data.timeExpandedGraph.get(TripVertex, toVertex);
 
-                toVertex -= data.numberOfStopEvents();
-
-                if (toVertex >= data.numberOfStopEvents())
-                    toVertex -= data.numberOfStopEvents();
-
-                AssertMsg(toVertex < data.tripOfEvent.size(), "ToVertex is out of bounds!");
-                TripId toTrip = data.tripOfEvent[toVertex];
+                if (toTrip == noTripId) return false;
+                RouteId toRoute = data.routeOfTrip[toTrip];
 
                 if (reachedTrip[toRoute] <= toTrip)
                     return true;
+
                 reachedTrip[toRoute] = toTrip;
             }
             return false;

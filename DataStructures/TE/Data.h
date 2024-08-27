@@ -62,15 +62,15 @@ public:
         }
 
         data.stopEventData.reserve(numStopEvents);
+        data.routeOfTrip.assign(data.numTrips, noRouteId);
         data.stopEventIdsOfStop.assign(data.stopData.size(), {});
-        data.tripOfEvent.assign(numStopEvents, noTripId);
 
         DynamicTimeExpandedGraph builderGraph;
         size_t numberOfVerticesToAdd = numStopEvents * 3;
 
         builderGraph.addVertices(numberOfVerticesToAdd);
 
-        builderGraph[RouteVertex].assign(numberOfVerticesToAdd, noRouteId);
+        builderGraph[TripVertex].assign(numberOfVerticesToAdd, noTripId);
         builderGraph[StopVertex].assign(numberOfVerticesToAdd, noStop);
 
         std::cout << "Adding the event vertices with all information like StopId, RouteId, ..." << std::endl;
@@ -87,12 +87,12 @@ public:
 
             AssertMsg(!firstTrip.stopEvents.empty(), "Trip is empty??");
             for (const Intermediate::Trip& trip : route) {
-                for (const Intermediate::StopEvent& event : trip.stopEvents) {
+                for (size_t j = 0; j < trip.stopEvents.size(); ++j) {
+                    const Intermediate::StopEvent& event = trip.stopEvents[j];
                     // set data
                     data.stopEventData.emplace_back(event);
 
                     data.stopEventIdsOfStop[event.stopId].emplace_back(currentVertex);
-                    data.tripOfEvent[currentVertex] = tripId;
 
                     // transfer
                     builderGraph.set(StopVertex, data.getTransferVertexOfEvent(currentVertex), event.stopId);
@@ -100,17 +100,24 @@ public:
                     builderGraph.set(StopVertex, data.getDepartureVertexOfEvent(currentVertex), event.stopId);
 
                     // arr & dep
-                    builderGraph.set(RouteVertex, data.getArrivalVertexOfEvent(currentVertex), i);
-                    builderGraph.set(RouteVertex, data.getDepartureVertexOfEvent(currentVertex), i);
+                    builderGraph.set(TripVertex, data.getArrivalVertexOfEvent(currentVertex), tripId);
+                    builderGraph.set(TripVertex, data.getDepartureVertexOfEvent(currentVertex), tripId);
 
                     // add edges
                     builderGraph.addEdge(data.getArrivalVertexOfEvent(currentVertex), data.getDepartureVertexOfEvent(currentVertex)).set(TravelTime, event.departureTime - event.arrivalTime);
                     builderGraph.addEdge(data.getTransferVertexOfEvent(currentVertex), data.getDepartureVertexOfEvent(currentVertex)).set(TravelTime, 0);
                     builderGraph.addEdge(data.getArrivalVertexOfEvent(currentVertex), data.getTransferVertexOfEvent(currentVertex)).set(TravelTime, 0);
 
+                    if (j > 0) {
+                        AssertMsg(trip.stopEvents[j-1].departureTime <= event.arrivalTime, "Time travel!");
+                        builderGraph.addEdge(data.getDepartureVertexOfEvent(currentVertex-1), data.getArrivalVertexOfEvent(currentVertex)).set(TravelTime, event.arrivalTime - trip.stopEvents[j-1].departureTime);
+                    }
+
                     ++currentVertex;
                     ++progress;
                 }
+
+                data.routeOfTrip[tripId] = i;
                 ++tripId;
             }
         }
@@ -254,11 +261,7 @@ public:
     {
         AssertMsg(isStop(stop), "Stop is not a stop!");
 
-        if (stopEventIdsOfStop[stop].empty()) {
-            return stopEventData.size();
-        }
-
-        if (time < stopEventData[stopEventIdsOfStop[stop].front()].departureTime) {
+        if (stopEventIdsOfStop[stop].empty()) [[unlikely]] {
             return stopEventData.size();
         }
 
@@ -289,13 +292,13 @@ public:
 
     inline void serialize(const std::string& fileName) const noexcept
     {
-        IO::serialize(fileName, stopData, routeData, stopEventData, stopEventIdsOfStop, stopsOfRoute, tripOfEvent, numTrips);
+        IO::serialize(fileName, stopData, routeData, routeOfTrip, stopEventData, stopEventIdsOfStop, stopsOfRoute, numTrips);
         timeExpandedGraph.writeBinary(fileName + ".graph");
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
-        IO::deserialize(fileName, stopData, routeData, stopEventData, stopEventIdsOfStop, stopsOfRoute, tripOfEvent, numTrips);
+        IO::deserialize(fileName, stopData, routeData, routeOfTrip, stopEventData, stopEventIdsOfStop, stopsOfRoute, numTrips);
         timeExpandedGraph.readBinary(fileName + ".graph");
     }
 
@@ -303,10 +306,10 @@ public:
     {
         long long result = Vector::byteSize(stopData);
         result += Vector::byteSize(routeData);
+        result += Vector::byteSize(routeOfTrip);
         result += Vector::byteSize(stopEventData);
         result += Vector::byteSize(stopEventIdsOfStop);
         result += Vector::byteSize(stopsOfRoute);
-        result += Vector::byteSize(tripOfEvent);
         result += sizeof(numTrips);
         result += timeExpandedGraph.byteSize();
         return result;
@@ -315,10 +318,10 @@ public:
 public:
     std::vector<RAPTOR::Stop> stopData;
     std::vector<RAPTOR::Route> routeData;
+    std::vector<RouteId> routeOfTrip;
     std::vector<RAPTOR::StopEvent> stopEventData;
     std::vector<std::vector<size_t>> stopEventIdsOfStop;
     std::vector<std::vector<StopId>> stopsOfRoute;
-    std::vector<TripId> tripOfEvent;
     size_t numTrips;
 
     // event == transfer node

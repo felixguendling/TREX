@@ -100,12 +100,18 @@ using StaticDAGTransferPattern = StaticGraph<WithViaVertex, WithTravelTime>;
 // @todo check which type of graph
 using DynamicQueryGraph = DynamicGraph<NoVertexAttributes, WithTravelTime>;
 
-// TDD
+// TD
 using WithDurationFunctionAndTravelTimeAndTransferCost = List<Attribute<DurationFunction, std::vector<std::pair<uint32_t, uint32_t>>>, Attribute<TravelTime, int>, Attribute<TransferCost, uint8_t>>;
 using WithRouteVertex = List<Attribute<RouteVertex, RouteId>>;
 
 using DynamicTimeDependentRouteGraph = DynamicGraph<WithRouteVertex, WithDurationFunctionAndTravelTimeAndTransferCost>;
 using TimeDependentRouteGraph = StaticGraph<WithRouteVertex, WithDurationFunctionAndTravelTimeAndTransferCost>;
+
+// TE
+using WithStopVertexAndRouteVertex = List<Attribute<StopVertex, StopId>, Attribute<RouteVertex, RouteId>>;
+
+using DynamicTimeExpandedGraph = DynamicGraph<WithStopVertexAndRouteVertex, WithTravelTime>;
+using TimeExpandedGraph = StaticGraph<WithStopVertexAndRouteVertex, WithTravelTime>;
 
 #include "Utils/Conversion.h"
 #include "Utils/IO.h"

@@ -44,7 +44,7 @@ public:
 
     inline static Data FromIntermediate(const Intermediate::Data& inter) noexcept
     {
-        return FromIntermediate(inter, inter.fifoRoutes());
+        return FromIntermediate(inter, inter.greedyfifoRoutes());
     }
 
     inline static Data FromIntermediate(const Intermediate::Data& inter, const std::vector<std::vector<Intermediate::Trip>>& routes) noexcept

@@ -9,6 +9,7 @@
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
 #include "../../DataStructures/TD/Data.h"
+#include "../../DataStructures/TE/Data.h"
 #include "../../DataStructures/TripBased/MultimodalData.h"
 #include "../../Shell/Shell.h"
 
@@ -156,6 +157,34 @@ public:
         TD::Data data = TD::Data::FromIntermediate(inter);
         data.printInfo();
         Graph::printInfo(data.timeDependentGraph);
+        data.serialize(outputFile);
+    }
+};
+
+class IntermediateToTE : public ParameterizedCommand {
+public:
+    IntermediateToTE(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "intermediateToTE",
+            "Converts binary intermediate data to TE format.")
+    {
+        addParameter("Input file");
+        addParameter("Output file");
+        addParameter("Extract Footpaths?", "true");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string inputFile = getParameter("Input file");
+        const std::string outputFile = getParameter("Output file");
+        const bool extractFootpaths = getParameter<bool>("Extract Footpaths?");
+
+        Intermediate::Data inter = Intermediate::Data::FromBinary(inputFile);
+        inter.printInfo();
+
+        TE::Data data = TE::Data::FromIntermediate(inter, extractFootpaths);
+        data.printInfo();
+        Graph::printInfo(data.timeExpandedGraph);
         data.serialize(outputFile);
     }
 };

@@ -1443,19 +1443,14 @@ public:
     {
         TE::Data data = TE::Data::FromBinary(getParameter("TE input file"));
         data.printInfo();
-        TE::Query<TE::AggregateProfiler, false> algorithm(data);
-        TE::Query<TE::AggregateProfiler, true> algorithmNodeBlocking(data);
+        TE::Query<TE::AggregateProfiler> algorithm(data);
 
         const size_t n = getParameter<size_t>("Number of queries");
         const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);
 
         for (const StopQuery& query : queries) {
             algorithm.run(query.source, query.departureTime, query.target);
-            algorithmNodeBlocking.run(query.source, query.departureTime, query.target);
         }
-        std::cout << "** Reached Trip disabled:" << std::endl;
         algorithm.getProfiler().printStatistics();
-        std::cout << "** Reached Trip active:" << std::endl;
-        algorithmNodeBlocking.getProfiler().printStatistics();
     }
 };

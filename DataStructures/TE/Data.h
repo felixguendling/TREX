@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include "../CSA/Entities/Connection.h"
 #include "../Graph/Graph.h"
 #include "../Intermediate/Data.h"
 
@@ -17,6 +18,20 @@
 namespace TE {
 
 class Data {
+private:
+    struct Event {
+        size_t id;
+        StopId stop;
+        int time;
+        TripId trip;
+
+        Event(size_t id = -1, StopId stop = noStop, int time = -1, TripId trip = noTripId)
+            : id(id)
+            , stop(stop)
+            , time(time)
+            , trip(trip) {};
+    };
+
 public:
     Data() {};
 
@@ -34,160 +49,159 @@ public:
 
     inline static Data FromIntermediate(const Intermediate::Data& inter, const bool extractFootpaths = true) noexcept
     {
-        return FromIntermediate(inter, inter.greedyfifoRoutes(), extractFootpaths);
-    }
-
-    inline static Data FromIntermediate(const Intermediate::Data& inter, const std::vector<std::vector<Intermediate::Trip>>& routes, const bool extractFootpaths = true) noexcept
-    {
         Data data;
+        data.stopData.clear();
+        data.stopData.reserve(inter.stops.size());
+
+        data.depEventsAtStop.clear();
+        data.depEventsAtStop.assign(inter.stops.size(), {});
+
         for (const Intermediate::Stop& stop : inter.stops) {
             data.stopData.emplace_back(stop);
         }
 
-        data.stopsOfRoute.assign(routes.size(), {});
-        data.numTrips = 0;
+        data.numTrips = inter.trips.size();
 
-        size_t numStopEvents = 0;
+        size_t numberOfEvents(0);
+        TripId currentTrip(0);
 
-        for (RouteId i(0); i < routes.size(); ++i) {
-            const auto& route = routes[i];
-            AssertMsg(!route.empty(), "A route should not be empty!");
+        std::vector<CSA::Connection> connections;
+        for (const Intermediate::Trip& trip : inter.trips) {
+            AssertMsg(!trip.stopEvents.empty(), "Intermediate data contains trip without any stop event!");
+            for (size_t i = 1; i < trip.stopEvents.size(); i++) {
+                const Intermediate::StopEvent& from = trip.stopEvents[i - 1];
+                const Intermediate::StopEvent& to = trip.stopEvents[i];
+                connections.emplace_back(from.stopId, to.stopId, from.departureTime, to.arrivalTime, currentTrip);
 
-            numStopEvents += route[0].stopEvents.size() * route.size();
-            data.numTrips += route.size();
-
-            for (auto& event : route[0].stopEvents) {
-                data.stopsOfRoute[i].emplace_back(event.stopId);
+                numberOfEvents += 2;
             }
+
+            ++currentTrip;
         }
+        std::sort(connections.begin(), connections.end());
 
-        data.stopEventData.reserve(numStopEvents);
-        data.routeOfTrip.assign(data.numTrips, noRouteId);
-        data.stopEventIdsOfStop.assign(data.stopData.size(), {});
+        DynamicTimeExpandedGraph bobTheBuilder;
+        bobTheBuilder.addVertices(numberOfEvents);
 
-        DynamicTimeExpandedGraph builderGraph;
-        size_t numberOfVerticesToAdd = numStopEvents * 3;
+        // this allows us to keep track of the previous arrival event in order to create an edge
+        std::vector<size_t> lastArrivalEventOfTrip(inter.trips.size(), numberOfEvents);
 
-        builderGraph.addVertices(numberOfVerticesToAdd);
+        data.events.clear();
+        data.events.reserve(numberOfEvents);
 
-        builderGraph[TripVertex].assign(numberOfVerticesToAdd, noTripId);
-        builderGraph[StopVertex].assign(numberOfVerticesToAdd, noStop);
+        for (size_t i = 0; i < connections.size(); ++i) {
+            // first departure event, then arrival
+            const auto& conn = connections[i];
 
-        std::cout << "Adding the event vertices with all information like StopId, RouteId, ..." << std::endl;
-        Progress progress(numStopEvents);
-        Vertex currentVertex(0);
-        TripId tripId(0);
+            size_t id = (i << 1);
 
-        for (RouteId i = RouteId(0); i < routes.size(); i++) {
-            const auto& route = routes[i];
-            AssertMsg(!route.empty(), "A route should not be empty!");
+            data.events.emplace_back(id, conn.departureStopId, conn.departureTime, conn.tripId);
+            data.events.emplace_back(id + 1, conn.arrivalStopId, conn.arrivalTime, conn.tripId);
 
-            const auto& firstTrip = route[0];
-            data.routeData.emplace_back(firstTrip.routeName, firstTrip.type);
+            bobTheBuilder.set(StopVertex, Vertex(id), conn.departureStopId);
+            bobTheBuilder.set(StopVertex, Vertex(id + 1), conn.arrivalStopId);
 
-            AssertMsg(!firstTrip.stopEvents.empty(), "Trip is empty??");
-            for (const Intermediate::Trip& trip : route) {
-                for (size_t j = 0; j < trip.stopEvents.size(); ++j) {
-                    const Intermediate::StopEvent& event = trip.stopEvents[j];
-                    // set data
-                    data.stopEventData.emplace_back(event);
+            // check if can create an edge to the previous arrival event
+            // ** Trip Edge **
+            AssertMsg(conn.tripId < lastArrivalEventOfTrip.size(), "Trip is out of bounds!");
+            if (lastArrivalEventOfTrip[conn.tripId] != numberOfEvents) {
+                AssertMsg(lastArrivalEventOfTrip[conn.tripId] < numberOfEvents, "Last Arrival Event is out of bounds!");
 
-                    data.stopEventIdsOfStop[event.stopId].emplace_back(currentVertex);
-
-                    // transfer
-                    builderGraph.set(StopVertex, data.getTransferVertexOfEvent(currentVertex), event.stopId);
-                    builderGraph.set(StopVertex, data.getArrivalVertexOfEvent(currentVertex), event.stopId);
-                    builderGraph.set(StopVertex, data.getDepartureVertexOfEvent(currentVertex), event.stopId);
-
-                    // arr & dep
-                    builderGraph.set(TripVertex, data.getArrivalVertexOfEvent(currentVertex), tripId);
-                    builderGraph.set(TripVertex, data.getDepartureVertexOfEvent(currentVertex), tripId);
-
-                    // add edges
-                    builderGraph.addEdge(data.getArrivalVertexOfEvent(currentVertex), data.getDepartureVertexOfEvent(currentVertex)).set(TravelTime, event.departureTime - event.arrivalTime);
-                    builderGraph.addEdge(data.getTransferVertexOfEvent(currentVertex), data.getDepartureVertexOfEvent(currentVertex)).set(TravelTime, 0);
-                    builderGraph.addEdge(data.getArrivalVertexOfEvent(currentVertex), data.getTransferVertexOfEvent(currentVertex)).set(TravelTime, 0);
-
-                    if (j > 0) {
-                        AssertMsg(trip.stopEvents[j-1].departureTime <= event.arrivalTime, "Time travel!");
-                        builderGraph.addEdge(data.getDepartureVertexOfEvent(currentVertex-1), data.getArrivalVertexOfEvent(currentVertex)).set(TravelTime, event.arrivalTime - trip.stopEvents[j-1].departureTime);
-                    }
-
-                    ++currentVertex;
-                    ++progress;
-                }
-
-                data.routeOfTrip[tripId] = i;
-                ++tripId;
+                bobTheBuilder.addEdge(Vertex(lastArrivalEventOfTrip[conn.tripId]), Vertex(id + 1));
             }
+
+            lastArrivalEventOfTrip[conn.tripId] = id + 1;
+
+            // try to add ** Transfer edge ** to previous departure event at stop
+            AssertMsg(conn.departureStopId < data.stopData.size(), "Departure StopId is out of bounds!");
+
+            if (!data.depEventsAtStop[conn.departureStopId].empty()) {
+                Vertex prevDep = Vertex(data.depEventsAtStop[conn.departureStopId].back());
+                AssertMsg(prevDep < numberOfEvents, "Previous Departure Event is out of bounds!");
+
+                bobTheBuilder.addEdge(prevDep, Vertex(id));
+            }
+
+            // also add departure vertex to stop
+            data.depEventsAtStop[conn.departureStopId].emplace_back(id);
+
+            // add the edge from departure => arrival vertex
+            bobTheBuilder.addEdge(Vertex(id), Vertex(id + 1));
         }
-        progress.finished();
-        std::cout << "Done!" << std::endl;
-
-        AssertMsg(tripId == inter.numberOfTrips(), "Number of trips do not align, " << tripId << " vs " << inter.numberOfTrips() << "!");
-        // add transfer edges and transfer chains
-
-        // this is to keep track which stop events we already added to which stop
-        std::unordered_map<size_t, size_t> reachableEvent(data.numberOfStops());
-
-        std::cout << "Adding the transferchain " << (extractFootpaths ? "and the footpaths between transfer vertices " : "") << "..." << std::endl;
-        Progress progress2(data.stopData.size());
 
         for (StopId stop = StopId(0); stop < data.stopData.size(); ++stop) {
-            auto& values = data.stopEventIdsOfStop[stop];
-
-            std::sort(values.begin(), values.end(), [&](size_t left, size_t right) {
-                return data.getTimeOfVertex(Vertex(left), stop) < data.getTimeOfVertex(Vertex(right), stop);
-            });
-
-            int previousTime = data.getTimeOfVertex(data.getTransferVertexOfEvent(values[0]), stop);
-            int currentTime = 0;
-
-            // transfer chain
-            for (size_t i = 1; i < values.size(); ++i) {
-                currentTime = data.getTimeOfVertex(data.getTransferVertexOfEvent(values[i]), stop);
-                AssertMsg(previousTime <= currentTime, "Time travel of transfer nodes!");
-                builderGraph.addEdge(data.getTransferVertexOfEvent(values[i - 1]), data.getTransferVertexOfEvent(values[i])).set(TravelTime, currentTime - previousTime);
-
-                previousTime = currentTime;
-            }
-
-            if (extractFootpaths) {
-                for (const auto edge : inter.transferGraph.edgesFrom(stop)) {
-                    reachableEvent[inter.transferGraph.get(ToVertex, edge)] = static_cast<size_t>(data.stopEventData.size());
-                }
-
-                // in reverse order, since we don't want to create any dubious duplicate footpaths
-                for (size_t i = values.size(); i > 0; --i) {
-                    for (const auto edge : inter.transferGraph.edgesFrom(stop)) {
-                        Vertex toStop = inter.transferGraph.get(ToVertex, edge);
-
-                        int timeAtStop = data.getTimeOfVertex(data.getTransferVertexOfEvent(values[i - 1]), stop) + inter.transferGraph.get(TravelTime, edge);
-
-                        size_t earliestEvent = data.getFirstReachableStopEventAtStop(StopId(toStop), timeAtStop);
-
-                        // no improvement?
-                        if (earliestEvent >= reachableEvent[toStop]) {
-                            continue;
-                        }
-                        AssertMsg(earliestEvent < data.stopEventData.size(), "Reached Event is not valid!");
-                        reachableEvent[toStop] = earliestEvent;
-
-                        // otherwise we can reach a better / earlier event, hence add the footpath
-                        builderGraph.addEdge(data.getTransferVertexOfEvent(values[i - 1]), data.getTransferVertexOfEvent(earliestEvent)).set(TravelTime, inter.transferGraph.get(TravelTime, edge));
-                    }
-                }
-                reachableEvent.clear();
-            }
-
-            ++progress2;
+            AssertMsg(std::is_sorted(data.depEventsAtStop[stop].begin(), data.depEventsAtStop[stop].end(), [&](const size_t& left, const size_t& right) {
+                return data.events[left].time < data.events[right].time;
+            }),
+                "Is not sorted correctly!");
         }
-        progress2.finished();
-        std::cout << "Done!" << std::endl;
 
-        builderGraph.sortEdges(ToVertex);
+        // now we need to add the edges from arrival events to the same stop && per footpath reachable stops departure events
 
-        Graph::move(std::move(builderGraph), data.timeExpandedGraph);
+        auto addEdgeToReachableDepartureEvent = [&](const Vertex fromVertex, const StopId toStop, const int timeAtStop) {
+            AssertMsg(fromVertex < numberOfEvents, "From Event is out of bounds!");
+            AssertMsg(data.isStop(toStop), "To Stop is out of bounds!");
+            AssertMsg(data.events[fromVertex].time <= timeAtStop, "Time travel!");
+
+            const auto& departureEventAtToStop = data.depEventsAtStop[toStop];
+
+            if (departureEventAtToStop.empty()) {
+                return;
+            }
+
+            if (timeAtStop > data.events[departureEventAtToStop.back()].time) {
+                return;
+            }
+
+            for (auto& event : departureEventAtToStop) {
+                if (timeAtStop <= data.events[event].time) {
+                    bobTheBuilder.addEdge(fromVertex, Vertex(event));
+                    return;
+                }
+            }
+            AssertMsg(false, "No edge added??");
+            return;
+        };
+
+        for (size_t i = 0; i < connections.size(); ++i) {
+            Vertex arrEvent = Vertex((i << 1) + 1);
+            AssertMsg(data.isEvent(arrEvent), "Arrival Event is not an event!");
+            AssertMsg(data.isArrivalEvent(arrEvent), "Arrival Event is not an arrival event!");
+
+            StopId fromStop = data.events[arrEvent].stop;
+
+            int time = data.events[arrEvent].time;
+
+            addEdgeToReachableDepartureEvent(arrEvent, fromStop, time + data.stopData[fromStop].minTransferTime);
+
+            if (!extractFootpaths) {
+                continue;
+            }
+
+            for (const auto edge : inter.transferGraph.edgesFrom(fromStop)) {
+                StopId toStop = StopId(inter.transferGraph.get(ToVertex, edge));
+                addEdgeToReachableDepartureEvent(arrEvent, toStop, time + inter.transferGraph.get(TravelTime, edge));
+            }
+        }
+
+        for (const auto [edge, fromVertex] : bobTheBuilder.edgesWithFromVertex()) {
+            Vertex toVertex = bobTheBuilder.get(ToVertex, edge);
+
+            AssertMsg(data.isEvent(fromVertex), "FromVertex is not valid!");
+            AssertMsg(data.isEvent(toVertex), "ToVertex is not valid!");
+
+            int fromTime = data.events[fromVertex].time;
+            int toTime = data.events[toVertex].time;
+
+            AssertMsg(fromTime <= toTime, "Time travel!");
+
+            bobTheBuilder.set(TravelTime, edge, toTime - fromTime);
+        }
+
+        bobTheBuilder.sortEdges(ToVertex);
+        Graph::move(std::move(bobTheBuilder), data.timeExpandedGraph);
+
+        Graph::printInfo(data.timeExpandedGraph);
 
         return data;
     }
@@ -197,86 +211,40 @@ public:
     inline bool isStop(const StopId stop) const noexcept { return stop < numberOfStops(); }
     inline Range<StopId> stops() const noexcept { return Range<StopId>(StopId(0), StopId(numberOfStops())); }
 
-    inline size_t numberOfRoutes() const noexcept { return routeData.size(); }
-    inline bool isRoute(const RouteId route) const noexcept { return route < numberOfRoutes(); }
-    inline Range<RouteId> routes() const noexcept { return Range<RouteId>(RouteId(0), RouteId(numberOfRoutes())); }
-
     inline size_t numberOfTrips() const noexcept { return numTrips; }
     inline bool isTrip(const TripId route) const noexcept { return route < numberOfTrips(); }
     inline Range<TripId> trips() const noexcept { return Range<TripId>(TripId(0), TripId(numberOfTrips())); }
 
-    inline size_t numberOfStopEvents() const noexcept { return stopEventData.size(); }
+    inline size_t numberOfStopEvents() const noexcept { return (events.size() >> 1); }
+    inline size_t numberOfTEVertices() const noexcept { return events.size(); }
+    inline bool isEvent(const Vertex event) const noexcept { return event < events.size(); }
+    inline bool isDepartureEvent(const Vertex event) const noexcept { return !isArrivalEvent(event); }
+    inline bool isArrivalEvent(const Vertex event) const noexcept { return (event & 1); }
 
-    inline size_t numberOfStopsInRoute(const RouteId route) const noexcept
+    inline int getTimeOfVertex(Vertex vertex) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
-        return stopsOfRoute[route].size();
+        AssertMsg(isEvent(vertex), "Vertex " << vertex << " is not valid!");
+
+        return events[vertex].time;
     }
 
-    inline std::vector<StopId>& getStopsOfRoute(const RouteId route) noexcept
+    inline Vertex getFirstReachableDepartureVertexAtStop(const StopId stop, const int time) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
-        return stopsOfRoute[route];
-    }
+        AssertMsg(isStop(stop), "Stop is not valid");
 
-    inline Vertex getTransferVertexOfEvent(const size_t event) const noexcept
-    {
-        AssertMsg(event < numberOfStopEvents(), "Event is out of bounds!");
-        return Vertex(event);
-    }
+        const auto& departureEventAtToStop = depEventsAtStop[stop];
 
-    inline Vertex getArrivalVertexOfEvent(const size_t event) const noexcept
-    {
-        AssertMsg(event < numberOfStopEvents(), "Event is out of bounds!");
-        return Vertex(numberOfStopEvents() + event);
-    }
-
-    inline Vertex getDepartureVertexOfEvent(const size_t event) const noexcept
-    {
-        AssertMsg(event < numberOfStopEvents(), "Event is out of bounds!");
-        return Vertex(2 * numberOfStopEvents() + event);
-    }
-
-    inline int getTimeOfVertex(Vertex vertex, StopId stop) const noexcept
-    {
-        AssertMsg(vertex < 3 * numberOfStopEvents(), "Vertex " << vertex << " is not valid!");
-        AssertMsg(isStop(stop), "Stop is not a stop!");
-
-        // transfer node
-        if (vertex < numberOfStopEvents()) {
-            return stopEventData[vertex].arrivalTime + stopData[stop].minTransferTime;
+        if ((departureEventAtToStop.empty()) || (time > events[departureEventAtToStop.back()].time)) {
+            return Vertex(numberOfTEVertices());
         }
 
-        vertex -= numberOfStopEvents();
-
-        // arr node or dep node
-        if (vertex < numberOfStopEvents()) {
-            return stopEventData[vertex].arrivalTime;
-        } else {
-            return stopEventData[vertex].departureTime;
-        }
-    }
-
-    inline size_t getFirstReachableStopEventAtStop(const StopId stop, const int time) const noexcept
-    {
-        AssertMsg(isStop(stop), "Stop is not a stop!");
-
-        if (stopEventIdsOfStop[stop].empty()) [[unlikely]] {
-            return stopEventData.size();
-        }
-
-        if (time > stopEventData[stopEventIdsOfStop[stop].back()].departureTime) {
-            return stopEventData.size();
-        }
-
-        for (size_t id : stopEventIdsOfStop[stop]) {
-            if (time <= stopEventData[id].departureTime) {
-                return id;
+        for (auto& event : departureEventAtToStop) {
+            if (time <= events[event].time) {
+                return Vertex(event);
             }
         }
-
-        AssertMsg(false, "No event found?");
-        return stopEventData.size();
+        AssertMsg(false, "No edge added??");
+        return Vertex(numberOfTEVertices());
     }
 
     inline void printInfo() const noexcept
@@ -284,7 +252,6 @@ public:
         std::cout << "TE public transit data:" << std::endl;
         std::cout << "   Number of Stops:          " << std::setw(12) << String::prettyInt(numberOfStops()) << std::endl;
         std::cout << "   Number of Trips:          " << std::setw(12) << String::prettyInt(numberOfTrips()) << std::endl;
-        std::cout << "   Number of Routes:         " << std::setw(12) << String::prettyInt(numberOfRoutes()) << std::endl;
         std::cout << "   Number of Stop Events:    " << std::setw(12) << String::prettyInt(numberOfStopEvents()) << std::endl;
         std::cout << "   Number of TE Vertices:    " << std::setw(12) << String::prettyInt(timeExpandedGraph.numVertices()) << std::endl;
         std::cout << "   Number of TE Edges:       " << std::setw(12) << String::prettyInt(timeExpandedGraph.numEdges()) << std::endl;
@@ -292,24 +259,21 @@ public:
 
     inline void serialize(const std::string& fileName) const noexcept
     {
-        IO::serialize(fileName, stopData, routeData, routeOfTrip, stopEventData, stopEventIdsOfStop, stopsOfRoute, numTrips);
+        IO::serialize(fileName, stopData, events, depEventsAtStop, numTrips);
         timeExpandedGraph.writeBinary(fileName + ".graph");
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
-        IO::deserialize(fileName, stopData, routeData, routeOfTrip, stopEventData, stopEventIdsOfStop, stopsOfRoute, numTrips);
+        IO::deserialize(fileName, stopData, events, depEventsAtStop, numTrips);
         timeExpandedGraph.readBinary(fileName + ".graph");
     }
 
     inline long long byteSize() const noexcept
     {
         long long result = Vector::byteSize(stopData);
-        result += Vector::byteSize(routeData);
-        result += Vector::byteSize(routeOfTrip);
-        result += Vector::byteSize(stopEventData);
-        result += Vector::byteSize(stopEventIdsOfStop);
-        result += Vector::byteSize(stopsOfRoute);
+        result += Vector::byteSize(events);
+        result += Vector::byteSize(depEventsAtStop);
         result += sizeof(numTrips);
         result += timeExpandedGraph.byteSize();
         return result;
@@ -317,16 +281,10 @@ public:
 
 public:
     std::vector<RAPTOR::Stop> stopData;
-    std::vector<RAPTOR::Route> routeData;
-    std::vector<RouteId> routeOfTrip;
-    std::vector<RAPTOR::StopEvent> stopEventData;
-    std::vector<std::vector<size_t>> stopEventIdsOfStop;
-    std::vector<std::vector<StopId>> stopsOfRoute;
+    std::vector<Event> events;
+    std::vector<std::vector<size_t>> depEventsAtStop;
     size_t numTrips;
 
-    // event == transfer node
-    // event + numStopEvents == arrival node
-    // event + 2 * numStopEvents == departure node
     TimeExpandedGraph timeExpandedGraph;
 };
 }

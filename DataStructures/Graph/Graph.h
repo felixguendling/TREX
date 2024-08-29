@@ -108,10 +108,10 @@ using DynamicTimeDependentRouteGraph = DynamicGraph<WithRouteVertex, WithDuratio
 using TimeDependentRouteGraph = StaticGraph<WithRouteVertex, WithDurationFunctionAndTravelTimeAndTransferCost>;
 
 // TE
-using WithStopVertexAndTripVertexAndEventVertex = List<Attribute<StopVertex, StopId>, Attribute<TripVertex, TripId>, Attribute<EventVertex, StopEventId>>;
+using WithStopVertex = List<Attribute<StopVertex, StopId>>;
 
-using DynamicTimeExpandedGraph = DynamicGraph<WithStopVertexAndTripVertexAndEventVertex, WithTravelTime>;
-using TimeExpandedGraph = StaticGraph<WithStopVertexAndTripVertexAndEventVertex, WithTravelTime>;
+using DynamicTimeExpandedGraph = DynamicGraph<WithStopVertex, WithTravelTime>;
+using TimeExpandedGraph = StaticGraph<WithStopVertex, WithTravelTime>;
 
 #include "Utils/Conversion.h"
 #include "Utils/IO.h"

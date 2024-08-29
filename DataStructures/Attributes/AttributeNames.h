@@ -105,10 +105,8 @@ using Hop = AttributeNameWrapper<30>;
 using DurationFunction = AttributeNameWrapper<31>;
 using TransferCost = AttributeNameWrapper<32>;
 using RouteVertex = AttributeNameWrapper<33>;
-using TripVertex = AttributeNameWrapper<34>;
-using EventVertex = AttributeNameWrapper<35>;
-using StopVertex = AttributeNameWrapper<36>;
-using UnknownType = AttributeNameWrapper<37>;
+using StopVertex = AttributeNameWrapper<34>;
+using UnknownType = AttributeNameWrapper<35>;
 // Ensure that Unknown is the last entry!
 
 } // namespace ImplementationDetail
@@ -147,8 +145,6 @@ constexpr ImplementationDetail::Hop Hop;
 constexpr ImplementationDetail::DurationFunction DurationFunction;
 constexpr ImplementationDetail::TransferCost TransferCost;
 constexpr ImplementationDetail::RouteVertex RouteVertex;
-constexpr ImplementationDetail::TripVertex TripVertex;
-constexpr ImplementationDetail::EventVertex EventVertex;
 constexpr ImplementationDetail::StopVertex StopVertex;
 constexpr ImplementationDetail::UnknownType Unknown;
 // Ensure that Unknown is the last entry!
@@ -190,10 +186,8 @@ constexpr const char* AttributeNameStrings[] = {
     /* 31 */ "DurationFunction",
     /* 32 */ "TransferCost",
     /* 33 */ "RouteVertex",
-    /* 34 */ "TripVertex",
-    /* 35 */ "EventVertex",
-    /* 36 */ "StopVertex",
-    /* 37 */ "Unknown"
+    /* 34 */ "StopVertex",
+    /* 35 */ "Unknown"
     // Ensure that Unknown is the last entry!
 };
 

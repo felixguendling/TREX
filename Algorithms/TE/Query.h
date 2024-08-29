@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "../../DataStructures/TE/Data.h"
-/* #include "../../Helpers/Vector/TimestampedVector.h" */
 #include "../Dijkstra/Dijkstra.h"
 #include "Profiler.h"
 
@@ -16,7 +15,6 @@ public:
 
     Query(const Data& data)
         : data(data)
-        , reachedTrip(data.numberOfRoutes(), TripId(data.numberOfTrips()))
         , dijkstra(data.timeExpandedGraph, TravelTime)
     {
         profiler.registerPhases({ PHASE_CLEAR, PHASE_FIND_FIRST_VERTEX, PHASE_RUN });
@@ -34,23 +32,20 @@ public:
         AssertMsg(0 <= departureTime, "Time is negative!");
 
         profiler.startPhase();
-        Vertex firstReachableNode = Vertex(data.getFirstReachableStopEventAtStop(source, departureTime));
+        Vertex firstReachableNode = Vertex(data.getFirstReachableDepartureVertexAtStop(source, departureTime));
 
         // Did we reach any transfer node?
-        if (firstReachableNode == data.numberOfStopEvents()) {
+        if (firstReachableNode == data.numberOfTEVertices()) {
             return -1;
         }
 
-        AssertMsg(firstReachableNode < data.numberOfStopEvents(), "First reachable node " << firstReachableNode << " is not valid!");
+        AssertMsg(data.isDepartureEvent(firstReachableNode), "First reachable node " << firstReachableNode << " is not valid!");
 
         profiler.donePhase(PHASE_FIND_FIRST_VERTEX);
 
         profiler.startPhase();
         dijkstra.clear();
 
-        if constexpr (NODE_BLOCKING) {
-            std::fill(reachedTrip.begin(), reachedTrip.end(), TripId(data.numberOfTrips()));
-        }
         profiler.donePhase(PHASE_CLEAR);
 
         profiler.startPhase();
@@ -65,24 +60,8 @@ public:
             profiler.countMetric(METRIC_SEETLED_VERTICES);
         };
 
-        auto pruneEdge = [&](const auto /* from */, [[maybe_unused]] const auto edge) {
+        auto pruneEdge = [&](const auto /* from */, const auto /* edge */) {
             profiler.countMetric(METRIC_RELAXED_EDGES);
-
-            if constexpr (NODE_BLOCKING) {
-                Vertex toVertex = data.timeExpandedGraph.get(ToVertex, edge);
-                if (toVertex < data.numberOfStopEvents())
-                    return false;
-
-                TripId toTrip = data.timeExpandedGraph.get(TripVertex, toVertex);
-
-                if (toTrip == noTripId) return false;
-                RouteId toRoute = data.routeOfTrip[toTrip];
-
-                if (reachedTrip[toRoute] <= toTrip)
-                    return true;
-
-                reachedTrip[toRoute] = toTrip;
-            }
             return false;
         };
 
@@ -110,7 +89,6 @@ public:
 
 private:
     const Data& data;
-    std::vector<TripId> reachedTrip;
 
     Dijkstra<TimeExpandedGraph> dijkstra;
     Profiler profiler;

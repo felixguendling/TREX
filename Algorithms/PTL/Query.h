@@ -37,6 +37,11 @@ public:
         prepareStartingVertex(source, departureTime);
         profiler.donePhase(PHASE_FIND_FIRST_VERTEX);
 
+        if (startingVertex == noVertex) {
+            profiler.done();
+            return -1;
+        }
+
         profiler.startPhase();
         prepareSet();
         profiler.donePhase(PHASE_INSERT_HASH);
@@ -50,7 +55,7 @@ public:
         int finalTime = -1;
 
         if constexpr (BINARY) {
-            finalTime = scanHubsBinary(arrEvents, left);
+            finalTime = (arrEvents.size() < 16 ? scanHubs(arrEvents, left) : scanHubsBinary(arrEvents, left));
         } else {
             finalTime = scanHubs(arrEvents, left);
         }
@@ -64,6 +69,8 @@ public:
     inline bool prepareStartingVertex(const StopId stop, const int time) noexcept
     {
         Vertex firstReachableNode = data.teData.getFirstReachableDepartureVertexAtStop(stop, time);
+
+        startingVertex = noVertex;
 
         // Did we reach any transfer node?
         if (!data.teData.isEvent(firstReachableNode)) {
@@ -124,15 +131,17 @@ public:
     {
         if (arrEvents.empty())
             return -1;
-        size_t i = left;
-        size_t j = arrEvents.size() - 1;
+
+        // Use signed type to handle underflows correctly
+        int i = static_cast<int>(left);
+        int j = static_cast<int>(arrEvents.size()) - 1;
 
         AssertMsg(i <= j, "Left and Right are not valid!");
 
-        while (i < j) {
-            size_t mid = ((i + j) >> 1);
-            AssertMsg(mid < arrEvents.size(), "Mid ( " << mid << " ) is out of bounds (" << arrEvents.size() << " )!");
-            bool found = false;
+        bool found = false;
+        while (i <= j) {
+            size_t mid = i + (j - i) / 2;
+            AssertMsg(mid < arrEvents.size(), "Mid ( " << mid << " ) is out of bounds (" << arrEvents.size() << " )! i: " << i << ", j: " << j);
 
             const auto& arrEventAtTarget = arrEvents[mid];
 
@@ -143,17 +152,21 @@ public:
             for (const auto& hub : bwdLabels) {
                 profiler.countMetric(METRIC_CHECK_HUBS);
 
-                if (hash.find(hub) != hash.end()) {
-                    j = mid;
-                    found = true;
+                found = (hash.find(hub) != hash.end());
+
+                if (found) {
                     break;
                 }
             }
-
-            i = (found ? i : mid + 1);
+            if (found) {
+                j = mid - 1;
+            } else {
+                i = mid + 1;
+            }
         }
 
-        if (i == arrEvents.size() - 1) {
+        // Properly handle the case when no valid index is found
+        if ((i == static_cast<int>(arrEvents.size()) - 1 && !found) || i >= static_cast<int>(arrEvents.size())) {
             return -1;
         }
         profiler.countMetric(METRIC_FOUND_SOLUTIONS);

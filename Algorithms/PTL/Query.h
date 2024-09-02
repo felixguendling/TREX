@@ -24,6 +24,7 @@ public:
             METRIC_FOUND_SOLUTIONS });
     };
 
+    template <bool BINARY = true>
     int run(const StopId source, const int departureTime, const StopId target) noexcept
     {
         AssertMsg(data.teData.isStop(source), "Source is not valid!");
@@ -46,7 +47,13 @@ public:
 
         size_t left = getIndexOfFirstEventAfterTime(arrEvents, departureTime);
 
-        int finalTime = scanHubs(arrEvents, left);
+        int finalTime = -1;
+
+        if constexpr (BINARY) {
+            finalTime = scanHubsBinary(arrEvents, left);
+        } else {
+            finalTime = scanHubs(arrEvents, left);
+        }
 
         profiler.donePhase(PHASE_RUN);
         profiler.done();
@@ -111,6 +118,46 @@ public:
             }
         }
         return -1;
+    }
+
+    inline int scanHubsBinary(const auto& arrEvents, const size_t left = 0) noexcept
+    {
+        if (arrEvents.empty())
+            return -1;
+        size_t i = left;
+        size_t j = arrEvents.size() - 1;
+
+        AssertMsg(i <= j, "Left and Right are not valid!");
+
+        while (i < j) {
+            size_t mid = ((i + j) >> 1);
+            AssertMsg(mid < arrEvents.size(), "Mid ( " << mid << " ) is out of bounds (" << arrEvents.size() << " )!");
+            bool found = false;
+
+            const auto& arrEventAtTarget = arrEvents[mid];
+
+            profiler.countMetric(METRIC_CHECK_ARR_EVENTS);
+
+            const auto& bwdLabels = data.getBwdHubs(Vertex(arrEventAtTarget));
+
+            for (const auto& hub : bwdLabels) {
+                profiler.countMetric(METRIC_CHECK_HUBS);
+
+                if (hash.find(hub) != hash.end()) {
+                    j = mid;
+                    found = true;
+                    break;
+                }
+            }
+
+            i = (found ? i : mid + 1);
+        }
+
+        if (i == arrEvents.size() - 1) {
+            return -1;
+        }
+        profiler.countMetric(METRIC_FOUND_SOLUTIONS);
+        return data.teData.getTimeOfVertex(Vertex(arrEvents[i]));
     }
 
     inline const Profiler& getProfiler() const noexcept

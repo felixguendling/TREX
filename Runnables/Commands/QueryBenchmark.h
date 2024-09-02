@@ -1472,14 +1472,19 @@ public:
     {
         PTL::Data data = PTL::Data::FromBinary(getParameter("PTL input file"));
         data.printInfo();
-        PTL::Query<PTL::AggregateProfiler> algorithm(data);
+        PTL::Query<PTL::AggregateProfiler> algorithmLinear(data);
+        PTL::Query<PTL::AggregateProfiler> algorithmBinary(data);
 
         const size_t n = getParameter<size_t>("Number of queries");
         const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);
 
         for (const StopQuery& query : queries) {
-            algorithm.run(query.source, query.departureTime, query.target);
+            algorithmLinear.template run<false>(query.source, query.departureTime, query.target);
+            algorithmBinary.run(query.source, query.departureTime, query.target);
         }
-        algorithm.getProfiler().printStatistics();
+        std::cout << "Linear Search through Target Arrival Events:" << std::endl;
+        algorithmLinear.getProfiler().printStatistics();
+        std::cout << "Binary Search through Target Arrival Events:" << std::endl;
+        algorithmBinary.getProfiler().printStatistics();
     }
 };

@@ -56,6 +56,9 @@ public:
         data.depEventsAtStop.clear();
         data.depEventsAtStop.assign(inter.stops.size(), {});
 
+        data.arrEventsAtStop.clear();
+        data.arrEventsAtStop.assign(inter.stops.size(), {});
+
         for (const Intermediate::Stop& stop : inter.stops) {
             data.stopData.emplace_back(stop);
         }
@@ -101,6 +104,9 @@ public:
             bobTheBuilder.set(StopVertex, Vertex(id), conn.departureStopId);
             bobTheBuilder.set(StopVertex, Vertex(id + 1), conn.arrivalStopId);
 
+            // add the arrival event to arrEventsAtStop
+            data.arrEventsAtStop[conn.arrivalStopId].emplace_back(id + 1);
+
             // check if can create an edge to the previous arrival event
             // ** Trip Edge **
             AssertMsg(conn.tripId < lastArrivalEventOfTrip.size(), "Trip is out of bounds!");
@@ -127,13 +133,6 @@ public:
 
             // add the edge from departure => arrival vertex
             bobTheBuilder.addEdge(Vertex(id), Vertex(id + 1));
-        }
-
-        for (StopId stop = StopId(0); stop < data.stopData.size(); ++stop) {
-            AssertMsg(std::is_sorted(data.depEventsAtStop[stop].begin(), data.depEventsAtStop[stop].end(), [&](const size_t& left, const size_t& right) {
-                return data.events[left].time < data.events[right].time;
-            }),
-                "Is not sorted correctly!");
         }
 
         // now we need to add the edges from arrival events to the same stop && per footpath reachable stops departure events
@@ -178,13 +177,13 @@ public:
                 continue;
             }
 
-            for (const auto edge : inter.transferGraph.edgesFrom(fromStop)) {
+            for (const auto& edge : inter.transferGraph.edgesFrom(fromStop)) {
                 StopId toStop = StopId(inter.transferGraph.get(ToVertex, edge));
                 addEdgeToReachableDepartureEvent(arrEvent, toStop, time + inter.transferGraph.get(TravelTime, edge));
             }
         }
 
-        for (const auto [edge, fromVertex] : bobTheBuilder.edgesWithFromVertex()) {
+        for (const auto& [edge, fromVertex] : bobTheBuilder.edgesWithFromVertex()) {
             Vertex toVertex = bobTheBuilder.get(ToVertex, edge);
 
             AssertMsg(data.isEvent(fromVertex), "FromVertex is not valid!");
@@ -203,6 +202,22 @@ public:
 
         Graph::printInfo(data.timeExpandedGraph);
 
+        for (StopId stop(0); stop < data.stopData.size(); ++stop) {
+            std::sort(data.arrEventsAtStop[stop].begin(), data.arrEventsAtStop[stop].end(), [&](const size_t left, const size_t right) {
+                return data.events[left].time < data.events[right].time;
+            });
+
+            AssertMsg(std::is_sorted(data.arrEventsAtStop[stop].begin(), data.arrEventsAtStop[stop].end(), [&](const size_t left, const size_t right) {
+                return data.events[left].time < data.events[right].time;
+            }),
+                "Arrival Events are not sorted correctly!");
+
+            AssertMsg(std::is_sorted(data.depEventsAtStop[stop].begin(), data.depEventsAtStop[stop].end(), [&](const size_t left, const size_t right) {
+                return data.events[left].time < data.events[right].time;
+            }),
+                "Departure Events are not sorted correctly!");
+        }
+
         return data;
     }
 
@@ -215,7 +230,7 @@ public:
     inline bool isTrip(const TripId route) const noexcept { return route < numberOfTrips(); }
     inline Range<TripId> trips() const noexcept { return Range<TripId>(TripId(0), TripId(numberOfTrips())); }
 
-    inline size_t numberOfStopEvents() const noexcept { return (events.size() >> 1); }
+    inline size_t numberOfStopEvents() const noexcept { return events.size(); }
     inline size_t numberOfTEVertices() const noexcept { return events.size(); }
     inline bool isEvent(const Vertex event) const noexcept { return event < events.size(); }
     inline bool isDepartureEvent(const Vertex event) const noexcept { return !isArrivalEvent(event); }
@@ -259,13 +274,13 @@ public:
 
     inline void serialize(const std::string& fileName) const noexcept
     {
-        IO::serialize(fileName, stopData, events, depEventsAtStop, numTrips);
+        IO::serialize(fileName, stopData, events, depEventsAtStop, arrEventsAtStop, numTrips);
         timeExpandedGraph.writeBinary(fileName + ".graph");
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
-        IO::deserialize(fileName, stopData, events, depEventsAtStop, numTrips);
+        IO::deserialize(fileName, stopData, events, depEventsAtStop, arrEventsAtStop, numTrips);
         timeExpandedGraph.readBinary(fileName + ".graph");
     }
 
@@ -274,15 +289,57 @@ public:
         long long result = Vector::byteSize(stopData);
         result += Vector::byteSize(events);
         result += Vector::byteSize(depEventsAtStop);
+        result += Vector::byteSize(arrEventsAtStop);
         result += sizeof(numTrips);
         result += timeExpandedGraph.byteSize();
         return result;
+    }
+
+    inline std::vector<size_t>& getDeparturesOfStop(const StopId stop) noexcept
+    {
+        AssertMsg(isStop(stop), "Stop is not a stop!");
+        return depEventsAtStop[stop];
+    }
+
+    inline std::vector<size_t>& getArrivalsOfStop(const StopId stop) noexcept
+    {
+        AssertMsg(isStop(stop), "Stop is not a stop!");
+        return arrEventsAtStop[stop];
+    }
+
+    inline void writeOrderForAkiba(const std::string& fileName) const noexcept
+    {
+        std::vector<size_t> order;
+        order.reserve(numberOfStopEvents());
+
+        // first all departure events in reverse order
+        for (StopId stop(0); stop < numberOfStops(); ++stop) {
+            order.insert(order.end(), depEventsAtStop[stop].begin(), depEventsAtStop[stop].end());
+            order.insert(order.end(), arrEventsAtStop[stop].begin(), arrEventsAtStop[stop].end());
+        }
+        // // then all arrival events in reverse order
+        // for (StopId stop(0); stop < numberOfStops(); ++stop) {
+        //     order.insert(order.end(), arrEventsAtStop[stop].begin(), arrEventsAtStop[stop].end());
+        // }
+
+        std::ofstream file;
+
+        file.open(fileName);
+
+        file << order.size() << std::endl;
+
+        for (auto& val : order) {
+            file << val << std::endl;
+        }
+        file.close();
+        AssertMsg(file.good(), "Something went wrong!");
     }
 
 public:
     std::vector<RAPTOR::Stop> stopData;
     std::vector<Event> events;
     std::vector<std::vector<size_t>> depEventsAtStop;
+    std::vector<std::vector<size_t>> arrEventsAtStop;
     size_t numTrips;
 
     TimeExpandedGraph timeExpandedGraph;

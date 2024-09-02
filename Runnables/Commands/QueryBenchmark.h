@@ -12,6 +12,7 @@
 #include "../../Algorithms/CSA/HLCSA.h"
 #include "../../Algorithms/CSA/ProfileCSA.h"
 #include "../../Algorithms/CSA/ULTRACSA.h"
+#include "../../Algorithms/PTL/Query.h"
 #include "../../Algorithms/RAPTOR/Bounded/BoundedMcRAPTOR.h"
 #include "../../Algorithms/RAPTOR/DijkstraRAPTOR.h"
 #include "../../Algorithms/RAPTOR/HLRAPTOR.h"
@@ -36,6 +37,7 @@
 #include "../../Algorithms/TripBased/Query/Query.h"
 #include "../../Algorithms/TripBased/Query/TransitiveQuery.h"
 #include "../../DataStructures/CSA/Data.h"
+#include "../../DataStructures/PTL/Data.h"
 #include "../../DataStructures/Queries/Queries.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
@@ -1444,6 +1446,33 @@ public:
         TE::Data data = TE::Data::FromBinary(getParameter("TE input file"));
         data.printInfo();
         TE::Query<TE::AggregateProfiler> algorithm(data);
+
+        const size_t n = getParameter<size_t>("Number of queries");
+        const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);
+
+        for (const StopQuery& query : queries) {
+            algorithm.run(query.source, query.departureTime, query.target);
+        }
+        algorithm.getProfiler().printStatistics();
+    }
+};
+
+class RunPTLQueries : public ParameterizedCommand {
+public:
+    RunPTLQueries(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "runPTLQueries",
+            "Runs the given number of random PTL queries.")
+    {
+        addParameter("PTL input file");
+        addParameter("Number of queries");
+    }
+
+    virtual void execute() noexcept
+    {
+        PTL::Data data = PTL::Data::FromBinary(getParameter("PTL input file"));
+        data.printInfo();
+        PTL::Query<PTL::AggregateProfiler> algorithm(data);
 
         const size_t n = getParameter<size_t>("Number of queries");
         const std::vector<StopQuery> queries = generateRandomStopQueries(data.numberOfStops(), n);

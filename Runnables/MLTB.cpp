@@ -41,8 +41,14 @@ int main(int argc, char** argv)
 
     new IntermediateToTD(shell);
     new IntermediateToTE(shell);
+
+    new ExportTEGraphToHubLabelFile(shell);
+
     new RunTDDijkstraQueries(shell);
     new RunTEDijkstraQueries(shell);
+
+    new TEToPTL(shell);
+    new RunPTLQueries(shell);
 
     shell.run();
     return 0;

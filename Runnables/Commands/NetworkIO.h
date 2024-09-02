@@ -6,6 +6,7 @@
 #include "../../DataStructures/GTFS/Data.h"
 #include "../../DataStructures/Graph/Graph.h"
 #include "../../DataStructures/Intermediate/Data.h"
+#include "../../DataStructures/PTL/Data.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
 #include "../../DataStructures/TD/Data.h"
@@ -189,6 +190,39 @@ public:
     }
 };
 
+class TEToPTL : public ParameterizedCommand {
+public:
+    TEToPTL(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "tEToPTL",
+            "Converts TE data to PTL format.")
+    {
+        addParameter("Input file");
+        addParameter("Output file");
+        addParameter("Input file (labels)", "");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string inputFile = getParameter("Input file");
+        const std::string outputFile = getParameter("Output file");
+        const std::string inputFileLabels = getParameter("Input file (labels)");
+
+        TE::Data data = TE::Data(inputFile);
+        data.printInfo();
+
+        PTL::Data ptl(data);
+
+        if (inputFileLabels != "") {
+            ptl.readLabels(inputFileLabels);
+            ptl.sortLabels();
+        }
+
+        ptl.printInfo();
+
+        ptl.serialize(outputFile);
+    }
+};
 class BuildMultimodalRAPTORData : public ParameterizedCommand {
 public:
     BuildMultimodalRAPTORData(BasicShell& shell)
@@ -443,3 +477,49 @@ RAPTOR::TRANSFER_WEIGHTED, true);
     }
 };
 */
+
+class ExportTEGraphToHubLabelFile : public ParameterizedCommand {
+public:
+    ExportTEGraphToHubLabelFile(BasicShell& shell)
+        : ParameterizedCommand(shell, "exportTEGraphToHubLabelFile",
+            "Writes all the TE Data into text file.")
+    {
+        addParameter("TE Binary");
+        addParameter("Output file");
+        addParameter("Output file (Dimacs)");
+        addParameter("Output file (Order)");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string networkFile = getParameter("TE Binary");
+        const std::string outputFile = getParameter("Output file");
+        const std::string outputFileDimcas = getParameter("Output file (Dimacs)");
+        const std::string outputFileOrder = getParameter("Output file (Order)");
+
+        TE::Data network = TE::Data(networkFile);
+
+        Graph::toDimacs(outputFileDimcas, network.timeExpandedGraph, network.timeExpandedGraph[TravelTime]);
+        std::cout << "Graph exported successfully to " << outputFileDimcas << std::endl;
+
+        std::ofstream file(outputFile);
+
+        // Check if the file is open
+        if (!file.is_open()) {
+            std::cerr << "Error: Could not open the file " << outputFile << std::endl;
+            return;
+        }
+
+        // Write each edge in the format: [src_id] [dst_id] [arc_length]
+        for (const auto [edge, from] : network.timeExpandedGraph.edgesWithFromVertex()) {
+            file << static_cast<size_t>(from + 1) << " " << static_cast<size_t>(network.timeExpandedGraph.get(ToVertex, edge) + 1) << " " << static_cast<size_t>(network.timeExpandedGraph.get(TravelTime, edge)) << std::endl;
+        }
+
+        // Close the file stream
+        file.close();
+        std::cout << "Graph exported successfully to " << outputFile << std::endl;
+
+        network.writeOrderForAkiba(outputFileOrder);
+        std::cout << "Order exported successfully to " << outputFileOrder << std::endl;
+    }
+};

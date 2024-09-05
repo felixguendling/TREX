@@ -6,6 +6,7 @@
 #include "../CSA/Entities/Connection.h"
 #include "../Graph/Graph.h"
 #include "../Intermediate/Data.h"
+#include "../RAPTOR/Entities/Stop.h"
 
 #include "../../Helpers/Assert.h"
 #include "../../Helpers/Console/Progress.h"

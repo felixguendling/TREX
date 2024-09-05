@@ -21,7 +21,7 @@ public:
         , fwdVertices(teData.numberOfTEVertices())
         , bwdVertices(teData.numberOfTEVertices())
     {
-        readLabels(fileName);
+        readViennotLabels(fileName);
         sortLabels();
     };
 
@@ -32,11 +32,65 @@ public:
         return data;
     }
 
-    inline bool readLabels(const std::string fileName)
+    inline bool readViennotLabels(const std::string& fileName)
     {
-        std::cout << "Reading Labels from " << fileName << " ... " << std::endl;
+        std::cout << "Reading Viennot Labels from " << fileName << " ... " << std::endl;
         std::ifstream file;
         file.open(fileName);
+
+        if (!file.is_open()) {
+            std::cerr << "Error: Could not open the file." << std::endl;
+            return 1;
+        }
+
+        size_t n = teData.numberOfTEVertices();
+
+        fwdVertices.resize(n, {});
+        bwdVertices.resize(n, {});
+
+        std::string line;
+        char type;
+        size_t vertex, hub, dummyDist;
+
+        while (std::getline(file, line)) {
+            std::istringstream iss(line);
+            iss >> type >> vertex >> hub >> dummyDist;
+
+            --vertex;
+            --hub;
+
+            AssertMsg(vertex < n, "Vertex is out of bounds!");
+            AssertMsg(hub < n, "Hub is out of bounds!");
+
+            switch (type) {
+            case 'o':
+                fwdVertices[vertex].push_back(Vertex(hub));
+                break;
+            case 'i':
+                bwdVertices[hub].push_back(Vertex(vertex));
+                break;
+            default:
+                std::cerr << "Warning: Unknown label type '" << type << "' in line: " << line << std::endl;
+                break;
+            }
+        }
+
+        file >> std::ws;
+        file.close();
+        std::cout << "Done!" << std::endl;
+        return file.eof() && !file.fail();
+    }
+
+    inline bool readSavrusLabels(const std::string& fileName)
+    {
+        std::cout << "Reading Savrus Labels from " << fileName << " ... " << std::endl;
+        std::ifstream file;
+        file.open(fileName);
+
+        if (!file.is_open()) {
+            std::cerr << "Error: Could not open the file." << std::endl;
+            return 1;
+        }
 
         size_t n;
         file >> n;
@@ -117,10 +171,12 @@ public:
         size_t minSizeFWD = teData.numberOfTEVertices();
         size_t maxSizeFWD = 0;
         size_t totalSizeFWD = 0;
+        Vertex maxFwdVertex = noVertex;
 
         size_t minSizeBWD = teData.numberOfTEVertices();
         size_t maxSizeBWD = 0;
         size_t totalSizeBWD = 0;
+        Vertex maxBwdVertex = noVertex;
 
         AssertMsg(fwdVertices.size() == (teData.numberOfTEVertices()), "Not the same size!");
         AssertMsg(bwdVertices.size() == (teData.numberOfTEVertices()), "Not the same size!");
@@ -129,11 +185,18 @@ public:
             minSizeFWD = std::min(minSizeFWD, fwdVertices[v].size());
             maxSizeFWD = std::max(maxSizeFWD, fwdVertices[v].size());
 
+            if (maxSizeFWD == fwdVertices[v].size()) {
+                maxFwdVertex = v;
+            }
+
             totalSizeFWD += fwdVertices[v].size();
 
             minSizeBWD = std::min(minSizeBWD, bwdVertices[v].size());
             maxSizeBWD = std::max(maxSizeBWD, bwdVertices[v].size());
 
+            if (maxSizeBWD == bwdVertices[v].size()) {
+                maxBwdVertex = v;
+            }
             totalSizeBWD += bwdVertices[v].size();
         }
 
@@ -144,12 +207,14 @@ public:
         std::cout << "   Number of TE Edges:        " << std::setw(12) << String::prettyInt(teData.timeExpandedGraph.numEdges()) << std::endl;
         std::cout << "   Forward Labels:" << std::endl;
         std::cout << "      Min # of hubs:          " << std::setw(12) << String::prettyInt(minSizeFWD) << std::endl;
-        std::cout << "      Max # of hubs:          " << std::setw(12) << String::prettyInt(maxSizeFWD) << std::endl;
         std::cout << "      Avg # of hubs:          " << std::setw(12) << String::prettyDouble(static_cast<double>(totalSizeFWD) / (teData.numberOfTEVertices())) << std::endl;
+        std::cout << "      Max # of hubs:          " << std::setw(12) << String::prettyInt(maxSizeFWD) << std::endl;
+        std::cout << "      Max Vertex:             " << std::setw(12) << maxFwdVertex << std::endl;
         std::cout << "   Backward Labels:" << std::endl;
         std::cout << "      Min # of hubs:          " << std::setw(12) << String::prettyInt(minSizeBWD) << std::endl;
-        std::cout << "      Max # of hubs:          " << std::setw(12) << String::prettyInt(maxSizeBWD) << std::endl;
         std::cout << "      Avg # of hubs:          " << std::setw(12) << String::prettyDouble(static_cast<double>(totalSizeBWD) / (teData.numberOfTEVertices())) << std::endl;
+        std::cout << "      Max # of hubs:          " << std::setw(12) << String::prettyInt(maxSizeBWD) << std::endl;
+        std::cout << "      Max Vertex:             " << std::setw(12) << maxBwdVertex << std::endl;
         std::cout << "   Total size:                " << std::setw(12) << String::bytesToString(byteSize()) << std::endl;
     }
 

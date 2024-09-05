@@ -214,7 +214,7 @@ public:
         PTL::Data ptl(data);
 
         if (inputFileLabels != "") {
-            ptl.readLabels(inputFileLabels);
+            ptl.readViennotLabels(inputFileLabels);
             ptl.sortLabels();
         }
 

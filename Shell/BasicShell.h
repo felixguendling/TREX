@@ -45,8 +45,9 @@ inline char getch()
 
 class BasicShell {
 public:
-    BasicShell(std::string programName = "", std::string prompt = "> ", bool autosaveCache = true,
-        std::string cacheFile = "readcache", std::ostream& out = std::cout)
+    BasicShell(std::string programName = "", std::string prompt = "> ",
+        bool autosaveCache = true, std::string cacheFile = "readcache",
+        std::ostream& out = std::cout)
         : programName(programName)
         , prompt(prompt)
         , out(out)
@@ -167,7 +168,8 @@ public:
             if (firstSpacePos < currentLine.size()) {
                 const std::string commandName = currentLine.substr(0, firstSpacePos);
                 currentLine = currentLine.substr(lastSpacePos + 1);
-                collectParameterSuggestions(commandName, currentLine, suggestions,
+                collectParameterSuggestions(
+                    commandName, currentLine, suggestions,
                     String::count(String::trim(currentLine), ' ') - 1);
             } else if (!isPrompt) {
                 collectCommandSuggestions(currentLine, suggestions);
@@ -250,9 +252,13 @@ public:
             Timer commandTimer;
             command->execute(tokens[1]);
             if (reportCommandTimes)
-                shell << grey("[Finished in ", String::msToString(commandTimer.elapsedMilliseconds()), "]") << newLine;
+                shell << grey("[Finished in ",
+                    String::msToString(commandTimer.elapsedMilliseconds()),
+                    "]")
+                      << newLine;
         } else {
-            shell << "Unknown command: \"" << tokens[0] << "\", try using \"help\"" << newLine;
+            shell << "Unknown command: \"" << tokens[0] << "\", try using \"help\""
+                  << newLine;
         }
     }
 
@@ -272,7 +278,8 @@ public:
     }
 
     template <typename T>
-    inline T ask(const std::string& question, const std::vector<std::string>& suggestions)
+    inline T ask(const std::string& question,
+        const std::vector<std::string>& suggestions)
     {
         additionalSuggestions = suggestions;
         std::string oldPrompt = prompt;
@@ -283,15 +290,13 @@ public:
         return String::lexicalCast<T>(line);
     }
 
-    inline std::string ask(const std::string& question, const std::vector<std::string>& suggestions)
+    inline std::string ask(const std::string& question,
+        const std::vector<std::string>& suggestions)
     {
         return ask<std::string>(question, suggestions);
     }
 
-    inline void stop()
-    {
-        running = false;
-    }
+    inline void stop() { running = false; }
 
     inline void execute(const std::string& line) noexcept
     {
@@ -382,10 +387,7 @@ public:
         return shell << (std::string)::white(c...);
     }
 
-    inline BasicShell& printPrompt()
-    {
-        return blue(prompt);
-    }
+    inline BasicShell& printPrompt() { return blue(prompt); }
 
 public:
     inline bool addCommand(Command* c)
@@ -398,40 +400,22 @@ public:
         }
     }
 
-    inline const std::vector<Command*>& getCommands() const
-    {
-        return commands;
-    }
+    inline const std::vector<Command*>& getCommands() const { return commands; }
 
-    inline std::string getProgramName() const
-    {
-        return programName;
-    }
+    inline std::string getProgramName() const { return programName; }
 
-    inline void setProgramName(const std::string& name)
-    {
-        programName = name;
-    }
+    inline void setProgramName(const std::string& name) { programName = name; }
 
-    inline std::string getPrompt() const
-    {
-        return prompt;
-    }
+    inline std::string getPrompt() const { return prompt; }
 
-    inline void setPrompt(const std::string& p)
-    {
-        prompt = p;
-    }
+    inline void setPrompt(const std::string& p) { prompt = p; }
 
     inline void clearLine() const
     {
         shell << "\r" << whiteSpace(getScreenWidth()) << "\r";
     }
 
-    inline std::string getDir() const
-    {
-        return dir;
-    }
+    inline std::string getDir() const { return dir; }
 
     inline void setDir(const std::string& s)
     {
@@ -441,60 +425,30 @@ public:
         }
     }
 
-    inline std::vector<std::string>& getReadCache()
-    {
-        return cache;
-    }
+    inline std::vector<std::string>& getReadCache() { return cache; }
 
-    inline std::string getCacheFile() const
-    {
-        return cacheFile;
-    }
+    inline std::string getCacheFile() const { return cacheFile; }
 
     inline void setCacheFile(const std::string& filename)
     {
         cacheFile = filename;
     }
 
-    inline bool getAutosaveCache() const
-    {
-        return autosaveCache;
-    }
+    inline bool getAutosaveCache() const { return autosaveCache; }
 
-    inline void setAutosaveCache(const bool b)
-    {
-        autosaveCache = b;
-    }
+    inline void setAutosaveCache(const bool b) { autosaveCache = b; }
 
-    inline bool getAutoCompleteFiles() const
-    {
-        return autoCompleteFiles;
-    }
+    inline bool getAutoCompleteFiles() const { return autoCompleteFiles; }
 
-    inline void setAutoCompleteFiles(const bool b)
-    {
-        autoCompleteFiles = b;
-    }
+    inline void setAutoCompleteFiles(const bool b) { autoCompleteFiles = b; }
 
-    inline bool getReportCommandTimes() const
-    {
-        return reportCommandTimes;
-    }
+    inline bool getReportCommandTimes() const { return reportCommandTimes; }
 
-    inline void setReportCommandTimes(const bool b)
-    {
-        reportCommandTimes = b;
-    }
+    inline void setReportCommandTimes(const bool b) { reportCommandTimes = b; }
 
-    inline bool getReportParameters() const
-    {
-        return reportParameters;
-    }
+    inline bool getReportParameters() const { return reportParameters; }
 
-    inline void setReportParameters(const bool b)
-    {
-        reportParameters = b;
-    }
+    inline void setReportParameters(const bool b) { reportParameters = b; }
 
 private:
     inline std::string whiteSpace(int size) const
@@ -520,7 +474,8 @@ private:
         return result;
     }
 
-    inline void collectCommandSuggestions(const std::string& s, std::vector<std::string>& suggestions)
+    inline void collectCommandSuggestions(const std::string& s,
+        std::vector<std::string>& suggestions)
     {
         for (Command* command : commands) {
             if (command->name().find(s) == 0) {
@@ -529,7 +484,9 @@ private:
         }
     }
 
-    inline void collectAdditionalSuggestions(const std::string& s, std::vector<std::string>& suggestions)
+    inline void
+    collectAdditionalSuggestions(const std::string& s,
+        std::vector<std::string>& suggestions)
     {
         for (const std::string& suggestion : additionalSuggestions) {
             if (suggestion.find(s) == 0) {
@@ -538,7 +495,8 @@ private:
         }
     }
 
-    inline void collectPathSuggestions(const std::string& s, std::vector<std::string>& suggestions)
+    inline void collectPathSuggestions(const std::string& s,
+        std::vector<std::string>& suggestions)
     {
         const int splitPos = s.rfind('/');
         if (splitPos < 0)
@@ -557,7 +515,8 @@ private:
         }
     }
 
-    inline void collectCacheSuggestions(const std::string& s, std::vector<std::string>& suggestions)
+    inline void collectCacheSuggestions(const std::string& s,
+        std::vector<std::string>& suggestions)
     {
         std::string line = String::trim(s);
         if (s.size() > 0 && String::isWhiteSpace(s.back()))
@@ -569,7 +528,9 @@ private:
         }
     }
 
-    inline void collectParameterSuggestions(const std::string& commandName, const std::string& s,
+    inline void
+    collectParameterSuggestions(const std::string& commandName,
+        const std::string& s,
         std::vector<std::string>& suggestions)
     {
         Command* command = findCommand(commandName);
@@ -582,8 +543,10 @@ private:
         }
     }
 
-    inline void collectParameterSuggestions(const std::string& commandName, const std::string& s,
-        std::vector<std::string>& suggestions, const size_t index)
+    inline void collectParameterSuggestions(const std::string& commandName,
+        const std::string& s,
+        std::vector<std::string>& suggestions,
+        const size_t index)
     {
         Command* command = findCommand(commandName);
         if (command != nullptr) {
@@ -602,7 +565,8 @@ private:
         autoComplete(s, suggestions);
     }
 
-    inline void autoComplete(const std::string& s, std::vector<std::string>& suggestions)
+    inline void autoComplete(const std::string& s,
+        std::vector<std::string>& suggestions)
     {
         if (suggestions.size() == 0)
             return;
@@ -640,7 +604,8 @@ private:
         }
     }
 
-    inline void autoComplete(const std::string& s, const std::string& suggestion)
+    inline void autoComplete(const std::string& s,
+        const std::string& suggestion)
     {
         if (s.empty())
             return;

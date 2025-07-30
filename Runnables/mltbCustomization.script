@@ -1,3 +1,3 @@
-applyPartitionFile ../../Datasets/Germany/MLTB/partition4_4.i20.txt ../../Datasets/Germany/MLTB/mltb.binary true
+applyPartitionFile ../../Datasets/Germany/MLTB/kahypar/compact_layout.graph.metis.part1024.epsilon0.05.seed0.KaHyPar 10 ../../Datasets/Germany/MLTB/mltb.binary true
 customize ../../Datasets/Germany/MLTB/mltb.binary ../../Datasets/Germany/MLTB/mltb.binary
 showInfoOfMLTB ../../Datasets/Germany/MLTB/mltb.binary

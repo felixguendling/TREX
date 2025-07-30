@@ -28,7 +28,8 @@ public:
 
 private:
     struct ParentLabel {
-        ParentLabel(const Vertex parent = noVertex, const bool reachedByTransfer = false,
+        ParentLabel(const Vertex parent = noVertex,
+            const bool reachedByTransfer = false,
             const TripId tripId = noTripId)
             : parent(parent)
             , reachedByTransfer(reachedByTransfer)
@@ -45,7 +46,8 @@ private:
     };
 
 public:
-    ULTRACSA(const Data& data, const CH::CH& chData, const Profiler& profilerTemplate = Profiler())
+    ULTRACSA(const Data& data, const CH::CH& chData,
+        const Profiler& profilerTemplate = Profiler())
         : data(data)
         , initialTransfers(chData, FORWARD, data.numberOfStops())
         , sourceVertex(noVertex)
@@ -56,14 +58,19 @@ public:
         , parentLabel(PathRetrieval ? data.numberOfStops() + 1 : 0)
         , profiler(profilerTemplate)
     {
-        AssertMsg(!Graph::hasLoops(data.transferGraph), "Shortcut graph may not have loops!");
-        AssertMsg(Vector::isSorted(data.connections), "Connections must be sorted in ascending order!");
-        profiler.registerPhases({ PHASE_CLEAR, PHASE_INITIALIZATION, PHASE_CONNECTION_SCAN });
-        profiler.registerMetrics({ METRIC_CONNECTIONS, METRIC_EDGES, METRIC_STOPS_BY_TRIP, METRIC_STOPS_BY_TRANSFER });
+        AssertMsg(!Graph::hasLoops(data.transferGraph),
+            "Shortcut graph may not have loops!");
+        AssertMsg(Vector::isSorted(data.connections),
+            "Connections must be sorted in ascending order!");
+        profiler.registerPhases(
+            { PHASE_CLEAR, PHASE_INITIALIZATION, PHASE_CONNECTION_SCAN });
+        profiler.registerMetrics({ METRIC_CONNECTIONS, METRIC_EDGES,
+            METRIC_STOPS_BY_TRIP, METRIC_STOPS_BY_TRANSFER });
         profiler.initialize();
     }
 
-    inline void run(const Vertex source, const int departureTime, const Vertex target = noVertex) noexcept
+    inline void run(const Vertex source, const int departureTime,
+        const Vertex target = noVertex) noexcept
     {
         profiler.start();
 
@@ -106,13 +113,15 @@ public:
         return arrivalTime[stop];
     }
 
-    template <bool T = PathRetrieval, typename = std::enable_if_t<T == PathRetrieval && T>>
+    template <bool T = PathRetrieval,
+        typename = std::enable_if_t<T == PathRetrieval && T>>
     inline Journey getJourney() noexcept
     {
         return getJourney(targetStop);
     }
 
-    template <bool T = PathRetrieval, typename = std::enable_if_t<T == PathRetrieval && T>>
+    template <bool T = PathRetrieval,
+        typename = std::enable_if_t<T == PathRetrieval && T>>
     inline Journey getJourney(const Vertex vertex) noexcept
     {
         StopId stop = (vertex == targetVertex) ? (targetStop) : (StopId(vertex));
@@ -122,10 +131,15 @@ public:
         while (stop != sourceVertex) {
             const ParentLabel& label = parentLabel[stop];
             if (label.reachedByTransfer) {
-                const int parentDepartureTime = (label.parent == sourceVertex) ? sourceDepartureTime : arrivalTime[label.parent];
-                journey.emplace_back(label.parent, stop, parentDepartureTime, arrivalTime[stop], label.transferId);
+                const int parentDepartureTime = (label.parent == sourceVertex)
+                    ? sourceDepartureTime
+                    : arrivalTime[label.parent];
+                journey.emplace_back(label.parent, stop, parentDepartureTime,
+                    arrivalTime[stop], label.transferId);
             } else {
-                journey.emplace_back(label.parent, stop, data.connections[tripReached[label.tripId]].departureTime,
+                journey.emplace_back(
+                    label.parent, stop,
+                    data.connections[tripReached[label.tripId]].departureTime,
                     arrivalTime[stop], label.tripId);
             }
             stop = StopId(label.parent);
@@ -139,15 +153,13 @@ public:
         return journeyToPath(getJourney(vertex));
     }
 
-    inline std::vector<std::string> getRouteDescription(const Vertex vertex) noexcept
+    inline std::vector<std::string>
+    getRouteDescription(const Vertex vertex) noexcept
     {
         return data.journeyToText(getJourney(vertex));
     }
 
-    inline const Profiler& getProfiler() const noexcept
-    {
-        return profiler;
-    }
+    inline const Profiler& getProfiler() const noexcept { return profiler; }
 
 private:
     inline void clear()
@@ -163,15 +175,18 @@ private:
         }
     }
 
-    inline ConnectionId firstReachableConnection(const int departureTime) const noexcept
+    inline ConnectionId
+    firstReachableConnection(const int departureTime) const noexcept
     {
         return ConnectionId(
-            Vector::lowerBound(data.connections, departureTime, [](const Connection& connection, const int time) {
-                return connection.departureTime < time;
-            }));
+            Vector::lowerBound(data.connections, departureTime,
+                [](const Connection& connection, const int time) {
+                    return connection.departureTime < time;
+                }));
     }
 
-    inline void scanConnections(const ConnectionId begin, const ConnectionId end) noexcept
+    inline void scanConnections(const ConnectionId begin,
+        const ConnectionId end) noexcept
     {
         for (ConnectionId i = begin; i < end; i++) {
             const Connection& connection = data.connections[i];
@@ -179,22 +194,26 @@ private:
                 break;
             if (connectionIsReachable(connection, i)) {
                 profiler.countMetric(METRIC_CONNECTIONS);
-                arrivalByTrip(connection.arrivalStopId, connection.arrivalTime, connection.tripId);
+                arrivalByTrip(connection.arrivalStopId, connection.arrivalTime,
+                    connection.tripId);
             }
         }
     }
 
-    inline bool connectionIsReachableFromStop(const Connection& connection) const noexcept
+    inline bool
+    connectionIsReachableFromStop(const Connection& connection) const noexcept
     {
         return arrivalTime[connection.departureStopId] <= connection.departureTime - data.minTransferTime(connection.departureStopId);
     }
 
-    inline bool connectionIsReachableFromTrip(const Connection& connection) const noexcept
+    inline bool
+    connectionIsReachableFromTrip(const Connection& connection) const noexcept
     {
         return tripReached[connection.tripId] != TripFlag();
     }
 
-    inline bool connectionIsReachable(const Connection& connection, const ConnectionId id) noexcept
+    inline bool connectionIsReachable(const Connection& connection,
+        const ConnectionId id) noexcept
     {
         if (connectionIsReachableFromTrip(connection))
             return true;
@@ -210,7 +229,8 @@ private:
         return false;
     }
 
-    inline void arrivalByTrip(const StopId stop, const int time, const TripId trip) noexcept
+    inline void arrivalByTrip(const StopId stop, const int time,
+        const TripId trip) noexcept
     {
         if (arrivalTime[stop] <= time)
             return;
@@ -241,7 +261,8 @@ private:
         initialTransfers.run(sourceVertex, targetVertex);
         for (const Vertex stop : initialTransfers.getForwardPOIs()) {
             AssertMsg(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
-            AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY, "Vertex " << stop << " was not reached!");
+            AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY,
+                "Vertex " << stop << " was not reached!");
             profiler.countMetric(METRIC_EDGES);
             const int newArrivalTime = sourceDepartureTime + initialTransfers.getForwardDistance(stop);
             arrivalByTransfer(StopId(stop), newArrivalTime, sourceVertex, noEdge);
@@ -253,7 +274,8 @@ private:
         }
     }
 
-    inline void arrivalByTransfer(const StopId stop, const int time, const Vertex parent, const Edge edge) noexcept
+    inline void arrivalByTransfer(const StopId stop, const int time,
+        const Vertex parent, const Edge edge) noexcept
     {
         if (arrivalTime[stop] <= time)
             return;

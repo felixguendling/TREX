@@ -12,16 +12,14 @@ namespace Intermediate {
 
 class Transfer {
 public:
-    Transfer(const StopId fromStopId = noStop, const StopId toStopId = noStop, const int minTransferTime = 0)
+    Transfer(const StopId fromStopId = noStop, const StopId toStopId = noStop,
+        const int minTransferTime = 0)
         : fromStopId(fromStopId)
         , toStopId(toStopId)
         , minTransferTime(minTransferTime)
     {
     }
-    Transfer(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Transfer(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     inline bool operator<(const Transfer& t) const noexcept
     {
@@ -30,7 +28,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const Transfer& t)
     {
-        return out << "Transfer{" << t.fromStopId << ", " << t.toStopId << ", " << t.minTransferTime << "}";
+        return out << "Transfer{" << t.fromStopId << ", " << t.toStopId << ", "
+                   << t.minTransferTime << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept

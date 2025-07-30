@@ -22,10 +22,7 @@ public:
         {
             return i != other.i;
         }
-        inline auto operator*() const noexcept
-        {
-            return (*range)[i];
-        }
+        inline auto operator*() const noexcept { return (*range)[i]; }
         inline Iterator& operator++() noexcept
         {
             --i;
@@ -62,25 +59,16 @@ public:
 
     ReverseRange(const Range&&) = delete;
 
-    inline Iterator begin() const noexcept
-    {
-        return Iterator(range, size() - 1);
-    }
+    inline Iterator begin() const noexcept { return Iterator(range, size() - 1); }
 
     inline Iterator end() const noexcept
     {
         return Iterator(range, static_cast<size_t>(-1));
     }
 
-    inline bool empty() const noexcept
-    {
-        return (range) ? range->empty() : true;
-    }
+    inline bool empty() const noexcept { return (range) ? range->empty() : true; }
 
-    inline size_t size() const noexcept
-    {
-        return (range) ? range->size() : 0;
-    }
+    inline size_t size() const noexcept { return (range) ? range->size() : 0; }
 
     inline auto operator[](const size_t i) const noexcept
     {

@@ -1,5 +1,7 @@
 #pragma once
 
+// Builder for Number Of Cells = 2 on all levels
+
 #include "../../../DataStructures/MLTB/MLData.h"
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
@@ -16,127 +18,167 @@ public:
     Builder(MLData& data)
         : data(data)
         , search(data)
-        , incommingEventsOfCell(0)
-        , avgPathLengthPerLevel(data.numberOfLevels(), 0)
+        , stopEvents()
     {
-        data.createCompactLayoutGraph();
     }
 
-    void process(std::vector<int>& levels, std::vector<int>& ids, size_t indexOfCell)
+    void collectUsingMasks(const uint64_t LEVELMASK, const uint64_t TARGETMASK)
     {
-        std::vector<std::pair<TripId, StopIndex>> stopEvents = data.getBorderStopEvents(levels, ids);
+        /* profiler.startPhase(); */
+        auto masksMatches = [&](StopId stop) {
+            return (data.getCellIdOfStop(stop) & LEVELMASK) == TARGETMASK;
+        };
 
-        incommingEventsOfCell[indexOfCell] = stopEvents.size();
+        for (StopId stop(0); stop < data.numberOfStops(); ++stop) {
+            // does the global id match the mask and does it have a neighbor where the
+            // mask does not match?
+            if (!masksMatches(stop))
+                continue;
 
-        for (auto element : stopEvents) {
-            search.run(element.first, element.second, levels, ids);
+            // check the neighbors in compact layoutGraph
+            AssertMsg(data.layoutGraph.isVertex(stop),
+                "Stop is not in the layoutgraph");
+
+            for (const RAPTOR::RouteSegment& route :
+                data.routesContainingStop(stop)) {
+                // EDGE CASE: a stop is not a border stop (of a route) if it's at either
+                // end (start or end)
+                if (route.stopIndex == 0)
+                    continue;
+
+                // check if the next / previous stop in stop array of route is in
+                // another cell
+                RAPTOR::RouteSegment neighbourSeg(route.routeId,
+                    StopIndex(route.stopIndex - 1));
+
+                // check if neighbour in same cell
+                if (!masksMatches(data.raptorData.stopOfRouteSegment(neighbourSeg))) {
+                    // add all stop events of this route
+                    for (TripId trip : data.tripsOfRoute(route.routeId)) {
+                        /* profiler.countMetric(COLLECTED_STOPEVENTS); */
+                        stopEvents.push_back(
+                            std::make_pair(trip, StopIndex(route.stopIndex - 1)));
+                    }
+                }
+            }
         }
-    }
-
-    // obacht, das ist eine recs function
-    void computeCellIds(std::vector<std::vector<int>>& result, std::vector<int> level, int depth, int NUM_LEVELS, int NUM_CELLS_PER_LEVELS)
-    {
-        if (depth == NUM_LEVELS) {
-            result.push_back(level);
-            return;
-        }
-
-        for (int cell(0); cell < NUM_CELLS_PER_LEVELS; ++cell) {
-            std::vector<int> copy(level);
-            copy[depth] = cell;
-            computeCellIds(result, copy, depth + 1, NUM_LEVELS, NUM_CELLS_PER_LEVELS);
-        }
-    }
-
-    void generateAllLevelCellIds(std::vector<std::vector<int>>& result, int NUM_LEVELS)
-    {
-        std::vector<int> currentLevel(NUM_LEVELS, 0);
-        computeCellIds(result, currentLevel, 0, NUM_LEVELS, data.numberOfCellsPerLevel());
+        /* profiler.donePhase(COLLECT_STOPEVENTS); */
     }
 
     void printInfo()
     {
+        /* profiler.printStatisticsAsCSV(); */
         search.getProfiler().printStatisticsAsCSV();
     }
 
-    void customize(const bool verbose = true)
+    void run(const uint64_t LEVELMASK, const uint64_t TARGETMASK)
     {
-        for (int level(0); level < data.numberOfLevels(); ++level) {
-            std::vector<int> levels(data.numberOfLevels() - level, 0);
-            for (size_t i(0); i < levels.size(); ++i)
-                levels[i] = data.numberOfLevels() - i - 1;
 
-            std::vector<std::vector<int>> result;
-            result.reserve(std::pow(data.numberOfCellsPerLevel(), data.numberOfLevels() - level));
+        collectUsingMasks(LEVELMASK, TARGETMASK);
 
-            generateAllLevelCellIds(result, data.numberOfLevels() - level);
-
-            // STATS
-            size_t indexOfCell = 0;
-            incommingEventsOfCell.assign(std::pow(data.numberOfCellsPerLevel(), data.numberOfLevels() - level), 0);
-
-            if (verbose)
-                std::cout << "**** Level: " << level << ", " << result.size() << " cells! ****" << std::endl;
-
-            Progress progress(result.size());
-
-            for (auto& element : result) {
-                process(levels, element, indexOfCell);
-                ++progress;
-                ++indexOfCell;
-            }
-
-            /* search.addCollectShortcuts(); */
-            progress.finished();
-
-            if (verbose) {
-                std::cout << "##### Stats for Level " << level << std::endl;
-                printInfo();
-
-                avgPathLengthPerLevel[level] = search.getAvgPathLengthPerLevel();
-                std::cout << "\"Avg. # of Transfers Unpacked\"," << avgPathLengthPerLevel[level] << std::endl;
-                std::cout << "\"# of added shortcuts\"," << search.getNumberOfAddedShortcuts() << std::endl;
-                /* std::cout << "Cell Index, Incomming Events\n"; */
-                /* for (size_t i(0); i < incommingEventsOfCell.size(); ++i) { */
-                /*     std::cout << (int)i << "," << incommingEventsOfCell[i] << "\n"; */
-                /* } */
-                std::cout << "###############################" << std::endl;
-            }
-            search.getProfiler().reset();
-            search.resetStats();
-
-            indexOfCell = 0;
+        /* profiler.startPhase(); */
+        for (auto& element : stopEvents) {
+            search.run(element.first, element.second, LEVELMASK, TARGETMASK);
         }
 
-        data.stopEventGraph[LocalLevel].swap(search.getLocalLevels());
-        /* data.localLevelOfTrip = search.getLocalLevelOfTrips(); */
-
-        if (verbose) {
-            Graph::printInfo(search.getAugmentedGraph());
-        }
-
-        /* Graph::copy(search.getAugmentedGraph(), data.stopEventGraph); */
-
-        /*         if (verbose) { */
-        /*             std::vector<size_t> tripBuckets(data.numberOfLevels()+1, 0); */
-
-        /*             for (auto& level : search.getLocalLevelOfTrips()) { */
-        /*                 ++tripBuckets[level]; */
-        /*             } */
-
-        /*             std::cout << "Trip Distribution over Levels:" << std::endl; */
-        /*             for (size_t level(0); level < tripBuckets.size(); ++level) */
-        /*                 std::cout << level << "\t" << tripBuckets[level] << std::endl; */
-        /*         } */
+        /* profiler.donePhase(SCAN_THE_CELL_INSIDE); */
+        stopEvents.clear();
     }
 
-private:
     MLData& data;
     TransferSearch<TripBased::AggregateProfiler> search;
+    std::vector<std::pair<TripId, StopIndex>> stopEvents;
 
-    // to collect stats
-    // vector to count how many incomming events need to be processed at cell [i]
-    std::vector<uint64_t> incommingEventsOfCell;
-    std::vector<double> avgPathLengthPerLevel;
+    /* AggregateProfiler profiler; */
 };
+
+inline void Customize(MLData& data, const bool verbose = true)
+{
+    data.createCompactLayoutGraph();
+
+    data.addInformationToStopEventGraph();
+
+    uint64_t LEVELMASK = (~0);
+    uint64_t TARGETMASK = 0;
+
+    Builder bobTheBuilder(data);
+
+    for (int level(0); level < data.getNumberOfLevels(); ++level) {
+        int numberOfCellsOnThisLevel = (1 << (data.getNumberOfLevels() - level));
+
+        if (verbose)
+            std::cout << "**** Level: " << level << ", " << numberOfCellsOnThisLevel
+                      << " cells! ****" << std::endl;
+
+        Progress progress(numberOfCellsOnThisLevel);
+
+        // get all valid TARGETMASKs
+        for (int target(0); target < numberOfCellsOnThisLevel; ++target) {
+            TARGETMASK = target << level;
+            bobTheBuilder.run(LEVELMASK, TARGETMASK);
+
+            ++progress;
+        }
+
+        /* search.addCollectShortcuts(); */
+        progress.finished();
+
+        if (verbose) {
+            std::cout << "##### Stats for Level " << level << std::endl;
+            bobTheBuilder.printInfo();
+        }
+        bobTheBuilder.search.getProfiler().reset();
+        bobTheBuilder.search.resetStats();
+
+        LEVELMASK <<= 1;
+    }
 }
+
+inline void Customize(MLData& data, const int numberOfThreads,
+    const int pinMultiplier = 1, const bool verbose = true)
+{
+    data.createCompactLayoutGraph();
+    data.addInformationToStopEventGraph();
+
+    uint64_t LEVELMASK = (~0);
+    uint64_t TARGETMASK = 0;
+
+    const int numCores = numberOfCores();
+    omp_set_num_threads(numberOfThreads);
+
+    for (int level(0); level < data.getNumberOfLevels(); ++level) {
+        int numberOfCellsOnThisLevel = (1 << (data.getNumberOfLevels() - level));
+        if (verbose)
+            std::cout << "**** Level: " << level << ", " << numberOfCellsOnThisLevel
+                      << " cells! ****" << std::endl;
+
+        Progress progress(numberOfCellsOnThisLevel);
+
+#pragma omp parallel
+        {
+            int threadId = omp_get_thread_num();
+            pinThreadToCoreId((threadId * pinMultiplier) % numCores);
+            AssertMsg(omp_get_num_threads() == numberOfThreads,
+                "Number of threads is " << omp_get_num_threads()
+                                        << ", but should be " << numberOfThreads
+                                        << "!");
+
+            Builder bobTheBuilder(data);
+
+// get all valid TARGETMASKs
+#pragma omp for schedule(dynamic, 1)
+            for (int target = 0; target < numberOfCellsOnThisLevel; ++target) {
+                TARGETMASK = target << level;
+                bobTheBuilder.run(LEVELMASK, TARGETMASK);
+                ++progress;
+            }
+
+            bobTheBuilder.search.getProfiler().reset();
+            bobTheBuilder.search.resetStats();
+        }
+
+        LEVELMASK <<= 1;
+        progress.finished();
+    }
+}
+} // namespace TripBased

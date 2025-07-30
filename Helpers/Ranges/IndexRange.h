@@ -24,10 +24,7 @@ public:
         {
             return i != other.i;
         }
-        inline auto operator*() const noexcept
-        {
-            return (*index)[(*range)[i]];
-        }
+        inline auto operator*() const noexcept { return (*index)[(*range)[i]]; }
         inline Iterator& operator++() noexcept
         {
             ++i;
@@ -61,7 +58,8 @@ public:
     {
     }
 
-    IndexRange(const Index& index, const Range& range, const size_t beginIndex, const size_t endIndex)
+    IndexRange(const Index& index, const Range& range, const size_t beginIndex,
+        const size_t endIndex)
         : index(&index)
         , range(&range)
         , beginIndex(beginIndex)
@@ -69,7 +67,8 @@ public:
     {
     }
 
-    IndexRange(const Index& index, const Range& range, const size_t beginIndex = 0)
+    IndexRange(const Index& index, const Range& range,
+        const size_t beginIndex = 0)
         : index(&index)
         , range(&range)
         , beginIndex(beginIndex)
@@ -77,8 +76,12 @@ public:
     {
     }
 
-    IndexRange(const Index&&, const Range&, const size_t = 0, const size_t = 0) = delete;
-    IndexRange(const Index&, const Range&&, const size_t = 0, const size_t = 0) = delete;
+    IndexRange(const Index&&, const Range&, const size_t = 0,
+        const size_t = 0)
+        = delete;
+    IndexRange(const Index&, const Range&&, const size_t = 0,
+        const size_t = 0)
+        = delete;
 
     inline Iterator begin() const noexcept
     {
@@ -90,15 +93,9 @@ public:
         return Iterator(index, range, endIndex);
     }
 
-    inline bool empty() const noexcept
-    {
-        return endIndex <= beginIndex;
-    }
+    inline bool empty() const noexcept { return endIndex <= beginIndex; }
 
-    inline size_t size() const noexcept
-    {
-        return endIndex - beginIndex;
-    }
+    inline size_t size() const noexcept { return endIndex - beginIndex; }
 
     inline auto operator[](const size_t i) const noexcept
     {

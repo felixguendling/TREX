@@ -21,7 +21,8 @@ inline constexpr int BidirectionalPopLimit = 200;
 template <typename PROFILER>
 using UnidirectionalWitnessSearch = CH::WitnessSearch<CHCoreGraph, PROFILER, UnidirectionalPopLimit>;
 template <typename PROFILER>
-using BidirectionalWitnessSearch = CH::BidirectionalWitnessSearch<CHCoreGraph, PROFILER, BidirectionalPopLimit>;
+using BidirectionalWitnessSearch = CH::BidirectionalWitnessSearch<CHCoreGraph, PROFILER,
+    BidirectionalPopLimit>;
 
 template <typename WITNESS_SEARCH>
 using GreedyKey = CH::GreedyKey<WITNESS_SEARCH>;
@@ -30,7 +31,8 @@ using PartialKey = CH::PartialKey<WITNESS_SEARCH, GreedyKey<WITNESS_SEARCH>>;
 using StopCriterion = CH::NoStopCriterion;
 
 template <typename CH_BUILDER>
-inline CH::CH finalizeCH(CH_BUILDER&& chBuilder, const std::string& orderOutputFile,
+inline CH::CH finalizeCH(CH_BUILDER&& chBuilder,
+    const std::string& orderOutputFile,
     const std::string& chOutputFile) noexcept
 {
     chBuilder.copyCoreToCH();
@@ -46,16 +48,20 @@ inline CH::CH finalizeCH(CH_BUILDER&& chBuilder, const std::string& orderOutputF
     return ch;
 }
 
-template <typename PROFILER, typename WITNESS_SEARCH, typename GRAPH, typename KEY_FUNCTION,
-    typename STOP_CRITERION = StopCriterion>
-inline CH::CH buildCH(GRAPH& originalGraph, const std::string& orderOutputFile, const std::string& chOutputFile,
-    const KEY_FUNCTION& keyFunction, const STOP_CRITERION& stopCriterion = StopCriterion()) noexcept
+template <typename PROFILER, typename WITNESS_SEARCH, typename GRAPH,
+    typename KEY_FUNCTION, typename STOP_CRITERION = StopCriterion>
+inline CH::CH
+buildCH(GRAPH& originalGraph, const std::string& orderOutputFile,
+    const std::string& chOutputFile, const KEY_FUNCTION& keyFunction,
+    const STOP_CRITERION& stopCriterion = StopCriterion()) noexcept
 {
     TravelTimeGraph graph;
     Graph::copy(originalGraph, graph);
     Graph::printInfo(graph);
-    CH::Builder<PROFILER, WITNESS_SEARCH, KEY_FUNCTION, STOP_CRITERION, false, false> chBuilder(
-        std::move(graph), graph[TravelTime], keyFunction, stopCriterion);
+    CH::Builder<PROFILER, WITNESS_SEARCH, KEY_FUNCTION, STOP_CRITERION, false,
+        false>
+        chBuilder(std::move(graph), graph[TravelTime], keyFunction,
+            stopCriterion);
     chBuilder.run();
     return finalizeCH(chBuilder, orderOutputFile, chOutputFile);
 }
@@ -63,13 +69,16 @@ inline CH::CH buildCH(GRAPH& originalGraph, const std::string& orderOutputFile, 
 class BuildCH : public ParameterizedCommand {
 public:
     BuildCH(BasicShell& shell)
-        : ParameterizedCommand(shell, "buildCH", "Computes a CH with greedy key for the input graph.")
+        : ParameterizedCommand(
+            shell, "buildCH",
+            "Computes a CH with greedy key for the input graph.")
     {
         addParameter("Graph binary");
         addParameter("Order output file");
         addParameter("CH output file");
         addParameter("Use full profiler?", "true");
-        addParameter("Witness search type", "bidirectional", { "normal", "bidirectional" });
+        addParameter("Witness search type", "bidirectional",
+            { "normal", "bidirectional" });
         addParameter("Level weight", "256");
     }
 
@@ -97,8 +106,10 @@ private:
     inline void build() const noexcept
     {
         TransferGraph graph(getParameter("Graph binary"));
-        GreedyKey<WITNESS_SEARCH> keyFunction(ShortcutWeight, getParameter<int>("Level weight"), DegreeWeight);
-        buildCH<PROFILER, WITNESS_SEARCH>(graph, getParameter("Order output file"), getParameter("CH output file"),
+        GreedyKey<WITNESS_SEARCH> keyFunction(
+            ShortcutWeight, getParameter<int>("Level weight"), DegreeWeight);
+        buildCH<PROFILER, WITNESS_SEARCH>(graph, getParameter("Order output file"),
+            getParameter("CH output file"),
             keyFunction);
     }
 };
@@ -117,7 +128,8 @@ public:
         addParameter("Max core degree", "14");
         addParameter("Network type", "raptor", { "intermediate", "csa", "raptor" });
         addParameter("Use full profiler?", "true");
-        addParameter("Witness search type", "bidirectional", { "normal", "bidirectional" });
+        addParameter("Witness search type", "bidirectional",
+            { "normal", "bidirectional" });
         addParameter("Level weight", "256");
     }
 
@@ -165,12 +177,17 @@ private:
         contractable.resize(data.transferGraph.numVertices(), true);
 
         const double maxCoreDegree = getParameter<double>("Max core degree");
-        std::cout << "Min. core size: " << String::prettyInt(data.numberOfStops()) << std::endl;
-        std::cout << "Max. core degree: " << String::prettyInt(maxCoreDegree) << std::endl;
-        GreedyKey<WITNESS_SEARCH> greedyKey(ShortcutWeight, getParameter<int>("Level weight"), DegreeWeight);
-        PartialKey<WITNESS_SEARCH> keyFunction(contractable, data.transferGraph.numVertices(), greedyKey);
+        std::cout << "Min. core size: " << String::prettyInt(data.numberOfStops())
+                  << std::endl;
+        std::cout << "Max. core degree: " << String::prettyInt(maxCoreDegree)
+                  << std::endl;
+        GreedyKey<WITNESS_SEARCH> greedyKey(
+            ShortcutWeight, getParameter<int>("Level weight"), DegreeWeight);
+        PartialKey<WITNESS_SEARCH> keyFunction(
+            contractable, data.transferGraph.numVertices(), greedyKey);
         CH::CoreCriterion stopCriterion(data.numberOfStops(), maxCoreDegree);
-        const CH::CH ch = buildCH<PROFILER, WITNESS_SEARCH>(data.transferGraph, getParameter("Order output file"),
+        const CH::CH ch = buildCH<PROFILER, WITNESS_SEARCH>(
+            data.transferGraph, getParameter("Order output file"),
             getParameter("CH output file"), keyFunction, stopCriterion);
 
         Intermediate::TransferGraph resultGraph;

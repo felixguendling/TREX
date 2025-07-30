@@ -18,22 +18,28 @@ public:
     using Type = MultimodalMcBuilder<Debug, TimeFactor>;
 
 public:
-    MultimodalMcBuilder(const Data& data, const TransferGraph& transitiveTransferGraph)
+    MultimodalMcBuilder(const Data& data,
+        const TransferGraph& transitiveTransferGraph)
         : data(data)
         , transitiveTransferGraph(transitiveTransferGraph)
     {
         shortcutGraph.addVertices(data.numberOfStops());
         for (const Vertex vertex : shortcutGraph.vertices()) {
-            shortcutGraph.set(Coordinates, vertex, data.transferGraph.get(Coordinates, vertex));
+            shortcutGraph.set(Coordinates, vertex,
+                data.transferGraph.get(Coordinates, vertex));
         }
     }
 
-    void computeShortcuts(const ThreadPinning& threadPinning, const int intermediateWitnessTransferLimit = 0,
-        const int finalWitnessTransferLimit = 0, const int minDepartureTime = -never,
-        const int maxDepartureTime = never, const bool verbose = true) noexcept
+    void computeShortcuts(const ThreadPinning& threadPinning,
+        const int intermediateWitnessTransferLimit = 0,
+        const int finalWitnessTransferLimit = 0,
+        const int minDepartureTime = -never,
+        const int maxDepartureTime = never,
+        const bool verbose = true) noexcept
     {
         if (verbose)
-            std::cout << "Computing shortcuts with " << threadPinning.numberOfThreads << " threads." << std::endl;
+            std::cout << "Computing shortcuts with " << threadPinning.numberOfThreads
+                      << " threads." << std::endl;
 
         Progress progress(data.numberOfStops(), verbose);
         omp_set_num_threads(threadPinning.numberOfThreads);
@@ -43,8 +49,8 @@ public:
 
             DynamicTransferGraph localShortcutGraph = shortcutGraph;
             MultimodalMcShortcutSearch<Debug, TimeFactor> shortcutSearch(
-                data, transitiveTransferGraph, localShortcutGraph, intermediateWitnessTransferLimit,
-                finalWitnessTransferLimit);
+                data, transitiveTransferGraph, localShortcutGraph,
+                intermediateWitnessTransferLimit, finalWitnessTransferLimit);
 
 #pragma omp for schedule(dynamic)
             for (size_t i = 0; i < data.numberOfStops(); i++) {
@@ -58,12 +64,19 @@ public:
                     for (const Edge edge : localShortcutGraph.edgesFrom(from)) {
                         const Vertex to = localShortcutGraph.get(ToVertex, edge);
                         if (!shortcutGraph.hasEdge(from, to)) {
-                            shortcutGraph.addEdge(from, to).set(TravelTime, localShortcutGraph.get(TravelTime, edge));
+                            shortcutGraph.addEdge(from, to).set(
+                                TravelTime, localShortcutGraph.get(TravelTime, edge));
                         } else {
-                            AssertMsg(shortcutGraph.get(TravelTime, shortcutGraph.findEdge(from, to)) == localShortcutGraph.get(TravelTime, edge),
-                                "Edge from " << from << " to " << to << " has inconclusive travel time ("
-                                             << shortcutGraph.get(TravelTime, shortcutGraph.findEdge(from, to))
-                                             << ", " << localShortcutGraph.get(TravelTime, edge) << ")");
+                            AssertMsg(shortcutGraph.get(TravelTime,
+                                          shortcutGraph.findEdge(from, to))
+                                    == localShortcutGraph.get(TravelTime, edge),
+                                "Edge from "
+                                    << from << " to " << to
+                                    << " has inconclusive travel time ("
+                                    << shortcutGraph.get(
+                                           TravelTime, shortcutGraph.findEdge(from, to))
+                                    << ", " << localShortcutGraph.get(TravelTime, edge)
+                                    << ")");
                         }
                     }
                 }

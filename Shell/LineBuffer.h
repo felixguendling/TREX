@@ -168,7 +168,8 @@ public:
         moveCursorLeft(prefix.size(), prefix.size());
         out << whiteSpace(prefix.size() + suffix.size());
         cursorCouldBeOffScreen = true;
-        moveCursorLeft(prefix.size() + suffix.size(), prefix.size() + suffix.size());
+        moveCursorLeft(prefix.size() + suffix.size(),
+            prefix.size() + suffix.size());
         out << std::flush;
         prefix.clear();
         suffix.clear();
@@ -176,7 +177,8 @@ public:
 
     inline void setFirstCharColumn(const size_t newFirstCharColumn) noexcept
     {
-        AssertMsg(prefix.size() + suffix.size() == 0, "Cannot change first char column if the buffer is not empty!");
+        AssertMsg(prefix.size() + suffix.size() == 0,
+            "Cannot change first char column if the buffer is not empty!");
         firstCharColumn = newFirstCharColumn;
     }
 
@@ -195,7 +197,8 @@ public:
             moveCursorLeft(prefix.size(), prefix.size());
             out << whiteSpace(prefix.size() + suffix.size());
             cursorCouldBeOffScreen = true;
-            moveCursorLeft(prefix.size() + suffix.size(), prefix.size() + suffix.size());
+            moveCursorLeft(prefix.size() + suffix.size(),
+                prefix.size() + suffix.size());
             prefix.clear();
         }
         operator<<(newPrefix);
@@ -243,36 +246,25 @@ public:
     }
 
 private:
-    inline void cursorLeft() noexcept
-    {
-        out << "\x1b[1D";
-    }
+    inline void cursorLeft() noexcept { out << "\x1b[1D"; }
 
-    inline void cursorRight() noexcept
-    {
-        out << "\x1b[1C";
-    }
+    inline void cursorRight() noexcept { out << "\x1b[1C"; }
 
-    inline void cursorUp() noexcept
-    {
-        out << "\x1b[1A";
-    }
+    inline void cursorUp() noexcept { out << "\x1b[1A"; }
 
-    inline void cursorDown() noexcept
-    {
-        out << "\x1b[1B";
-    }
+    inline void cursorDown() noexcept { out << "\x1b[1B"; }
 
-    inline void cursorToLineBegin() noexcept
-    {
-        out << '\r';
-    }
+    inline void cursorToLineBegin() noexcept { out << '\r'; }
 
-    inline void moveCursorLeft(const size_t textSize, const size_t amount = 1) noexcept
+    inline void moveCursorLeft(const size_t textSize,
+        const size_t amount = 1) noexcept
     {
         if (amount == 0)
             return;
-        AssertMsg(textSize >= amount, "Cannot move left for " << amount << " steps, because the buffer contains only " << textSize << " chars!");
+        AssertMsg(textSize >= amount,
+            "Cannot move left for "
+                << amount << " steps, because the buffer contains only "
+                << textSize << " chars!");
         CursorPosition oldPosition = getCursorPosition(textSize, cursorCouldBeOffScreen);
         CursorPosition newPosition = getCursorPosition(textSize - amount, false);
         while (newPosition.y < oldPosition.y) {
@@ -290,10 +282,7 @@ private:
         cursorCouldBeOffScreen = false;
     }
 
-    inline void moveCursorLeft() noexcept
-    {
-        moveCursorLeft(prefix.size());
-    }
+    inline void moveCursorLeft() noexcept { moveCursorLeft(prefix.size()); }
 
     inline std::string whiteSpace(size_t size) const noexcept
     {
@@ -304,7 +293,9 @@ private:
         return ss.str();
     }
 
-    inline CursorPosition getCursorPosition(const size_t textSize, const bool cursorCouldBeOffScreen) const noexcept
+    inline CursorPosition
+    getCursorPosition(const size_t textSize,
+        const bool cursorCouldBeOffScreen) const noexcept
     {
         const size_t screenWidth = getScreenWidth();
         size_t x = (firstCharColumn + textSize) % screenWidth;

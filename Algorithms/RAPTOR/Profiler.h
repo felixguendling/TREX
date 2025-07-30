@@ -79,47 +79,26 @@ constexpr const char* MetricNames[] = {
 
 class NoProfiler {
 public:
-    inline void registerExtraRounds(const std::initializer_list<ExtraRound>&) const noexcept
-    {
-    }
-    inline void registerPhases(const std::initializer_list<Phase>&) const noexcept
-    {
-    }
-    inline void registerMetrics(const std::initializer_list<Metric>&) const noexcept
-    {
-    }
+    inline void registerExtraRounds(
+        const std::initializer_list<ExtraRound>&) const noexcept { }
+    inline void
+    registerPhases(const std::initializer_list<Phase>&) const noexcept { }
+    inline void
+    registerMetrics(const std::initializer_list<Metric>&) const noexcept { }
 
-    inline void initialize() const noexcept
-    {
-    }
+    inline void initialize() const noexcept { }
 
-    inline void start() const noexcept
-    {
-    }
-    inline void done() const noexcept
-    {
-    }
+    inline void start() const noexcept { }
+    inline void done() const noexcept { }
 
-    inline void startRound() const noexcept
-    {
-    }
-    inline void startExtraRound(const ExtraRound) const noexcept
-    {
-    }
-    inline void doneRound() const noexcept
-    {
-    }
+    inline void startRound() const noexcept { }
+    inline void startExtraRound(const ExtraRound) const noexcept { }
+    inline void doneRound() const noexcept { }
 
-    inline void startPhase() const noexcept
-    {
-    }
-    inline void donePhase(const Phase) const noexcept
-    {
-    }
+    inline void startPhase() const noexcept { }
+    inline void donePhase(const Phase) const noexcept { }
 
-    inline void countMetric(const Metric) const noexcept
-    {
-    }
+    inline void countMetric(const Metric) const noexcept { }
 };
 
 class BasicProfiler : public NoProfiler {
@@ -151,15 +130,9 @@ public:
         totalTimer.restart();
     }
 
-    inline void done() noexcept
-    {
-        totalTime += totalTimer.elapsedMicroseconds();
-    }
+    inline void done() noexcept { totalTime += totalTimer.elapsedMicroseconds(); }
 
-    inline void startRound() noexcept
-    {
-        roundCount++;
-    }
+    inline void startRound() noexcept { roundCount++; }
 
     inline void startExtraRound(const ExtraRound extraRound) noexcept
     {
@@ -185,13 +158,20 @@ public:
 
     inline void printStatistics() const noexcept
     {
-        std::cout << "Number of scanned routes: " << String::prettyDouble(metricValue[METRIC_ROUTES] / numQueries, 0)
+        std::cout << "Number of scanned routes: "
+                  << String::prettyDouble(metricValue[METRIC_ROUTES] / numQueries,
+                         0)
                   << std::endl;
         std::cout << "Number of settled vertices: "
-                  << String::prettyDouble(metricValue[METRIC_VERTICES] / numQueries, 0) << std::endl;
-        std::cout << "Number of rounds: " << String::prettyDouble(roundCount / numQueries, 2) << std::endl;
-        std::cout << "Initial transfers time: " << String::musToString(initialTime / numQueries) << std::endl;
-        std::cout << "Total time: " << String::musToString(totalTime / numQueries) << std::endl;
+                  << String::prettyDouble(metricValue[METRIC_VERTICES] / numQueries,
+                         0)
+                  << std::endl;
+        std::cout << "Number of rounds: "
+                  << String::prettyDouble(roundCount / numQueries, 2) << std::endl;
+        std::cout << "Initial transfers time: "
+                  << String::musToString(initialTime / numQueries) << std::endl;
+        std::cout << "Total time: " << String::musToString(totalTime / numQueries)
+                  << std::endl;
     }
 
 private:
@@ -241,15 +221,18 @@ struct RoundData {
 
     inline static int metricLength(const Metric metric) noexcept
     {
-        return std::max((int)std::string(MetricNames[metric]).length() + 1, MetricWidth);
+        return std::max((int)std::string(MetricNames[metric]).length() + 1,
+            MetricWidth);
     }
 
     inline static int phaseLength(const Phase phase) noexcept
     {
-        return std::max((int)std::string(PhaseNames[phase]).length() + 1, TimeWidth);
+        return std::max((int)std::string(PhaseNames[phase]).length() + 1,
+            TimeWidth);
     }
 
-    inline static void printHeader(const std::vector<Metric>& metrics, const std::vector<Phase>& phases) noexcept
+    inline static void printHeader(const std::vector<Metric>& metrics,
+        const std::vector<Phase>& phases) noexcept
     {
         std::cout << std::endl
                   << "Statistics:" << std::endl
@@ -263,20 +246,25 @@ struct RoundData {
         std::cout << std::setw(TimeWidth) << "Total" << std::endl;
     }
 
-    inline void print(const std::vector<Metric>& metrics, const std::vector<Phase>& phases,
+    inline void print(const std::vector<Metric>& metrics,
+        const std::vector<Phase>& phases,
         const std::string& name) const noexcept
     {
         std::cout << std::setw(8) << name;
         for (const Metric metric : metrics) {
-            std::cout << std::setw(metricLength(metric)) << String::prettyInt(metricValue[metric]);
+            std::cout << std::setw(metricLength(metric))
+                      << String::prettyInt(metricValue[metric]);
         }
         for (const Phase phase : phases) {
-            std::cout << std::setw(phaseLength(phase) + 1) << String::musToString(phaseTime[phase]);
+            std::cout << std::setw(phaseLength(phase) + 1)
+                      << String::musToString(phaseTime[phase]);
         }
-        std::cout << std::setw(TimeWidth + 1) << String::musToString(totalTime) << std::endl;
+        std::cout << std::setw(TimeWidth + 1) << String::musToString(totalTime)
+                  << std::endl;
     }
 
-    inline void print(const std::vector<Metric>& metrics, const std::vector<Phase>& phases,
+    inline void print(const std::vector<Metric>& metrics,
+        const std::vector<Phase>& phases,
         const size_t round) const noexcept
     {
         print(metrics, phases, String::prettyInt(round));
@@ -296,21 +284,24 @@ public:
     {
     }
 
-    inline void registerExtraRounds(const std::initializer_list<ExtraRound>& extraRoundList) noexcept
+    inline void registerExtraRounds(
+        const std::initializer_list<ExtraRound>& extraRoundList) noexcept
     {
         for (const ExtraRound extraRound : extraRoundList) {
             extraRounds.push_back(extraRound);
         }
     }
 
-    inline void registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
+    inline void
+    registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
     {
         for (const Phase phase : phaseList) {
             phases.push_back(phase);
         }
     }
 
-    inline void registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
+    inline void
+    registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
     {
         for (const Metric metric : metricList) {
             metrics.push_back(metric);
@@ -355,10 +346,7 @@ public:
         currentRoundData->totalTime += roundTimer.elapsedMicroseconds();
     }
 
-    inline void startPhase() noexcept
-    {
-        phaseTimer.restart();
-    }
+    inline void startPhase() noexcept { phaseTimer.restart(); }
 
     inline void donePhase(const Phase phase) noexcept
     {
@@ -370,10 +358,7 @@ public:
         currentRoundData->metricValue[metric]++;
     }
 
-    inline double getTotalTime() const noexcept
-    {
-        return totalTime;
-    }
+    inline double getTotalTime() const noexcept { return totalTime; }
 
     inline double getExtraRoundTime(const ExtraRound extraRound) const noexcept
     {
@@ -382,21 +367,27 @@ public:
 
     inline double getPhaseTime(const Phase phase) const noexcept
     {
-        double result = Vector::sum<long long>(roundData, [&](const RoundData& data) { return data.phaseTime[phase]; });
+        double result = Vector::sum<long long>(roundData, [&](const RoundData& data) {
+            return data.phaseTime[phase];
+        });
         for (const ExtraRound extraRound : extraRounds) {
             result += extraRoundData[extraRound].phaseTime[phase];
         }
         return result;
     }
 
-    inline double getPhaseTimeInExtraRound(const Phase phase, const ExtraRound extraRound) const noexcept
+    inline double
+    getPhaseTimeInExtraRound(const Phase phase,
+        const ExtraRound extraRound) const noexcept
     {
         return extraRoundData[extraRound].phaseTime[phase];
     }
 
     inline long long getMetric(const Metric metric) const noexcept
     {
-        long long result = Vector::sum<long long>(roundData, [&](const RoundData& data) { return data.metricValue[metric]; });
+        long long result = Vector::sum<long long>(roundData, [&](const RoundData& data) {
+            return data.metricValue[metric];
+        });
         for (const ExtraRound extraRound : extraRounds) {
             result += extraRoundData[extraRound].metricValue[metric];
         }
@@ -424,7 +415,8 @@ private:
         RoundData::printHeader(metrics, phases);
         RoundData total;
         for (const ExtraRound extraRound : extraRounds) {
-            extraRoundData[extraRound].print(metrics, phases, ExtraRoundNames[extraRound]);
+            extraRoundData[extraRound].print(metrics, phases,
+                ExtraRoundNames[extraRound]);
             total += extraRoundData[extraRound];
         }
         for (size_t i = 0; i < roundData.size(); i++) {
@@ -460,21 +452,36 @@ public:
     {
     }
 
-    inline void registerExtraRounds(const std::initializer_list<ExtraRound>& extraRoundList) noexcept
+    inline void reset() noexcept
+    {
+        totalTime = 0.0;
+        roundData.clear();
+        std::vector<RoundData>(NUM_EXTRA_ROUNDS).swap(extraRoundData);
+        currentRoundData = NULL;
+        inExtraRound = false;
+        numQueries = 0;
+        numRounds = 0;
+        totalNumRounds = 0;
+    }
+
+    inline void registerExtraRounds(
+        const std::initializer_list<ExtraRound>& extraRoundList) noexcept
     {
         for (const ExtraRound extraRound : extraRoundList) {
             extraRounds.push_back(extraRound);
         }
     }
 
-    inline void registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
+    inline void
+    registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
     {
         for (const Phase phase : phaseList) {
             phases.push_back(phase);
         }
     }
 
-    inline void registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
+    inline void
+    registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
     {
         for (const Metric metric : metricList) {
             metrics.push_back(metric);
@@ -533,10 +540,7 @@ public:
         }
     }
 
-    inline void startPhase() noexcept
-    {
-        phaseTimer.restart();
-    }
+    inline void startPhase() noexcept { phaseTimer.restart(); }
 
     inline void donePhase(const Phase phase) noexcept
     {
@@ -548,10 +552,7 @@ public:
         currentRoundData->metricValue[metric]++;
     }
 
-    inline double getTotalTime() const noexcept
-    {
-        return totalTime / numQueries;
-    }
+    inline double getTotalTime() const noexcept { return totalTime / numQueries; }
 
     inline double getExtraRoundTime(const ExtraRound extraRound) const noexcept
     {
@@ -560,21 +561,27 @@ public:
 
     inline double getPhaseTime(const Phase phase) const noexcept
     {
-        double result = Vector::sum<long long>(roundData, [&](const RoundData& data) { return data.phaseTime[phase]; });
+        double result = Vector::sum<long long>(roundData, [&](const RoundData& data) {
+            return data.phaseTime[phase];
+        });
         for (const ExtraRound extraRound : extraRounds) {
             result += extraRoundData[extraRound].phaseTime[phase];
         }
         return result / numQueries;
     }
 
-    inline double getPhaseTimeInExtraRound(const Phase phase, const ExtraRound extraRound) const noexcept
+    inline double
+    getPhaseTimeInExtraRound(const Phase phase,
+        const ExtraRound extraRound) const noexcept
     {
         return extraRoundData[extraRound].phaseTime[phase] / numQueries;
     }
 
     inline double getMetric(const Metric metric) const noexcept
     {
-        double result = Vector::sum<long long>(roundData, [&](const RoundData& data) { return data.metricValue[metric]; });
+        double result = Vector::sum<long long>(roundData, [&](const RoundData& data) {
+            return data.metricValue[metric];
+        });
         for (const ExtraRound extraRound : extraRounds) {
             result += extraRoundData[extraRound].metricValue[metric];
         }
@@ -598,12 +605,15 @@ public:
             total += data;
         }
         total.print(metrics, phases, "total");
-        std::cout << "Total time: " << String::musToString(totalTime / numQueries) << std::endl;
-        std::cout << "Avg. rounds: " << String::prettyDouble(totalNumRounds / static_cast<double>(numQueries))
+        std::cout << "Total time: " << String::musToString(totalTime / numQueries)
+                  << std::endl;
+        std::cout << "Avg. rounds: "
+                  << String::prettyDouble(totalNumRounds / static_cast<double>(numQueries))
                   << std::endl;
     }
 
-    inline AggregateProfiler& operator+=(const AggregateProfiler& other) noexcept
+    inline AggregateProfiler&
+    operator+=(const AggregateProfiler& other) noexcept
     {
         totalTime += other.totalTime;
         if (roundData.size() < other.roundData.size()) {

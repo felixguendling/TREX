@@ -19,19 +19,24 @@ public:
     using Type = MultimodalMcULTRABuilder<Debug, TimeFactor>;
 
 public:
-    MultimodalMcULTRABuilder(const Data& data, const TransferGraph& transitiveTransferGraph)
+    MultimodalMcULTRABuilder(const Data& data,
+        const TransferGraph& transitiveTransferGraph)
         : data(data)
         , transitiveTransferGraph(transitiveTransferGraph)
     {
         stopEventGraph.addVertices(data.numberOfStopEvents());
     }
 
-    void computeShortcuts(const ThreadPinning& threadPinning, const int intermediateWitnessTransferLimit = 0,
-        const int finalWitnessTransferLimit = 0, const int minDepartureTime = -never,
-        const int maxDepartureTime = never, const bool verbose = true) noexcept
+    void computeShortcuts(const ThreadPinning& threadPinning,
+        const int intermediateWitnessTransferLimit = 0,
+        const int finalWitnessTransferLimit = 0,
+        const int minDepartureTime = -never,
+        const int maxDepartureTime = never,
+        const bool verbose = true) noexcept
     {
         if (verbose)
-            std::cout << "Computing shortcuts with " << threadPinning.numberOfThreads << " threads." << std::endl;
+            std::cout << "Computing shortcuts with " << threadPinning.numberOfThreads
+                      << " threads." << std::endl;
 
         std::vector<Shortcut> shortcuts;
 
@@ -42,7 +47,8 @@ public:
             threadPinning.pinThread();
 
             MultimodalMcShortcutSearch<Debug, TimeFactor> shortcutSearch(
-                data, transitiveTransferGraph, intermediateWitnessTransferLimit, finalWitnessTransferLimit);
+                data, transitiveTransferGraph, intermediateWitnessTransferLimit,
+                finalWitnessTransferLimit);
 
 #pragma omp for schedule(dynamic)
             for (size_t i = 0; i < data.numberOfStops(); i++) {
@@ -59,15 +65,19 @@ public:
             }
         }
 
-        std::sort(shortcuts.begin(), shortcuts.end(), [](const Shortcut& a, const Shortcut& b) {
-            return (a.origin < b.origin) || ((a.origin == b.origin) && (a.destination < b.destination));
-        });
-        stopEventGraph.addEdge(Vertex(shortcuts[0].origin), Vertex(shortcuts[0].destination))
+        std::sort(shortcuts.begin(), shortcuts.end(),
+            [](const Shortcut& a, const Shortcut& b) {
+                return (a.origin < b.origin) || ((a.origin == b.origin) && (a.destination < b.destination));
+            });
+        stopEventGraph
+            .addEdge(Vertex(shortcuts[0].origin), Vertex(shortcuts[0].destination))
             .set(TravelTime, shortcuts[0].walkingDistance);
         for (size_t i = 1; i < shortcuts.size(); i++) {
             if ((shortcuts[i].origin == shortcuts[i - 1].origin) && (shortcuts[i].destination == shortcuts[i - 1].destination))
                 continue;
-            stopEventGraph.addEdge(Vertex(shortcuts[i].origin), Vertex(shortcuts[i].destination))
+            stopEventGraph
+                .addEdge(Vertex(shortcuts[i].origin),
+                    Vertex(shortcuts[i].destination))
                 .set(TravelTime, shortcuts[i].walkingDistance);
         }
         stopEventGraph.sortEdges(ToVertex);

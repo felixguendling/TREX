@@ -64,6 +64,7 @@ using DynamicGraphWithWeightsAndCoordinates = DynamicGraph<WithWeightAndCoordina
 using DynamicGraphWithWeightsAndCoordinatesAndSize = DynamicGraph<WithWeightAndCoordinatesAndSize, WithWeight>;
 
 using StaticGraphWithWeightsAndCoordinates = StaticGraph<WithWeightAndCoordinates, WithWeight>;
+using StaticGraphWithWeightsAndCoordinatesAndSize = StaticGraph<WithWeightAndCoordinatesAndSize, WithWeight>;
 
 // New Attributes
 using WithARCFlag = List<Attribute<ARCFlag, std::vector<bool>>>;
@@ -80,9 +81,11 @@ using WithTravelTimeAndLocalLevel = List<Attribute<TravelTime, int>, Attribute<L
 using WithTravelTimeAndLocalLevelAndFromVertex = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<FromVertex, Vertex>>;
 
 using WithLocalLevelAndHop = List<Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>>;
+using WithTravelTimeAndLocalLevel = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>>;
 using WithTravelTimeAndLocalLevelAndHop = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>>;
 using WithTravelTimeAndLocalLevelAndHopAndFromVertex = List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>, Attribute<Hop, uint8_t>, Attribute<FromVertex, Vertex>>;
 
+using TransferGraphWithLocalLevel = StaticGraph<NoVertexAttributes, WithTravelTimeAndLocalLevel>;
 using TransferGraphWithLocalLevelAndHop = StaticGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHop>;
 using DynamicTransferGraphWithLocalLevelAndHop = DynamicGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHop>;
 using DynamicTransferGraphWithLocalLevelAndHopAndFromVertex = DynamicGraph<NoVertexAttributes, WithTravelTimeAndLocalLevelAndHopAndFromVertex>;
@@ -96,6 +99,19 @@ using StaticDAGTransferPattern = StaticGraph<WithViaVertex, WithTravelTime>;
 
 // @todo check which type of graph
 using DynamicQueryGraph = DynamicGraph<NoVertexAttributes, WithTravelTime>;
+
+// TD
+using WithDurationFunctionAndTravelTimeAndTransferCost = List<Attribute<DurationFunction, std::vector<std::pair<uint32_t, uint32_t>>>, Attribute<TravelTime, int>, Attribute<TransferCost, uint8_t>>;
+using WithRouteVertex = List<Attribute<RouteVertex, RouteId>>;
+
+using DynamicTimeDependentRouteGraph = DynamicGraph<WithRouteVertex, WithDurationFunctionAndTravelTimeAndTransferCost>;
+using TimeDependentRouteGraph = StaticGraph<WithRouteVertex, WithDurationFunctionAndTravelTimeAndTransferCost>;
+
+// TE
+using WithStopVertex = List<Attribute<StopVertex, StopId>>;
+
+using DynamicTimeExpandedGraph = DynamicGraph<WithStopVertex, WithTravelTime>;
+using TimeExpandedGraph = StaticGraph<WithStopVertex, WithTravelTime>;
 
 #include "Utils/Conversion.h"
 #include "Utils/IO.h"

@@ -31,10 +31,7 @@ private:
 
     // Node label: Contains child Node indices and inner/leaf node data
     struct Node {
-        inline bool isLeaf() const
-        {
-            return (minChild < 0) && (maxChild < 0);
-        }
+        inline bool isLeaf() const { return (minChild < 0) && (maxChild < 0); }
         inline void makeLeaf()
         {
             minChild = -1;
@@ -49,7 +46,9 @@ private:
     };
 
 public:
-    CoordinateTree(const METRIC& metric, const std::vector<Geometry::Point>& coordinates, const int maxLeafSize = 10)
+    CoordinateTree(const METRIC& metric,
+        const std::vector<Geometry::Point>& coordinates,
+        const int maxLeafSize = 10)
         : metric(metric)
         , coordinates(coordinates)
         , vertexCount(coordinates.size())
@@ -64,7 +63,8 @@ public:
         makeBoundingBox(0, numVertices(), boundingBox);
         divideTree(newNode(), 0, numVertices(), boundingBox);
     }
-    CoordinateTree(const std::vector<Geometry::Point>& coordinates, const int maxLeafSize = 10)
+    CoordinateTree(const std::vector<Geometry::Point>& coordinates,
+        const int maxLeafSize = 10)
         : coordinates(coordinates)
         , vertexCount(coordinates.size())
         , maxLeafSize(maxLeafSize)
@@ -88,7 +88,8 @@ public:
         return nearestVertex;
     }
 
-    inline Vertex getNearestNeighbor(const Geometry::Point& p, const double minDistance) const noexcept
+    inline Vertex getNearestNeighbor(const Geometry::Point& p,
+        const double minDistance) const noexcept
     {
         nearestVertex = noVertex;
         nearestDistance = metric.distanceSquare(boundingBox.min, boundingBox.max) + 1;
@@ -98,7 +99,9 @@ public:
         return nearestVertex;
     }
 
-    inline std::vector<Vertex> getNeighbors(const Geometry::Point& p, const double maxDistance) const noexcept
+    inline std::vector<Vertex>
+    getNeighbors(const Geometry::Point& p,
+        const double maxDistance) const noexcept
     {
         neighbors.clear();
         nearestDistance = maxDistance * maxDistance;
@@ -107,12 +110,10 @@ public:
         return neighbors;
     }
 
-    inline size_t numVertices() const noexcept
-    {
-        return vertexCount;
-    }
+    inline size_t numVertices() const noexcept { return vertexCount; }
 
-    inline const Geometry::Point& getCoordinates(const Vertex vertex) const noexcept
+    inline const Geometry::Point&
+    getCoordinates(const Vertex vertex) const noexcept
     {
         return coordinates[vertex];
     }
@@ -123,15 +124,9 @@ public:
         nodes.clear();
     }
 
-    inline const std::vector<Vertex>& getOrder() const noexcept
-    {
-        return order;
-    }
+    inline const std::vector<Vertex>& getOrder() const noexcept { return order; }
 
-    inline size_t numNodes() const noexcept
-    {
-        return nodes.size();
-    }
+    inline size_t numNodes() const noexcept { return nodes.size(); }
 
     inline long long byteSize() const noexcept
     {
@@ -151,8 +146,11 @@ private:
     void divideTree(const int nodeIndex, const int beginIndex, const int endIndex,
         const Geometry::Rectangle& boundingBox) noexcept
     {
-        AssertMsg(isBoundingBox(beginIndex, endIndex, boundingBox), "Invalid bounding box!");
-        AssertMsg(endIndex > beginIndex, "endIndex = " << endIndex << " <= beginIndex = " << beginIndex << "!");
+        AssertMsg(isBoundingBox(beginIndex, endIndex, boundingBox),
+            "Invalid bounding box!");
+        AssertMsg(endIndex > beginIndex,
+            "endIndex = " << endIndex << " <= beginIndex = " << beginIndex
+                          << "!");
         AssertMsg(isNode(nodeIndex), "Index = " << nodeIndex << " is not a node!");
 
         Node& node = nodes[nodeIndex];
@@ -199,7 +197,8 @@ private:
     }
 
     template <bool MIN_DISTANCE = false>
-    void searchLevel(const int nodeIndex, const Geometry::Point& closest) const noexcept
+    void searchLevel(const int nodeIndex,
+        const Geometry::Point& closest) const noexcept
     {
         AssertMsg(isNode(nodeIndex), "Index = " << nodeIndex << " is not a node!");
 
@@ -240,7 +239,8 @@ private:
         }
     }
 
-    void searchNeighbors(const int nodeIndex, const Geometry::Point& closest) const noexcept
+    void searchNeighbors(const int nodeIndex,
+        const Geometry::Point& closest) const noexcept
     {
         AssertMsg(isNode(nodeIndex), "Index = " << nodeIndex << " is not a node!");
 
@@ -276,7 +276,8 @@ private:
         return (index < nodes.size());
     }
 
-    inline void makeBoundingBox(const int beginIndex, const int endIndex, Geometry::Rectangle& boundingBox) noexcept
+    inline void makeBoundingBox(const int beginIndex, const int endIndex,
+        Geometry::Rectangle& boundingBox) noexcept
     {
         Assert(endIndex > beginIndex);
         boundingBox.clear(coordinates[order[beginIndex]]);
@@ -285,14 +286,16 @@ private:
         }
     }
 
-    inline bool isBoundingBox(const int beginIndex, const int endIndex, const Geometry::Rectangle& boundingBox) noexcept
+    inline bool isBoundingBox(const int beginIndex, const int endIndex,
+        const Geometry::Rectangle& boundingBox) noexcept
     {
         Geometry::Rectangle realBoundingBox;
         makeBoundingBox(beginIndex, endIndex, realBoundingBox);
         return (realBoundingBox == boundingBox);
     }
 
-    void check(const int nodeIndex, const Geometry::Rectangle& bb, std::vector<bool>& seen) const noexcept
+    void check(const int nodeIndex, const Geometry::Rectangle& bb,
+        std::vector<bool>& seen) const noexcept
     {
         AssertMsg(isNode(nodeIndex), "Index = " << nodeIndex << " is not a node!");
         const Node& node = nodes[nodeIndex];
@@ -307,7 +310,8 @@ private:
                               << std::flush;
                     std::cout << "order[i]: " << order[i] << std::endl
                               << std::flush;
-                    std::cout << "coordinates[order[i]]: " << coordinates[order[i]] << std::endl
+                    std::cout << "coordinates[order[i]]: " << coordinates[order[i]]
+                              << std::endl
                               << std::flush;
                 }
                 Assert(bb.contains(coordinates[order[i]]));
@@ -324,7 +328,8 @@ private:
                           << std::flush;
                 std::cout << "minBB: " << minBB << std::endl
                           << std::flush;
-                std::cout << "node.splitDimension: " << node.inner.splitDimension << std::endl
+                std::cout << "node.splitDimension: " << node.inner.splitDimension
+                          << std::endl
                           << std::flush;
                 std::cout << "node.minChildMax: " << node.inner.minChildMax << std::endl
                           << std::flush;

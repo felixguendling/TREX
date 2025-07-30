@@ -1,12 +1,14 @@
 #include "../../Helpers/IO/Serialization.h"
 #include <bitset>
-#include <cmath>
 #include <cassert>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
-// Stores the cellIds for a given number of elements. CellIds consist of a _cell id per level_, hence Multi Level Partition.
-// The cellid of an element is stored inside one integer, where the numberOfCellsPerLevel * least significant bits store the cell id for the level 0
+// Stores the cellIds for a given number of elements. CellIds consist of a _cell
+// id per level_, hence Multi Level Partition. The cellid of an element is
+// stored inside one integer, where the numberOfCellsPerLevel * least
+// significant bits store the cell id for the level 0
 class MultiLevelPartition {
 private:
     std::vector<uint64_t> ids {};
@@ -15,7 +17,8 @@ private:
 
 public:
     MultiLevelPartition() = default;
-    MultiLevelPartition(uint64_t numberOfNodes, uint8_t levels, uint8_t numberOfCellsPerLevel)
+    MultiLevelPartition(uint64_t numberOfNodes, uint8_t levels,
+        uint8_t numberOfCellsPerLevel)
         : ids(numberOfNodes, 0)
         , levels(levels)
         , numberOfCellsPerLevel(numberOfCellsPerLevel)
@@ -29,21 +32,29 @@ public:
 
     // simple getter
     inline uint8_t getNumberOfLevels() const { return levels; }
-    inline uint8_t getNumberOfCellsPerLevel() const { return numberOfCellsPerLevel; }
+    inline uint8_t getNumberOfCellsPerLevel() const
+    {
+        return numberOfCellsPerLevel;
+    }
     inline uint8_t getNumberOfCellsInLevel(uint8_t level) const
     {
         assert(isLevelValid(level));
         return numberOfCellsPerLevel;
     }
 
-    // set all ids to 0
-    inline void clear()
+    // Overload the [] operator to access the ID of an element directly
+    inline uint64_t operator[](uint64_t node) const
     {
-        ids.clear();
+        assert(isNodeValid(node));
+        return ids[node];
     }
 
+    // set all ids to 0
+    inline void clear() { ids.clear(); }
+
     // reset, where you can set new vals
-    inline void reset(uint64_t newNumberOfNodes, uint8_t newLevels, uint8_t newNumberOfCellsPerLevel)
+    inline void reset(uint64_t newNumberOfNodes, uint8_t newLevels,
+        uint8_t newNumberOfCellsPerLevel)
     {
         // no val should be 0
         assert(0 < levels);
@@ -70,7 +81,8 @@ public:
     }
 
     // sets the correct bit for the given node at the given level
-    inline void setCellIdOfNodeAtLevel(uint64_t node, uint8_t cellId, uint8_t level)
+    inline void setCellIdOfNodeAtLevel(uint64_t node, uint8_t cellId,
+        uint8_t level)
     {
         assert(isNodeValid(node));
         assert(isCellIdValid(cellId));
@@ -85,10 +97,12 @@ public:
         assert(isNodeValid(node));
         assert(isLevelValid(level));
 
-        ids[node] &= ~(((1ULL << numberOfCellsPerLevel) - 1) << (level * numberOfCellsPerLevel));
+        ids[node] &= ~(((1ULL << numberOfCellsPerLevel) - 1)
+            << (level * numberOfCellsPerLevel));
     }
 
-    // returns the level of the lowest level, on which node1 and node2 differ. Note that iff ids[node1] == ids[node2], then this returns 16
+    // returns the level of the lowest level, on which node1 and node2 differ.
+    // Note that iff ids[node1] == ids[node2], then this returns 16
     inline uint8_t getLowestDifferentLevel(uint64_t node1, uint64_t node2) const
     {
         assert(isNodeValid(node1));
@@ -118,15 +132,45 @@ public:
         return (64 - __builtin_clzll(xorResult)) / numberOfCellsPerLevel;
     }
 
+    inline uint8_t getLowestCommonLevel(uint64_t stop, uint64_t node1,
+        uint64_t node2) const
+    {
+        assert(isNodeValid(stop));
+        assert(isNodeValid(node1));
+        assert(isNodeValid(node2));
+
+        // Compute XOR of IDs for the two nodes against the stop
+        uint64_t xorResult1 = ids[stop] ^ ids[node1];
+        uint64_t xorResult2 = ids[stop] ^ ids[node2];
+
+        return (64 - std::max(__builtin_clzll(xorResult1), __builtin_clzll(xorResult2))) / numberOfCellsPerLevel;
+    }
+
+    // now, the stop parameter *is* the cellid
+    inline uint8_t getLowestCommonLevelExplizit(uint64_t stop, uint64_t node1,
+        uint64_t node2) const
+    {
+        assert(isNodeValid(node1));
+        assert(isNodeValid(node2));
+        // Compute XOR of IDs for the two nodes against the stop
+        uint64_t xorResult1 = stop ^ ids[node1];
+        uint64_t xorResult2 = stop ^ ids[node2];
+
+        return 32 - (std::max(__builtin_clzll(xorResult1), __builtin_clzll(xorResult2)) >> 1);
+    }
+
     // returns true iff node1 and node2 are in the same cell on the given level
-    // does not mean, that below and / or above this level, the two nodes are in the same cell
-    inline bool isInSameCellOnLevel(uint64_t node1, uint64_t node2, uint8_t level) const
+    // does not mean, that below and / or above this level, the two nodes are in
+    // the same cell
+    inline bool isInSameCellOnLevel(uint64_t node1, uint64_t node2,
+        uint8_t level) const
     {
         assert(isNodeValid(node1));
         assert(isNodeValid(node2));
         assert(isLevelValid(level));
 
-        uint64_t cellMask = ((1ULL << numberOfCellsPerLevel) - 1) << (level * numberOfCellsPerLevel);
+        uint64_t cellMask = ((1ULL << numberOfCellsPerLevel) - 1)
+            << (level * numberOfCellsPerLevel);
 
         return (ids[node1] & cellMask) == (ids[node2] & cellMask);
     }
@@ -139,7 +183,8 @@ public:
         return ids[node1] == ids[node2];
     }
 
-    inline bool inSameCell(uint64_t node, std::vector<int>& levels, std::vector<int>& cellIds) const
+    inline bool inSameCell(uint64_t node, std::vector<int>& levels,
+        std::vector<int>& cellIds) const
     {
         assert(isNodeValid(node));
         assert(levels.size() == cellIds.size());
@@ -174,7 +219,8 @@ public:
         return result;
     }
 
-    inline std::vector<int> verticesInCell(std::vector<int>& levels, std::vector<int>& cellIds) const
+    inline std::vector<int> verticesInCell(std::vector<int>& levels,
+        std::vector<int>& cellIds) const
     {
         assert(levels.size() == cellIds.size());
 
@@ -222,20 +268,14 @@ public:
 
     // ****************************
     // asserts
-    inline bool isLevelValid(uint8_t level) const
-    {
-        return level < levels;
-    }
+    inline bool isLevelValid(uint8_t level) const { return level < levels; }
 
     inline bool isCellIdValid(uint8_t cellId) const
     {
         return cellId < numberOfCellsPerLevel;
     }
 
-    inline bool isNodeValid(uint64_t node) const
-    {
-        return node < ids.size();
-    }
+    inline bool isNodeValid(uint64_t node) const { return node < ids.size(); }
     // ****************************
 
     inline void serialize(IO::Serialization& serialize) const noexcept

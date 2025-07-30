@@ -13,7 +13,8 @@ public:
     {
         for (const TripId trip : data.trips()) {
             if (data.numberOfStopsInTrip(trip) > 255)
-                warning("Trip ", trip, " has ", data.numberOfStopsInTrip(trip), " stops!");
+                warning("Trip ", trip, " has ", data.numberOfStopsInTrip(trip),
+                    " stops!");
             defaultLabels[trip] = data.numberOfStopsInTrip(trip);
         }
     }
@@ -42,25 +43,30 @@ public:
 
     inline StopIndex operator()(const TripId trip) const noexcept
     {
-        AssertMsg(trip < labels[currentRound].size(), "Trip " << trip << " is out of bounds!");
+        AssertMsg(trip < labels[currentRound].size(),
+            "Trip " << trip << " is out of bounds!");
         return StopIndex(labels[currentRound][trip]);
     }
 
-    inline StopIndex operator()(const TripId trip, const size_t round) const noexcept
+    inline StopIndex operator()(const TripId trip,
+        const size_t round) const noexcept
     {
         const size_t trueRound = std::min(round, labels.size() - 1);
-        AssertMsg(trip < labels[trueRound].size(), "Trip " << trip << " is out of bounds!");
+        AssertMsg(trip < labels[trueRound].size(),
+            "Trip " << trip << " is out of bounds!");
         return StopIndex(labels[trueRound][trip]);
     }
 
-    inline bool alreadyReached(const TripId trip, const u_int8_t index) const noexcept
+    inline bool alreadyReached(const TripId trip,
+        const u_int8_t index) const noexcept
     {
         return labels[currentRound][trip] <= index;
     }
 
     inline void update(const TripId trip, const StopIndex index) noexcept
     {
-        AssertMsg(trip < labels[currentRound].size(), "Trip " << trip << " is out of bounds!");
+        AssertMsg(trip < labels[currentRound].size(),
+            "Trip " << trip << " is out of bounds!");
         const TripId routeEnd = data.firstTripOfRoute[data.routeOfTrip[trip] + 1];
         for (TripId i = trip; i < routeEnd; i++) {
             if (labels[currentRound][i] <= index)
@@ -69,9 +75,11 @@ public:
         }
     }
 
-    inline void updateCopyForward(const TripId trip, const StopIndex index) noexcept
+    inline void updateCopyForward(const TripId trip,
+        const StopIndex index) noexcept
     {
-        AssertMsg(trip < labels[currentRound].size(), "Trip " << trip << " is out of bounds!");
+        AssertMsg(trip < labels[currentRound].size(),
+            "Trip " << trip << " is out of bounds!");
         const TripId routeEnd = data.firstTripOfRoute[data.routeOfTrip[trip] + 1];
         for (TripId i = trip; i < routeEnd; i++) {
             if (labels[currentRound][i] <= index)

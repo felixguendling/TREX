@@ -10,7 +10,8 @@
 
 namespace RAPTOR::ULTRA {
 
-template <bool DEBUG = false, bool COUNT_OPTIMAL_CANDIDATES = false, bool IGNORE_ISOLATED_CANDIDATES = false>
+template <bool DEBUG = false, bool COUNT_OPTIMAL_CANDIDATES = false,
+    bool IGNORE_ISOLATED_CANDIDATES = false>
 class Builder {
 public:
     inline static constexpr bool Debug = DEBUG;
@@ -24,16 +25,20 @@ public:
     {
         shortcutGraph.addVertices(data.numberOfStops());
         for (const Vertex vertex : shortcutGraph.vertices()) {
-            shortcutGraph.set(Coordinates, vertex, data.transferGraph.get(Coordinates, vertex));
+            shortcutGraph.set(Coordinates, vertex,
+                data.transferGraph.get(Coordinates, vertex));
         }
     }
 
-    void computeShortcuts(const ThreadPinning& threadPinning, const int witnessTransferLimit = 15 * 60,
-        const int minDepartureTime = -never, const int maxDepartureTime = never,
+    void computeShortcuts(const ThreadPinning& threadPinning,
+        const int witnessTransferLimit = 15 * 60,
+        const int minDepartureTime = -never,
+        const int maxDepartureTime = never,
         const bool verbose = true) noexcept
     {
         if (verbose)
-            std::cout << "Computing shortcuts with " << threadPinning.numberOfThreads << " threads." << std::endl;
+            std::cout << "Computing shortcuts with " << threadPinning.numberOfThreads
+                      << " threads." << std::endl;
 
         size_t optimalCandidates = 0;
         Progress progress(data.numberOfStops(), verbose);
@@ -43,8 +48,8 @@ public:
             threadPinning.pinThread();
 
             DynamicTransferGraph localShortcutGraph = shortcutGraph;
-            ShortcutSearch<Debug, CountOptimalCandidates, IgnoreIsolatedCandidates> shortcutSearch(
-                data, localShortcutGraph, witnessTransferLimit);
+            ShortcutSearch<Debug, CountOptimalCandidates, IgnoreIsolatedCandidates>
+                shortcutSearch(data, localShortcutGraph, witnessTransferLimit);
 
 #pragma omp for schedule(dynamic)
             for (size_t i = 0; i < data.numberOfStops(); i++) {
@@ -61,12 +66,19 @@ public:
                     for (const Edge edge : localShortcutGraph.edgesFrom(from)) {
                         const Vertex to = localShortcutGraph.get(ToVertex, edge);
                         if (!shortcutGraph.hasEdge(from, to)) {
-                            shortcutGraph.addEdge(from, to).set(TravelTime, localShortcutGraph.get(TravelTime, edge));
+                            shortcutGraph.addEdge(from, to).set(
+                                TravelTime, localShortcutGraph.get(TravelTime, edge));
                         } else {
-                            AssertMsg(shortcutGraph.get(TravelTime, shortcutGraph.findEdge(from, to)) == localShortcutGraph.get(TravelTime, edge),
-                                "Edge from " << from << " to " << to << " has inconclusive travel time ("
-                                             << shortcutGraph.get(TravelTime, shortcutGraph.findEdge(from, to))
-                                             << ", " << localShortcutGraph.get(TravelTime, edge) << ")");
+                            AssertMsg(shortcutGraph.get(TravelTime,
+                                          shortcutGraph.findEdge(from, to))
+                                    == localShortcutGraph.get(TravelTime, edge),
+                                "Edge from "
+                                    << from << " to " << to
+                                    << " has inconclusive travel time ("
+                                    << shortcutGraph.get(
+                                           TravelTime, shortcutGraph.findEdge(from, to))
+                                    << ", " << localShortcutGraph.get(TravelTime, edge)
+                                    << ")");
                         }
                     }
                 }
@@ -74,7 +86,8 @@ public:
         }
         progress.finished();
         if constexpr (CountOptimalCandidates) {
-            std::cout << "#Optimal candidates: " << String::prettyInt(optimalCandidates) << std::endl;
+            std::cout << "#Optimal candidates: "
+                      << String::prettyInt(optimalCandidates) << std::endl;
         } else {
             suppressUnusedParameterWarning(optimalCandidates);
         }

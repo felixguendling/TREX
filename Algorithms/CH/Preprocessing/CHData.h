@@ -56,10 +56,7 @@ public:
         return level.size() - order.size();
     }
 
-    inline size_t numContracted() const noexcept
-    {
-        return order.size();
-    }
+    inline size_t numContracted() const noexcept { return order.size(); }
 
     inline void applyVertexPermutation(const Permutation& permutation) noexcept
     {

@@ -16,7 +16,8 @@
 
 namespace RAPTOR::ULTRA {
 
-template <bool DEBUG = false, bool COUNT_OPTIMAL_CANDIDATES = false, bool IGNORE_ISOLATED_CANDIDATES = false>
+template <bool DEBUG = false, bool COUNT_OPTIMAL_CANDIDATES = false,
+    bool IGNORE_ISOLATED_CANDIDATES = false>
 class ShortcutSearch {
 public:
     inline static constexpr bool Debug = DEBUG;
@@ -38,7 +39,8 @@ public:
     };
 
     struct DepartureLabel {
-        DepartureLabel(const RouteId routeId = noRouteId, const StopIndex stopIndex = noStopIndex,
+        DepartureLabel(const RouteId routeId = noRouteId,
+            const StopIndex stopIndex = noStopIndex,
             const int departureTime = never)
             : route(routeId, stopIndex)
             , departureTime(departureTime)
@@ -59,7 +61,8 @@ public:
         }
         std::vector<RouteSegment> routes;
         int departureTime;
-        inline bool operator<(const ConsolidatedDepartureLabel& other) const noexcept
+        inline bool
+        operator<(const ConsolidatedDepartureLabel& other) const noexcept
         {
             return departureTime > other.departureTime;
         }
@@ -82,7 +85,8 @@ public:
     };
 
 public:
-    ShortcutSearch(const Data& data, DynamicTransferGraph& shortcutGraph, const int witnessTransferLimit)
+    ShortcutSearch(const Data& data, DynamicTransferGraph& shortcutGraph,
+        const int witnessTransferLimit)
         : data(data)
         , shortcutGraph(shortcutGraph)
         , stationOfStop(data.numberOfStops())
@@ -98,7 +102,8 @@ public:
         , earliestDepartureTime(data.getMinDepartureTime())
         , timestamp(0)
     {
-        AssertMsg(data.hasImplicitBufferTimes(), "Shortcut search requires implicit departure buffer times!");
+        AssertMsg(data.hasImplicitBufferTimes(),
+            "Shortcut search requires implicit departure buffer times!");
         Dijkstra<TransferGraph, false> dijkstra(data.transferGraph);
         for (const StopId stop : data.stops()) {
             dijkstra.run(
@@ -109,38 +114,49 @@ public:
                     stationOfStop[stop].add(StopId(u));
                 },
                 NoOperation,
-                [&](const Vertex, const Edge edge) { return data.transferGraph.get(TravelTime, edge) > 0; });
+                [&](const Vertex, const Edge edge) {
+                    return data.transferGraph.get(TravelTime, edge) > 0;
+                });
         }
     }
 
-    inline void run(const StopId source, const int minTime, const int maxTime) noexcept
+    inline void run(const StopId source, const int minTime,
+        const int maxTime) noexcept
     {
         AssertMsg(data.isStop(source), "source (" << source << ") is not a stop!");
         if (stationOfStop[source].representative != source)
             return;
         setSource(source);
-        for (const ConsolidatedDepartureLabel& label : collectDepartures(minTime, maxTime)) {
+        for (const ConsolidatedDepartureLabel& label :
+            collectDepartures(minTime, maxTime)) {
             runForDepartureTime(label);
             if constexpr (CountOptimalCandidates) {
                 optimalCandidates += shortcuts.size();
             }
             for (const Shortcut& shortcut : shortcuts) {
                 if (!shortcutGraph.hasEdge(shortcut.origin, shortcut.destination)) {
-                    shortcutGraph.addEdge(shortcut.origin, shortcut.destination).set(TravelTime, shortcut.travelTime);
+                    shortcutGraph.addEdge(shortcut.origin, shortcut.destination)
+                        .set(TravelTime, shortcut.travelTime);
                 } else {
                     AssertMsg(
-                        shortcutGraph.get(TravelTime, shortcutGraph.findEdge(shortcut.origin, shortcut.destination)) == shortcut.travelTime,
+                        shortcutGraph.get(TravelTime,
+                            shortcutGraph.findEdge(shortcut.origin,
+                                shortcut.destination))
+                            == shortcut.travelTime,
                         "Edge from " << shortcut.origin << " to " << shortcut.destination
                                      << " has inconclusive travel time ("
-                                     << shortcutGraph.get(TravelTime,
-                                            shortcutGraph.findEdge(shortcut.origin, shortcut.destination))
+                                     << shortcutGraph.get(
+                                            TravelTime,
+                                            shortcutGraph.findEdge(shortcut.origin,
+                                                shortcut.destination))
                                      << ", " << shortcut.travelTime << ")");
                 }
             }
         }
     }
 
-    template <bool T = CountOptimalCandidates, typename = std::enable_if_t<T == CountOptimalCandidates && T>>
+    template <bool T = CountOptimalCandidates,
+        typename = std::enable_if_t<T == CountOptimalCandidates && T>>
     inline size_t getNumberOfOptimalCandidates() const noexcept
     {
         return optimalCandidates;
@@ -159,14 +175,17 @@ private:
         if constexpr (Debug) {
             std::cout << "   Source stop: " << source << std::endl;
             std::cout << "   Number of stops reached by direct transfer: "
-                      << String::prettyInt(stopsReachedByDirectTransfer.size()) << std::endl;
+                      << String::prettyInt(stopsReachedByDirectTransfer.size())
+                      << std::endl;
         }
     }
 
-    inline void runForDepartureTime(const ConsolidatedDepartureLabel& label) noexcept
+    inline void
+    runForDepartureTime(const ConsolidatedDepartureLabel& label) noexcept
     {
         if constexpr (Debug)
-            std::cout << "   Running search for departure time: " << label.departureTime << " ("
+            std::cout << "   Running search for departure time: "
+                      << label.departureTime << " ("
                       << String::secToTime(label.departureTime) << ")" << std::endl;
 
         timestamp++;
@@ -188,10 +207,13 @@ private:
         finalDijkstra();
     }
 
-    inline std::vector<ConsolidatedDepartureLabel> collectDepartures(const int minTime, const int maxTime) noexcept
+    inline std::vector<ConsolidatedDepartureLabel>
+    collectDepartures(const int minTime, const int maxTime) noexcept
     {
-        AssertMsg(directTransferArrivalLabels[sourceStation.representative].arrivalTime == 0,
-            "Direct transfer for source " << sourceStation.representative << " is incorrect!");
+        AssertMsg(
+            directTransferArrivalLabels[sourceStation.representative].arrivalTime == 0,
+            "Direct transfer for source " << sourceStation.representative
+                                          << " is incorrect!");
         const int cutoffTime = std::max(minTime, earliestDepartureTime);
         std::vector<DepartureLabel> departureLabels;
         for (const RouteId route : data.routes()) {
@@ -202,8 +224,8 @@ private:
                 if (directTransferArrivalLabels[stops[stopIndex]].arrivalTime > minimalTransferTime)
                     continue;
                 minimalTransferTime = directTransferArrivalLabels[stops[stopIndex]].arrivalTime;
-                for (const StopEvent* trip = data.firstTripOfRoute(route); trip <= data.lastTripOfRoute(route);
-                     trip += tripSize) {
+                for (const StopEvent* trip = data.firstTripOfRoute(route);
+                     trip <= data.lastTripOfRoute(route); trip += tripSize) {
                     const int departureTime = trip[stopIndex].departureTime - minimalTransferTime;
                     if (departureTime < cutoffTime)
                         continue;
@@ -212,7 +234,8 @@ private:
                     if (stationOfStop[stops[stopIndex]].representative == sourceStation.representative) {
                         departureLabels.emplace_back(noRouteId, noStopIndex, departureTime);
                     }
-                    departureLabels.emplace_back(route, StopIndex(stopIndex), departureTime);
+                    departureLabels.emplace_back(route, StopIndex(stopIndex),
+                        departureTime);
                 }
             }
         }
@@ -240,20 +263,27 @@ private:
     {
         sourceStation = Station();
 
-        std::vector<ArrivalLabel>(data.transferGraph.numVertices()).swap(directTransferArrivalLabels);
+        std::vector<ArrivalLabel>(data.transferGraph.numVertices())
+            .swap(directTransferArrivalLabels);
         stopsReachedByDirectTransfer.clear();
 
-        std::vector<ArrivalLabel>(data.numberOfStops()).swap(zeroTripsArrivalLabels);
+        std::vector<ArrivalLabel>(data.numberOfStops())
+            .swap(zeroTripsArrivalLabels);
 
         oneTripQueue.clear();
-        std::vector<ArrivalLabel>(data.transferGraph.numVertices()).swap(oneTripArrivalLabels);
-        std::vector<u_int16_t>(data.transferGraph.numVertices(), 0).swap(oneTripTimestamps);
+        std::vector<ArrivalLabel>(data.transferGraph.numVertices())
+            .swap(oneTripArrivalLabels);
+        std::vector<u_int16_t>(data.transferGraph.numVertices(), 0)
+            .swap(oneTripTimestamps);
 
         twoTripsQueue.clear();
-        std::vector<ArrivalLabel>(data.transferGraph.numVertices()).swap(twoTripsArrivalLabels);
-        std::vector<u_int16_t>(data.transferGraph.numVertices(), 0).swap(twoTripsTimestamps);
+        std::vector<ArrivalLabel>(data.transferGraph.numVertices())
+            .swap(twoTripsArrivalLabels);
+        std::vector<u_int16_t>(data.transferGraph.numVertices(), 0)
+            .swap(twoTripsTimestamps);
 
-        std::vector<StopId>(data.transferGraph.numVertices(), noStop).swap(oneTripTransferParent);
+        std::vector<StopId>(data.transferGraph.numVertices(), noStop)
+            .swap(oneTripTransferParent);
         std::vector<StopId>(data.numberOfStops(), noStop).swap(twoTripsRouteParent);
 
         shortcutCandidatesInQueue = 0;
@@ -268,10 +298,12 @@ private:
     inline void collectRoutes1(const std::vector<RouteSegment>& routes) noexcept
     {
         for (const RouteSegment& route : routes) {
-            AssertMsg(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
+            AssertMsg(data.isRoute(route.routeId),
+                "Route " << route.routeId << " is out of range!");
             AssertMsg(route.stopIndex + 1 < data.numberOfStopsInRoute(route.routeId),
                 "RouteSegment " << route << " is not a departure event!");
-            AssertMsg(data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime >= arrivalTime<0>(data.stopOfRouteSegment(route)),
+            AssertMsg(
+                data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime >= arrivalTime<0>(data.stopOfRouteSegment(route)),
                 "RouteSegment " << route << " is not reachable!");
             if (routesServingUpdatedStops.contains(route.routeId)) {
                 routesServingUpdatedStops[route.routeId] = std::min(routesServingUpdatedStops[route.routeId], route.stopIndex);
@@ -279,14 +311,16 @@ private:
                 routesServingUpdatedStops.insert(route.routeId, route.stopIndex);
             }
         }
-        AssertMsg(routesServingUpdatedStops.isSortedByKeys(), "Collected route segments are not sorted!");
+        AssertMsg(routesServingUpdatedStops.isSortedByKeys(),
+            "Collected route segments are not sorted!");
     }
 
     inline void collectRoutes2() noexcept
     {
         for (const StopId stop : stopsUpdatedByTransfer) {
             for (const RouteSegment& route : data.routesContainingStop(stop)) {
-                AssertMsg(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
+                AssertMsg(data.isRoute(route.routeId),
+                    "Route " << route.routeId << " is out of range!");
                 AssertMsg(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop,
                     "RAPTOR data contains invalid route segments!");
                 if (route.stopIndex + 1 == data.numberOfStopsInRoute(route.routeId))
@@ -294,7 +328,8 @@ private:
                 if (data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime < oneTripArrivalLabels[stop].arrivalTime)
                     continue;
                 if (routesServingUpdatedStops.contains(route.routeId)) {
-                    routesServingUpdatedStops[route.routeId] = std::min(routesServingUpdatedStops[route.routeId], route.stopIndex);
+                    routesServingUpdatedStops[route.routeId] = std::min(
+                        routesServingUpdatedStops[route.routeId], route.stopIndex);
                 } else {
                     routesServingUpdatedStops.insert(route.routeId, route.stopIndex);
                 }
@@ -339,14 +374,16 @@ private:
                 tripIterator.nextStop();
                 const int newArrivalTime = tripIterator.arrivalTime();
                 if (newArrivalTime < arrivalTime<CURRENT>(tripIterator.stop())) {
-                    arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime, tripIterator.stop(parentIndex));
+                    arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime,
+                        tripIterator.stop(parentIndex));
                 }
                 // Candidates may dominate equivalent labels from previous
                 // iterations
                 else if (newArrivalTime == arrivalTime<CURRENT>(tripIterator.stop()) && !isFromCurrentIteration<CURRENT>(tripIterator.stop()) && newArrivalTime < arrivalTime<CURRENT - 1>(tripIterator.stop())) {
                     const StopId parent = tripIterator.stop(parentIndex);
                     if (isCandidate<CURRENT>(parent)) {
-                        arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime, parent);
+                        arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime,
+                            parent);
                     }
                 }
             }
@@ -369,7 +406,8 @@ private:
     template <int CURRENT>
     inline bool isFromCurrentIteration(const StopId stop) const noexcept
     {
-        static_assert((CURRENT == 0) | (CURRENT == 1) | (CURRENT == 2), "Invalid round!");
+        static_assert((CURRENT == 0) | (CURRENT == 1) | (CURRENT == 2),
+            "Invalid round!");
         if constexpr (CURRENT == 0) {
             suppressUnusedParameterWarning(stop);
             return true;
@@ -383,7 +421,8 @@ private:
     inline void initialDijkstra() noexcept
     {
         directTransferArrivalLabels[sourceStation.representative].arrivalTime = 0;
-        directTransferQueue.update(&(directTransferArrivalLabels[sourceStation.representative]));
+        directTransferQueue.update(
+            &(directTransferArrivalLabels[sourceStation.representative]));
         while (!directTransferQueue.empty()) {
             ArrivalLabel* currentLabel = directTransferQueue.extractFront();
             const Vertex currentVertex = Vertex(currentLabel - &(directTransferArrivalLabels[0]));
@@ -392,7 +431,8 @@ private:
                 const int newArrivalTime = currentLabel->arrivalTime + data.transferGraph.get(TravelTime, edge);
                 if (newArrivalTime < directTransferArrivalLabels[neighborVertex].arrivalTime) {
                     directTransferArrivalLabels[neighborVertex].arrivalTime = newArrivalTime;
-                    directTransferQueue.update(&(directTransferArrivalLabels[neighborVertex]));
+                    directTransferQueue.update(
+                        &(directTransferArrivalLabels[neighborVertex]));
                 }
             }
             if (data.isStop(currentVertex)) {
@@ -407,7 +447,8 @@ private:
 
     inline void relaxInitialTransfers() noexcept
     {
-        AssertMsg(stopsUpdatedByTransfer.empty(), "stopsUpdatedByTransfer is not empty!");
+        AssertMsg(stopsUpdatedByTransfer.empty(),
+            "stopsUpdatedByTransfer is not empty!");
         for (const StopId stop : stopsReachedByDirectTransfer) {
             const int newArrivalTime = sourceDepartureTime + directTransferArrivalLabels[stop].arrivalTime;
             arrivalByEdge0(stop, newArrivalTime);
@@ -417,7 +458,8 @@ private:
 
     inline void intermediateDijkstra() noexcept
     {
-        AssertMsg(stopsUpdatedByTransfer.empty(), "stopsUpdatedByTransfer is not empty!");
+        AssertMsg(stopsUpdatedByTransfer.empty(),
+            "stopsUpdatedByTransfer is not empty!");
 
         shortcutCandidatesInQueue = 0;
         for (const StopId stop : stopsUpdatedByRoute) {
@@ -463,7 +505,8 @@ private:
                     transferLimit = intMax;
                 if constexpr (Debug)
                     std::cout << "   Transfer limit in round 1: "
-                              << String::secToString(transferLimit - sourceDepartureTime) << std::endl;
+                              << String::secToString(transferLimit - sourceDepartureTime)
+                              << std::endl;
             }
             if (data.isStop(currentVertex)) {
                 stopsUpdatedByTransfer.insert(StopId(currentVertex));
@@ -477,7 +520,8 @@ private:
 
     inline void finalDijkstra() noexcept
     {
-        AssertMsg(stopsUpdatedByTransfer.empty(), "stopsUpdatedByTransfer is not empty!");
+        AssertMsg(stopsUpdatedByTransfer.empty(),
+            "stopsUpdatedByTransfer is not empty!");
 
         for (const StopId stop : stopsUpdatedByRoute) {
             twoTripsQueue.update(&(twoTripsArrivalLabels[stop]));
@@ -509,24 +553,29 @@ private:
                     // shortcut
                     if constexpr (IgnoreIsolatedCandidates) {
                         if (directTransferArrivalLabels[currentVertex].arrivalTime < never) {
-                            shortcuts.emplace_back(transferParent, routeParent, walkingDistance);
+                            shortcuts.emplace_back(transferParent, routeParent,
+                                walkingDistance);
                         }
                     } else {
-                        shortcuts.emplace_back(transferParent, routeParent, walkingDistance);
+                        shortcuts.emplace_back(transferParent, routeParent,
+                            walkingDistance);
                     }
                     AssertMsg(shortcutDestinationCandidates.contains(routeParent),
-                        "Vertex " << currentVertex << " has route parent " << routeParent
-                                  << " but the route parent does not know about this!");
+                        "Vertex "
+                            << currentVertex << " has route parent " << routeParent
+                            << " but the route parent does not know about this!");
                     if constexpr (!CountOptimalCandidates) {
                         // Unmark other candidates using this shortcut, since we
                         // don't need them anymore
-                        for (const StopId obsoleteCandidate : shortcutDestinationCandidates[routeParent]) {
+                        for (const StopId obsoleteCandidate :
+                            shortcutDestinationCandidates[routeParent]) {
                             twoTripsRouteParent[obsoleteCandidate] = noStop;
                         }
                         shortcutDestinationCandidates.remove(routeParent);
                     } else {
                         twoTripsRouteParent[currentVertex] = noStop;
-                        shortcutDestinationCandidates[routeParent].erase(StopId(currentVertex));
+                        shortcutDestinationCandidates[routeParent].erase(
+                            StopId(currentVertex));
                         if (shortcutDestinationCandidates[routeParent].empty()) {
                             shortcutDestinationCandidates.remove(routeParent);
                         }
@@ -537,7 +586,9 @@ private:
                 break;
         }
 
-        AssertMsg(shortcutDestinationCandidates.empty(), "There are still shortcut destination candidates left (" << shortcutDestinationCandidates.size() << ")!");
+        AssertMsg(shortcutDestinationCandidates.empty(),
+            "There are still shortcut destination candidates left ("
+                << shortcutDestinationCandidates.size() << ")!");
         stopsUpdatedByRoute.clear();
     }
 
@@ -546,7 +597,8 @@ private:
     {
         static_assert((ROUND == 0) | (ROUND == 1) | (ROUND == 2), "Invalid round!");
         if constexpr (ROUND == 0) {
-            AssertMsg(data.isStop(vertex), "Arrival time in round 0 only available for stops!");
+            AssertMsg(data.isStop(vertex),
+                "Arrival time in round 0 only available for stops!");
             return zeroTripsArrivalLabels[vertex].arrivalTime;
         } else if constexpr (ROUND == 1) {
             return oneTripArrivalLabels[vertex].arrivalTime;
@@ -556,7 +608,8 @@ private:
     }
 
     template <int ROUND>
-    inline void arrivalByRoute(const StopId stop, const int arrivalTime, const StopId parent) noexcept
+    inline void arrivalByRoute(const StopId stop, const int arrivalTime,
+        const StopId parent) noexcept
     {
         static_assert((ROUND == 1) | (ROUND == 2), "Invalid round!");
         if constexpr (ROUND == 1) {
@@ -566,7 +619,8 @@ private:
         }
     }
 
-    inline void arrivalByRoute1(const StopId stop, const int arrivalTime, const StopId parent) noexcept
+    inline void arrivalByRoute1(const StopId stop, const int arrivalTime,
+        const StopId parent) noexcept
     {
         // Mark journey as candidate or witness
         if (stationOfStop[parent].representative == sourceStation.representative) {
@@ -589,7 +643,8 @@ private:
         stopsUpdatedByRoute.insert(stop);
     }
 
-    inline void arrivalByRoute2(const StopId stop, const int arrivalTime, const StopId parent) noexcept
+    inline void arrivalByRoute2(const StopId stop, const int arrivalTime,
+        const StopId parent) noexcept
     {
         // Mark journey as candidate or witness
         if (data.isStop(oneTripTransferParent[parent]) && (oneTripTransferParent[parent] != parent) && (!shortcutAlreadyExists(parent))) {
@@ -614,7 +669,8 @@ private:
         }
     }
 
-    inline void arrivalByEdge0(const Vertex vertex, const int arrivalTime) noexcept
+    inline void arrivalByEdge0(const Vertex vertex,
+        const int arrivalTime) noexcept
     {
         updateArrival<0>(vertex, arrivalTime, timestamp);
         if (oneTripArrivalLabels[vertex].arrivalTime > arrivalTime) {
@@ -631,7 +687,8 @@ private:
         }
     }
 
-    inline void arrivalByEdge1(const Vertex vertex, const int arrivalTime, const Vertex parent) noexcept
+    inline void arrivalByEdge1(const Vertex vertex, const int arrivalTime,
+        const Vertex parent) noexcept
     {
         if (isShortcutCandidate(vertex))
             shortcutCandidatesInQueue--;
@@ -648,7 +705,8 @@ private:
         oneTripQueue.update(&(oneTripArrivalLabels[vertex]));
     }
 
-    inline void arrivalByEdge2(const Vertex vertex, const int arrivalTime, const Vertex parent) noexcept
+    inline void arrivalByEdge2(const Vertex vertex, const int arrivalTime,
+        const Vertex parent) noexcept
     {
         updateArrival<2>(vertex, arrivalTime, twoTripsTimestamps[parent]);
         twoTripsQueue.update(&(twoTripsArrivalLabels[vertex]));
@@ -661,7 +719,8 @@ private:
             AssertMsg(shortcutDestinationCandidates.contains(routeParent),
                 "Vertex " << vertex << " has route parent " << routeParent
                           << " but the route parent does not know about this!");
-            AssertMsg(shortcutDestinationCandidates[routeParent].contains(StopId(vertex)),
+            AssertMsg(
+                shortcutDestinationCandidates[routeParent].contains(StopId(vertex)),
                 "Vertex " << vertex
                           << " is not contained in "
                              "shortcutDestinationCandidates List of "
@@ -675,7 +734,8 @@ private:
     }
 
     template <int ROUND>
-    inline void updateArrival(const Vertex vertex, const int arrivalTime, const u_int16_t labelTimestamp) noexcept
+    inline void updateArrival(const Vertex vertex, const int arrivalTime,
+        const u_int16_t labelTimestamp) noexcept
     {
         if constexpr (ROUND == 0) {
             zeroTripsArrivalLabels[vertex].arrivalTime = arrivalTime;

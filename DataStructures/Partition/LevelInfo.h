@@ -1,6 +1,7 @@
 #pragma once
 
-// taken and adapted from here https://github.com/michaelwegner/CRP/blob/master/datastructures/LevelInfo.h
+// taken and adapted from here
+// https://github.com/michaelwegner/CRP/blob/master/datastructures/LevelInfo.h
 
 #include "../../Helpers/Assert.h"
 #include "../../Helpers/IO/Serialization.h"
@@ -46,15 +47,9 @@ public:
         return cellNumber >> offset[l - 1];
     }
 
-    size_t getLevelCount() const
-    {
-        return offset.size() - 1;
-    }
+    size_t getLevelCount() const { return offset.size() - 1; }
 
-    const std::vector<uint8_t>& getOffsets() const
-    {
-        return offset;
-    }
+    const std::vector<uint8_t>& getOffsets() const { return offset; }
 
     void serialize(IO::Serialization& serialize) const noexcept
     {

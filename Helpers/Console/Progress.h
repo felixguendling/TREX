@@ -55,14 +55,8 @@ public:
         checkDraw();
     }
 
-    inline void operator++()
-    {
-        iterate();
-    }
-    inline void operator++(int)
-    {
-        iterate();
-    }
+    inline void operator++() { iterate(); }
+    inline void operator++(int) { iterate(); }
 
     inline void finished()
     {
@@ -72,23 +66,11 @@ public:
             os << std::endl;
     }
 
-    inline void SetCheckTimeStep(const int s)
-    {
-        checkTimeStep = s;
-    }
-    inline void SetRedrawTime(const double t)
-    {
-        redrawTime = t;
-    }
-    inline void SetRedrawStep(const int s)
-    {
-        redrawStep = std::max(1, s);
-    }
+    inline void SetCheckTimeStep(const int s) { checkTimeStep = s; }
+    inline void SetRedrawTime(const double t) { redrawTime = t; }
+    inline void SetRedrawStep(const int s) { redrawStep = std::max(1, s); }
 
-    inline int getNumberOfStepsDone() const noexcept
-    {
-        return stepsDone;
-    }
+    inline int getNumberOfStepsDone() const noexcept { return stepsDone; }
 
 protected:
     inline void checkDraw()

@@ -7,7 +7,8 @@
 #include "TaggedInteger.h"
 
 template <int TAG, typename VALUE_TYPE>
-using TaggedIntegerX = TaggedInteger<TAG, typename VALUE_TYPE::ValueType, VALUE_TYPE::InvalidValue, VALUE_TYPE::DefaultValue, VALUE_TYPE>;
+using TaggedIntegerX = TaggedInteger<TAG, typename VALUE_TYPE::ValueType, VALUE_TYPE::InvalidValue,
+    VALUE_TYPE::DefaultValue, VALUE_TYPE>;
 
 using Vertex = TaggedInteger<0, u_int32_t, -u_int32_t(1)>;
 constexpr Vertex noVertex(Vertex::InvalidValue);
@@ -38,6 +39,9 @@ constexpr StopEventId noStopEvent(StopEventId::InvalidValue);
 
 using LinkId = TaggedInteger<9, u_int32_t, -u_int32_t(1)>;
 constexpr LinkId noLink(LinkId::InvalidValue);
+
+using PackedTransfer = TaggedInteger<10, u_int32_t, -u_int32_t(1)>;
+constexpr PackedTransfer noPackedTransfer(PackedTransfer::InvalidValue);
 
 inline constexpr int intMax = std::numeric_limits<int>::max();
 inline constexpr double doubleMax = std::numeric_limits<double>::max();

@@ -33,7 +33,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const StopEvent& s)
     {
-        return out << "StopEvent{" << s.arrivalTime << ", " << s.departureTime << "}";
+        return out << "StopEvent{" << s.arrivalTime << ", " << s.departureTime
+                   << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept

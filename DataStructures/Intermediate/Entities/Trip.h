@@ -15,7 +15,8 @@ public:
     static const std::string CSV_HEADER;
 
 public:
-    Trip(const std::string& tripName = "", const std::string& routeName = "", const int type = -1)
+    Trip(const std::string& tripName = "", const std::string& routeName = "",
+        const int type = -1)
         : tripName(tripName)
         , routeName(routeName)
         , type(type)
@@ -37,10 +38,7 @@ public:
             stopEvents.emplace_back(se, timeOffset);
         }
     }
-    Trip(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Trip(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     inline bool operator<(const Trip& t) const noexcept
     {
@@ -89,8 +87,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const Trip& t)
     {
-        return out << "Trip{" << t.routeName << ", " << t.tripName << ", " << t.type << ", " << t.stopEvents.size()
-                   << "}";
+        return out << "Trip{" << t.routeName << ", " << t.tripName << ", " << t.type
+                   << ", " << t.stopEvents.size() << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept
@@ -163,7 +161,8 @@ const std::string Trip::CSV_HEADER = "name,route,vehicle";
 
 inline bool isFiFo(const Trip& a, const Trip& b) noexcept
 {
-    AssertMsg(a.stopEvents.size() == b.stopEvents.size(), "FiFO property can only be tested for trips of equal size!");
+    AssertMsg(a.stopEvents.size() == b.stopEvents.size(),
+        "FiFO property can only be tested for trips of equal size!");
     for (size_t i = 0; i < a.stopEvents.size(); i++) {
         if (a.stopEvents[i].arrivalTime > b.stopEvents[i].arrivalTime)
             return false;

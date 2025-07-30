@@ -9,7 +9,8 @@
 
 namespace CH {
 
-template <typename GRAPH = CHGraph, bool STALL_ON_DEMAND = true, bool DEBUG = false>
+template <typename GRAPH = CHGraph, bool STALL_ON_DEMAND = true,
+    bool DEBUG = false>
 class BucketQuery {
 public:
     using Graph = GRAPH;
@@ -20,9 +21,12 @@ public:
     using BaseQuery = Query<Graph, StallOnDemand, false, true>;
 
 public:
-    BucketQuery(const Graph& forward, const Graph& backward, const std::vector<int>& forwardWeight,
-        const std::vector<int>& backwardWeight, const Vertex::ValueType endOfPOIs)
-        : baseQuery(forward, backward, forwardWeight, backwardWeight, forward.numVertices())
+    BucketQuery(const Graph& forward, const Graph& backward,
+        const std::vector<int>& forwardWeight,
+        const std::vector<int>& backwardWeight,
+        const Vertex::ValueType endOfPOIs)
+        : baseQuery(forward, backward, forwardWeight, backwardWeight,
+            forward.numVertices())
         , bucketGraph { CHGraph(), CHGraph() }
         , distance { std::vector<int>(forward.numVertices(), INFTY),
             std::vector<int>(backward.numVertices(), INFTY) }
@@ -35,19 +39,24 @@ public:
     }
 
     template <typename ATTRIBUTE>
-    BucketQuery(const Graph& forward, const Graph& backward, const Vertex::ValueType endOfPOIs,
+    BucketQuery(const Graph& forward, const Graph& backward,
+        const Vertex::ValueType endOfPOIs,
         const ATTRIBUTE attribute = Weight)
-        : BucketQuery(forward, backward, forward[attribute], backward[attribute], endOfPOIs)
+        : BucketQuery(forward, backward, forward[attribute], backward[attribute],
+            endOfPOIs)
     {
     }
 
-    BucketQuery(const CH& ch, const int direction = FORWARD, const Vertex::ValueType endOfPOIs = 0)
-        : BucketQuery(ch.getGraph(direction), ch.getGraph(!direction), endOfPOIs, Weight)
+    BucketQuery(const CH& ch, const int direction = FORWARD,
+        const Vertex::ValueType endOfPOIs = 0)
+        : BucketQuery(ch.getGraph(direction), ch.getGraph(!direction), endOfPOIs,
+            Weight)
     {
     }
 
     template <bool TARGET_PRUNING = true>
-    inline void run(const Vertex from, const Vertex to, const double targetPruningFactor = 1) noexcept
+    inline void run(const Vertex from, const Vertex to,
+        const double targetPruningFactor = 1) noexcept
     {
         if (root[FORWARD] == from && root[BACKWARD] == to)
             return;
@@ -68,7 +77,8 @@ public:
         collectPOIs<BACKWARD>(targetPruningFactor);
 
         if constexpr (Debug)
-            std::cout << "   Time = " << String::msToString(timer.elapsedMilliseconds()) << std::endl;
+            std::cout << "   Time = "
+                      << String::msToString(timer.elapsedMilliseconds()) << std::endl;
     }
 
     template <int I, int J, bool TARGET_PRUNING = true>
@@ -89,7 +99,8 @@ public:
         collectPOIs<I>();
 
         if constexpr (Debug)
-            std::cout << "   Time = " << String::msToString(timer.elapsedMilliseconds()) << std::endl;
+            std::cout << "   Time = "
+                      << String::msToString(timer.elapsedMilliseconds()) << std::endl;
     }
 
     inline void clear() noexcept
@@ -124,13 +135,11 @@ public:
         collectPOIs<FORWARD>();
         collectPOIs<BACKWARD>();
         if constexpr (Debug)
-            std::cout << "   Time = " << String::msToString(timer.elapsedMilliseconds()) << std::endl;
+            std::cout << "   Time = "
+                      << String::msToString(timer.elapsedMilliseconds()) << std::endl;
     }
 
-    inline bool reachable() const noexcept
-    {
-        return baseQuery.reachable();
-    }
+    inline bool reachable() const noexcept { return baseQuery.reachable(); }
 
     inline bool visited(const Vertex vertex) const noexcept
     {
@@ -172,7 +181,8 @@ public:
         return reachedPOIs[BACKWARD];
     }
 
-    inline std::vector<Vertex> getReversePath(const Vertex = noVertex) const noexcept
+    inline std::vector<Vertex>
+    getReversePath(const Vertex = noVertex) const noexcept
     {
         return baseQuery.getReversePath();
     }
@@ -197,7 +207,8 @@ private:
     inline void buildBucketGraph() noexcept
     {
         if constexpr (Debug)
-            std::cout << "Building " << ((I == FORWARD) ? ("forward") : ("backward")) << " bucket graph" << std::endl;
+            std::cout << "Building " << ((I == FORWARD) ? ("forward") : ("backward"))
+                      << " bucket graph" << std::endl;
         CHConstructionGraph temp;
         temp.addVertices(distance[I].size());
         Progress progress(endOfPOIs, Debug);
@@ -205,8 +216,10 @@ private:
             baseQuery.template run<J, I>(vertex);
             for (const Vertex bucket : baseQuery.template getPOIs<J>()) {
                 AssertMsg(!temp.hasEdge(bucket, vertex),
-                    "Bucket graph contains already an edge from " << bucket << " to " << vertex << "!");
-                temp.addEdge(bucket, vertex).set(Weight, baseQuery.template getDistanceToPOI<J>(bucket));
+                    "Bucket graph contains already an edge from "
+                        << bucket << " to " << vertex << "!");
+                temp.addEdge(bucket, vertex)
+                    .set(Weight, baseQuery.template getDistanceToPOI<J>(bucket));
             }
             progress++;
         }

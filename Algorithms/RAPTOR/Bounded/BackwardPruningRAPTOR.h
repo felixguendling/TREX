@@ -44,7 +44,9 @@ public:
     using Round = std::vector<EarliestArrivalLabel>;
 
 public:
-    BackwardPruningRAPTOR(const Data& data, const ForwardPruningRAPTOR<Profiler>& forwardPruningRAPTOR,
+    BackwardPruningRAPTOR(
+        const Data& data,
+        const ForwardPruningRAPTOR<Profiler>& forwardPruningRAPTOR,
         Profiler& profiler)
         : data(data)
         , forwardPruningRAPTOR(forwardPruningRAPTOR)
@@ -60,11 +62,13 @@ public:
         , timestamp(0)
         , profiler(profiler)
     {
-        AssertMsg(data.hasImplicitBufferTimes(), "Departure buffer times have to be implicit!");
+        AssertMsg(data.hasImplicitBufferTimes(),
+            "Departure buffer times have to be implicit!");
     }
 
-    inline void run(const StopId source, const StopId target, const int originalDepartureTime,
-        const double arrivalSlack, const double tripSlack) noexcept
+    inline void run(const StopId source, const StopId target,
+        const int originalDepartureTime, const double arrivalSlack,
+        const double tripSlack) noexcept
     {
         profiler.startPhase();
         clear<true>();
@@ -83,14 +87,18 @@ public:
         profiler.donePhase(PHASE_INITIALIZATION);
     }
 
-    inline int getArrivalTimeByRoute(const StopId stop, const size_t round) noexcept
+    inline int getArrivalTimeByRoute(const StopId stop,
+        const size_t round) noexcept
     {
-        return roundLabel(std::min(round, rounds.size() - 1), stop).arrivalTimeByRoute;
+        return roundLabel(std::min(round, rounds.size() - 1), stop)
+            .arrivalTimeByRoute;
     }
 
-    inline int getArrivalTimeByTransfer(const StopId stop, const size_t round) noexcept
+    inline int getArrivalTimeByTransfer(const StopId stop,
+        const size_t round) noexcept
     {
-        return roundLabel(std::min(round, rounds.size() - 1), stop).arrivalTimeByTransfer;
+        return roundLabel(std::min(round, rounds.size() - 1), stop)
+            .arrivalTimeByTransfer;
     }
 
 private:
@@ -149,7 +157,8 @@ private:
     {
         for (const StopId stop : stopsUpdatedByTransfer) {
             for (const RouteSegment& route : data.routesContainingStop(stop)) {
-                AssertMsg(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
+                AssertMsg(data.isRoute(route.routeId),
+                    "Route " << route.routeId << " is out of range!");
                 AssertMsg(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop,
                     "RAPTOR data contains invalid route segments!");
                 if (route.stopIndex + 1 == data.numberOfStopsInRoute(route.routeId))
@@ -157,7 +166,8 @@ private:
                 if (data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime < previousRoundLabel(stop).arrivalTimeByTransfer)
                     continue;
                 if (routesServingUpdatedStops.contains(route.routeId)) {
-                    routesServingUpdatedStops[route.routeId] = std::min(routesServingUpdatedStops[route.routeId], route.stopIndex);
+                    routesServingUpdatedStops[route.routeId] = std::min(
+                        routesServingUpdatedStops[route.routeId], route.stopIndex);
                 } else {
                     routesServingUpdatedStops.insert(route.routeId, route.stopIndex);
                 }
@@ -172,7 +182,10 @@ private:
             profiler.countMetric(METRIC_ROUTES);
             StopIndex stopIndex = routesServingUpdatedStops[route];
             const size_t tripSize = data.numberOfStopsInRoute(route);
-            AssertMsg(stopIndex < tripSize - 1, "Cannot scan a route starting at/after the last stop (Route: " << route << ", StopIndex: " << stopIndex << ", TripSize: " << tripSize << ", RoundIndex: " << roundIndex << ")!");
+            AssertMsg(stopIndex < tripSize - 1,
+                "Cannot scan a route starting at/after the last stop (Route: "
+                    << route << ", StopIndex: " << stopIndex << ", TripSize: "
+                    << tripSize << ", RoundIndex: " << roundIndex << ")!");
 
             const StopId* stops = data.stopArrayOfRoute(route);
             const StopEvent* firstTrip = data.firstTripOfRoute(route);
@@ -181,9 +194,11 @@ private:
             StopId stop = stops[stopIndex];
             AssertMsg(trip[stopIndex].departureTime >= previousRoundLabel(stop).arrivalTimeByTransfer,
                 "Cannot scan a route after the last trip has departed (Route: "
-                    << route << ", Stop: " << stop << ", StopIndex: " << stopIndex
-                    << ", Time: " << previousRoundLabel(stop).arrivalTimeByTransfer << ", LastDeparture: "
-                    << trip[stopIndex].departureTime << ", RoundIndex: " << roundIndex << ")!");
+                    << route << ", Stop: " << stop
+                    << ", StopIndex: " << stopIndex << ", Time: "
+                    << previousRoundLabel(stop).arrivalTimeByTransfer
+                    << ", LastDeparture: " << trip[stopIndex].departureTime
+                    << ", RoundIndex: " << roundIndex << ")!");
 
             StopIndex parentIndex = stopIndex;
             while (stopIndex < tripSize - 1) {
@@ -208,14 +223,16 @@ private:
                 profiler.countMetric(METRIC_EDGES);
                 const int arrivalTime = earliestArrivalTime + data.transferGraph.get(TravelTime, edge);
                 const StopId toStop = StopId(data.transferGraph.get(ToVertex, edge));
-                AssertMsg(data.isStop(toStop), "Graph contains edges to non stop vertices!");
+                AssertMsg(data.isStop(toStop),
+                    "Graph contains edges to non stop vertices!");
                 arrivalByTransfer(toStop, arrivalTime);
             }
             stopsUpdatedByTransfer.insert(stop);
         }
     }
 
-    inline EarliestArrivalLabel& roundLabel(const size_t round, const StopId stop) noexcept
+    inline EarliestArrivalLabel& roundLabel(const size_t round,
+        const StopId stop) noexcept
     {
         EarliestArrivalLabel& result = rounds[round][stop];
         if (result.timestamp != timestamp) {
@@ -229,14 +246,21 @@ private:
 
     inline EarliestArrivalLabel& currentRoundLabel(const StopId stop) noexcept
     {
-        AssertMsg(roundIndex < rounds.size(), "Round index is out of bounds (roundIndex = " << roundIndex << ", rounds.size() = " << rounds.size() << ")!");
+        AssertMsg(roundIndex < rounds.size(),
+            "Round index is out of bounds (roundIndex = "
+                << roundIndex << ", rounds.size() = " << rounds.size()
+                << ")!");
         return roundLabel(roundIndex, stop);
     }
 
     inline EarliestArrivalLabel& previousRoundLabel(const StopId stop) noexcept
     {
-        AssertMsg(roundIndex - 1 < rounds.size(), "Round index is out of bounds (roundIndex = " << roundIndex << ", rounds.size() = " << rounds.size() << ")!");
-        AssertMsg(roundIndex > 0, "Cannot return previous round, because no round exists!");
+        AssertMsg(roundIndex - 1 < rounds.size(),
+            "Round index is out of bounds (roundIndex = "
+                << roundIndex << ", rounds.size() = " << rounds.size()
+                << ")!");
+        AssertMsg(roundIndex > 0,
+            "Cannot return previous round, because no round exists!");
         return roundLabel(roundIndex - 1, stop);
     }
 
@@ -254,7 +278,9 @@ private:
 
     inline void arrivalByRoute(const StopId stop, const int time) noexcept
     {
-        if (forwardPruningRAPTOR.getArrivalTimeByTransfer(stop, maxTrips - roundIndex) > -time)
+        if (forwardPruningRAPTOR.getArrivalTimeByTransfer(
+                stop, maxTrips - roundIndex)
+            > -time)
             return;
         EarliestArrivalLabel& label = currentRoundLabel(stop);
         if (label.arrivalTimeByRoute <= time)
@@ -266,7 +292,9 @@ private:
 
     inline void arrivalByTransfer(const StopId stop, const int time) noexcept
     {
-        if (forwardPruningRAPTOR.getArrivalTimeByRoute(stop, maxTrips - roundIndex) > -time)
+        if (forwardPruningRAPTOR.getArrivalTimeByRoute(
+                stop, maxTrips - roundIndex)
+            > -time)
             return;
         EarliestArrivalLabel& label = currentRoundLabel(stop);
         if (label.arrivalTimeByTransfer <= time)

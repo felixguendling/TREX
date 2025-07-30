@@ -11,7 +11,8 @@
 
 class MultiLevelPartition {
 public:
-    MultiLevelPartition(int NUMBER_OF_ELEMENTS = 0, int NUM_LEVELS = 1, int NUM_CELLS_PER_LEVEL = 1)
+    MultiLevelPartition(int NUMBER_OF_ELEMENTS = 0, int NUM_LEVELS = 1,
+        int NUM_CELLS_PER_LEVEL = 1)
         : numLevels(NUM_LEVELS)
         , numCellsPerLevel(NUM_CELLS_PER_LEVEL)
         , cellIds(NUMBER_OF_ELEMENTS, MultiLevelCell(NUM_LEVELS)) {
@@ -24,7 +25,8 @@ public:
         return cellIds[i];
     }
 
-    // reads a file (from 'fileName') that has a list of ids which are from [0, numLevels * numCellsPerLevel)
+    // reads a file (from 'fileName') that has a list of ids which are from [0,
+    // numLevels * numCellsPerLevel)
     inline void readFile(std::string fileName)
     {
         std::fstream file(fileName);
@@ -40,16 +42,19 @@ public:
 
             file.close();
 
-            std::cout << "Read " << String::prettyInt(index) << " many IDs!" << std::endl;
+            std::cout << "Read " << String::prettyInt(index) << " many IDs!"
+                      << std::endl;
         } else {
             std::cerr << "Unable to open the file: " << fileName << std::endl;
         }
     }
 
-    // converts an id from [0, numCellsPerLevel ** numLevels) into a vector of type int (= int) with the correct id per level
+    // converts an id from [0, numCellsPerLevel ** numLevels) into a vector of
+    // type int (= int) with the correct id per level
     inline std::vector<int> convertGlobalIdToMultiLevelCellId(int globalId)
     {
-        AssertMsg(isGlobalIdValid(globalId), "Global ID " << globalId << " is not valid!");
+        AssertMsg(isGlobalIdValid(globalId),
+            "Global ID " << globalId << " is not valid!");
 
         std::vector<int> ids(numLevels, 0);
 
@@ -74,10 +79,7 @@ public:
         return result;
     }
 
-    inline int getGlobalId(int id)
-    {
-        return getGlobalId(cellIds[id]);
-    }
+    inline int getGlobalId(int id) { return getGlobalId(cellIds[id]); }
 
     inline void set(int index, int globalId)
     {
@@ -96,9 +98,11 @@ public:
         return inSameCell(cellIds[a], cellIds[b]);
     }
 
-    inline bool inSameCell(int a, std::vector<int>& levels, std::vector<int>& cellIds)
+    inline bool inSameCell(int a, std::vector<int>& levels,
+        std::vector<int>& cellIds)
     {
-        AssertMsg(levels.size() == cellIds.size(), "Levels and CellIds must have same size!");
+        AssertMsg(levels.size() == cellIds.size(),
+            "Levels and CellIds must have same size!");
 
         bool result = true;
         for (size_t i(0); i < levels.size(); ++i) {
@@ -191,11 +195,18 @@ public:
     }
 
     // returns all id's of elements that share the same id's on the given levels
-    inline std::vector<int> verticesInCell(std::vector<int> levels, std::vector<int> localIds)
+    inline std::vector<int> verticesInCell(std::vector<int> levels,
+        std::vector<int> localIds)
     {
-        AssertMsg(levels.size() == localIds.size(), "Two vectors have different length!");
-        AssertMsg(std::all_of(levels.begin(), levels.end(), [&](int level) { return level < numLevels; }), "Level is not valid!");
-        AssertMsg(std::all_of(localIds.begin(), localIds.end(), [&](int localId) { return localId < numCellsPerLevel; }), "localId is not valid!");
+        AssertMsg(levels.size() == localIds.size(),
+            "Two vectors have different length!");
+        AssertMsg(std::all_of(levels.begin(), levels.end(),
+                      [&](int level) { return level < numLevels; }),
+            "Level is not valid!");
+        AssertMsg(
+            std::all_of(localIds.begin(), localIds.end(),
+                [&](int localId) { return localId < numCellsPerLevel; }),
+            "localId is not valid!");
 
         std::vector<int> elements;
 
@@ -211,10 +222,7 @@ public:
         return elements;
     }
 
-    inline size_t getNumberOfLevels() const
-    {
-        return (size_t)numLevels;
-    }
+    inline size_t getNumberOfLevels() const { return (size_t)numLevels; }
 
     inline size_t getNumberOfCellsInLevel(int level) const
     {
@@ -222,20 +230,11 @@ public:
         return getNumberOfLevels();
     }
 
-    inline int getNumberOfCellsPerLevel() const
-    {
-        return numCellsPerLevel;
-    }
+    inline int getNumberOfCellsPerLevel() const { return numCellsPerLevel; }
 
-    inline size_t getNumElements() const
-    {
-        return cellIds.size();
-    }
+    inline size_t getNumElements() const { return cellIds.size(); }
 
-    inline std::vector<MultiLevelCell>& getIds()
-    {
-        return cellIds;
-    }
+    inline std::vector<MultiLevelCell>& getIds() { return cellIds; }
 
     // globalId in range [0, std::pow(numCellsPerLevel, numLevels))
     inline bool isGlobalIdValid(int globalId)

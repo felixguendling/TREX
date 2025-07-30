@@ -12,7 +12,8 @@ namespace RAPTOR {
 
 class Stop {
 public:
-    Stop(const std::string& name = "", const Geometry::Point& coordinates = Geometry::Point(),
+    Stop(const std::string& name = "",
+        const Geometry::Point& coordinates = Geometry::Point(),
         const int minTransferTime = 0)
         : name(name)
         , coordinates(coordinates)
@@ -27,15 +28,17 @@ public:
         , minTransferTime(s.minTransferTime)
     {
     }
-    Stop(IO::Deserialization& deserialize)
+    Stop(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
+
+    double dist(const Stop& other) noexcept
     {
-        this->deserialize(deserialize);
+        return Geometry::geoDistanceInCM(coordinates, other.coordinates);
     }
 
     friend std::ostream& operator<<(std::ostream& out, const Stop& s)
     {
-        return out << "Stop{" << s.name << ", " << s.coordinates << ", " << s.minTransferTime
-                   << "}";
+        return out << "Stop{" << s.name << ", " << s.coordinates << ", "
+                   << s.minTransferTime << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept

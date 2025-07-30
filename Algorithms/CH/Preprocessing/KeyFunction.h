@@ -20,7 +20,8 @@ public:
     using Type = GreedyKey<WitnessSearch>;
 
 public:
-    GreedyKey(const int shortcutWeight = 1024, const int levelWeight = 1024, const int degreeWeight = 0)
+    GreedyKey(const int shortcutWeight = 1024, const int levelWeight = 1024,
+        const int degreeWeight = 0)
         : data(nullptr)
         , witnessSearch(nullptr)
         , shortcutWeight(shortcutWeight)
@@ -47,9 +48,7 @@ public:
     }
 
     template <typename T>
-    inline void update(T&) noexcept
-    {
-    }
+    inline void update(T&) noexcept { }
 
     inline void initialize(const Data* data, WITNESS_SEARCH* witnessSearch)
     {
@@ -67,7 +66,8 @@ private:
                 Vertex to = data->core.get(ToVertex, second);
                 if (from == to)
                     continue;
-                if (witnessSearch->shortcutIsNecessary(from, to, vertex,
+                if (witnessSearch->shortcutIsNecessary(
+                        from, to, vertex,
                         data->core.get(Weight, first) + data->core.get(Weight, second))) {
                     shortcutsAdded++;
                 }
@@ -92,10 +92,7 @@ public:
     using Type = PermutationKey<WitnessSearch>;
 
 public:
-    PermutationKey()
-    {
-        Assert(false);
-    }
+    PermutationKey() { Assert(false); }
     PermutationKey(const Permutation& permutation)
         : permutation(permutation)
     {
@@ -107,13 +104,14 @@ public:
     }
 
     template <typename T>
-    inline void update(T&) noexcept
-    {
-    }
+    inline void update(T&) noexcept { }
 
     inline void initialize(const Data* data, WitnessSearch*) noexcept
     {
-        AssertMsg(permutation.size() == data->numVertices, "Permutation of size " << permutation.size() << " cannot be used for a graph with " << data->numVertices << " vertices!");
+        AssertMsg(permutation.size() == data->numVertices,
+            "Permutation of size " << permutation.size()
+                                   << " cannot be used for a graph with "
+                                   << data->numVertices << " vertices!");
     }
 
 private:
@@ -133,12 +131,14 @@ public:
     {
     }
     OrderKey(Order&& order)
-        : PermutationKey<WITNESS_SEARCH>(Permutation(Construct::Invert, std::move(order)))
+        : PermutationKey<WITNESS_SEARCH>(
+            Permutation(Construct::Invert, std::move(order)))
     {
     }
 };
 
-template <typename WITNESS_SEARCH, typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>>
+template <typename WITNESS_SEARCH,
+    typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>>
 class PartialKey {
 public:
     using WitnessSearch = WITNESS_SEARCH;
@@ -155,7 +155,8 @@ public:
         , minOrderIndex(minOrderIndex)
     {
     }
-    PartialKey(const std::vector<bool>& contractable, const KeyFunction& keyFunction = KeyFunction())
+    PartialKey(const std::vector<bool>& contractable,
+        const KeyFunction& keyFunction = KeyFunction())
         : PartialKey(contractable, contractable.size() + 1, keyFunction)
     {
     }
@@ -169,7 +170,8 @@ public:
     inline void update(T& t) noexcept
     {
         if (data->order.size() >= minOrderIndex) {
-            for (Vertex v = Vertex(contractable.size() - 1); v < contractable.size(); v--) {
+            for (Vertex v = Vertex(contractable.size() - 1); v < contractable.size();
+                 v--) {
                 if (!contractable[v]) {
                     contractable[v] = true;
                     t.reKey(v);
@@ -179,7 +181,8 @@ public:
         }
     }
 
-    inline void initialize(const Data* data, WitnessSearch* witnessSearch) noexcept
+    inline void initialize(const Data* data,
+        WitnessSearch* witnessSearch) noexcept
     {
         this->data = data;
         keyFunction.initialize(data, witnessSearch);
@@ -192,7 +195,8 @@ private:
     size_t minOrderIndex;
 };
 
-template <typename WITNESS_SEARCH, typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>>
+template <typename WITNESS_SEARCH,
+    typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>>
 class StaggeredKey {
 public:
     using WitnessSearch = WITNESS_SEARCH;
@@ -201,7 +205,8 @@ public:
     using Type = StaggeredKey<WitnessSearch, KeyFunction>;
 
 public:
-    StaggeredKey(const std::vector<size_t>& firstContractableRound, const std::vector<size_t>& coreSizes,
+    StaggeredKey(const std::vector<size_t>& firstContractableRound,
+        const std::vector<size_t>& coreSizes,
         const KeyFunction& keyFunction = KeyFunction())
         : data(nullptr)
         , firstContractableRound(firstContractableRound)
@@ -213,7 +218,8 @@ public:
 
     inline KeyType operator()(const Vertex vertex) noexcept
     {
-        return (firstContractableRound[vertex] <= round) ? keyFunction(vertex) : intMax;
+        return (firstContractableRound[vertex] <= round) ? keyFunction(vertex)
+                                                         : intMax;
     }
 
     template <typename T>
@@ -221,7 +227,8 @@ public:
     {
         if (round < coreSizes.size() && data->coreSize() <= coreSizes[round]) {
             round++;
-            for (Vertex v = Vertex(firstContractableRound.size() - 1); v < firstContractableRound.size(); v--) {
+            for (Vertex v = Vertex(firstContractableRound.size() - 1);
+                 v < firstContractableRound.size(); v--) {
                 if (firstContractableRound[v] == round) {
                     t.reKey(v);
                 }
@@ -229,7 +236,8 @@ public:
         }
     }
 
-    inline void initialize(const Data* data, WitnessSearch* witnessSearch) noexcept
+    inline void initialize(const Data* data,
+        WitnessSearch* witnessSearch) noexcept
     {
         this->data = data;
         keyFunction.initialize(data, witnessSearch);
@@ -243,7 +251,8 @@ private:
     size_t round;
 };
 
-template <typename WITNESS_SEARCH, typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>>
+template <typename WITNESS_SEARCH,
+    typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>>
 class FactorKey {
 public:
     using WitnessSearch = WITNESS_SEARCH;
@@ -252,7 +261,8 @@ public:
     using Type = FactorKey<WitnessSearch, KeyFunction>;
 
 public:
-    FactorKey(std::vector<float> factor, const KeyFunction& keyFunction = KeyFunction())
+    FactorKey(std::vector<float> factor,
+        const KeyFunction& keyFunction = KeyFunction())
         : data(nullptr)
         , factor(factor)
         , keyFunction(keyFunction)
@@ -271,11 +281,10 @@ public:
     }
 
     template <typename T>
-    inline void update(T&) noexcept
-    {
-    }
+    inline void update(T&) noexcept { }
 
-    inline void initialize(const Data* data, WitnessSearch* witnessSearch) noexcept
+    inline void initialize(const Data* data,
+        WitnessSearch* witnessSearch) noexcept
     {
         this->data = data;
         keyFunction.initialize(data, witnessSearch);

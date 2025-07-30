@@ -30,51 +30,33 @@ typedef enum {
     NUM_METRICS
 } Metric;
 
-constexpr const char* MetricNames[] = {
-    "Rounds",
+constexpr const char* MetricNames[] = { "Rounds",
     "Scanned trips",
     "Scanned stops",
     "Relaxed transfers",
     "Not global transfers",
     "Enqueued trips",
     "Number of Runs",
-    "StopEvents to unpack"
-};
+    "StopEvents to unpack" };
 
 class NoProfiler {
 public:
-    inline void registerPhases(const std::initializer_list<Phase>&) const noexcept
-    {
-    }
-    inline void registerMetrics(const std::initializer_list<Metric>&) const noexcept
-    {
-    }
+    inline void
+    registerPhases(const std::initializer_list<Phase>&) const noexcept { }
+    inline void
+    registerMetrics(const std::initializer_list<Metric>&) const noexcept { }
 
-    inline void start() const noexcept
-    {
-    }
-    inline void done() const noexcept
-    {
-    }
+    inline void start() const noexcept { }
+    inline void done() const noexcept { }
 
-    inline void startPhase() const noexcept
-    {
-    }
-    inline void donePhase(const Phase) const noexcept
-    {
-    }
+    inline void startPhase() const noexcept { }
+    inline void donePhase(const Phase) const noexcept { }
 
-    inline void countMetric(const Metric) const noexcept
-    {
-    }
+    inline void countMetric(const Metric) const noexcept { }
 
-    inline void printStatistics() const noexcept
-    {
-    }
+    inline void printStatistics() const noexcept { }
 
-    inline void printStatisticsAsCSV() const noexcept
-    {
-    }
+    inline void printStatisticsAsCSV() const noexcept { }
 
     inline void reset() noexcept { }
 };
@@ -89,24 +71,23 @@ public:
     {
     }
 
-    inline void registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
+    inline void
+    registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
     {
         for (const Phase phase : phaseList) {
             phases.push_back(phase);
         }
     }
 
-    inline void registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
+    inline void
+    registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
     {
         for (const Metric metric : metricList) {
             metrics.push_back(metric);
         }
     }
 
-    inline void start() noexcept
-    {
-        totalTimer.restart();
-    }
+    inline void start() noexcept { totalTimer.restart(); }
 
     inline void done() noexcept
     {
@@ -114,10 +95,7 @@ public:
         numQueries++;
     }
 
-    inline void startPhase() noexcept
-    {
-        phaseTimer.restart();
-    }
+    inline void startPhase() noexcept { phaseTimer.restart(); }
 
     inline void donePhase(const Phase phase) noexcept
     {
@@ -129,10 +107,7 @@ public:
         metricValue[metric]++;
     }
 
-    inline double getTotalTime() const noexcept
-    {
-        return totalTime / numQueries;
-    }
+    inline double getTotalTime() const noexcept { return totalTime / numQueries; }
 
     inline double getPhaseTime(const Phase phase) const noexcept
     {
@@ -148,26 +123,32 @@ public:
     {
         for (const Metric metric : metrics) {
             std::cout << MetricNames[metric] << ": "
-                      << (metricValue[metric] / static_cast<double>(numQueries)) << std::endl;
+                      << (metricValue[metric] / static_cast<double>(numQueries))
+                      << std::endl;
         }
         for (const Phase phase : phases) {
             std::cout << PhaseNames[phase] << ": "
-                      << String::musToString(phaseTime[phase] / static_cast<double>(numQueries)) << std::endl;
+                      << String::musToString(phaseTime[phase] / static_cast<double>(numQueries))
+                      << std::endl;
         }
-        std::cout << "Total time: " << String::musToString(totalTime / numQueries) << std::endl;
+        std::cout << "Total time: " << String::musToString(totalTime / numQueries)
+                  << std::endl;
     }
 
-    inline void printStatisticsAsCSV() const noexcept 
+    inline void printStatisticsAsCSV() const noexcept
     {
         for (const Metric metric : metrics) {
             std::cout << "\"" << MetricNames[metric] << "\","
-                      << (float)((float)metricValue[metric] / (double)(numQueries)) << std::endl;
+                      << (float)((float)metricValue[metric] / (double)(numQueries))
+                      << std::endl;
         }
         for (const Phase phase : phases) {
             std::cout << "\"" << PhaseNames[phase] << "\","
-                      << (uint64_t)(phaseTime[phase] / (double)(numQueries)) << std::endl;
+                      << (uint64_t)(phaseTime[phase] / (double)(numQueries))
+                      << std::endl;
         }
-        std::cout << "\"Total time\"," << (uint64_t)(totalTime / numQueries) << std::endl;
+        std::cout << "\"Total time\"," << (uint64_t)(totalTime / numQueries)
+                  << std::endl;
     }
 
     inline void reset() noexcept

@@ -13,7 +13,8 @@
 
 namespace CH {
 
-template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1, bool ADAPTIVE_Q_POP_LIMIT = true>
+template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1,
+    bool ADAPTIVE_Q_POP_LIMIT = true>
 class NoWitnessSearch {
 public:
     using Graph = GRAPH;
@@ -23,19 +24,18 @@ public:
     using Type = NoWitnessSearch<Graph, Profiler, QPopLimit, AdaptiveQPopLimit>;
 
 public:
-    inline void initialize(const GRAPH*, const std::vector<int>*, Profiler*) noexcept
-    {
-    }
-    inline bool shortcutIsNecessary(const Vertex, const Vertex, const Vertex, const int) noexcept
+    inline void initialize(const GRAPH*, const std::vector<int>*,
+        Profiler*) noexcept { }
+    inline bool shortcutIsNecessary(const Vertex, const Vertex, const Vertex,
+        const int) noexcept
     {
         return true;
     }
-    inline void reset()
-    {
-    }
+    inline void reset() { }
 };
 
-template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1, bool ADAPTIVE_Q_POP_LIMIT = true>
+template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1,
+    bool ADAPTIVE_Q_POP_LIMIT = true>
 class WitnessSearch {
 public:
     using Graph = GRAPH;
@@ -78,7 +78,8 @@ public:
     {
     }
 
-    inline void initialize(const Graph* graph, const std::vector<int>* weight, Profiler* profiler) noexcept
+    inline void initialize(const Graph* graph, const std::vector<int>* weight,
+        Profiler* profiler) noexcept
     {
         this->graph = graph;
         this->weight = weight;
@@ -88,7 +89,8 @@ public:
         reset();
     }
 
-    inline bool shortcutIsNecessary(const Vertex from, const Vertex to, const Vertex via, const int shortcutDistance,
+    inline bool shortcutIsNecessary(const Vertex from, const Vertex to,
+        const Vertex via, const int shortcutDistance,
         const bool = false) noexcept
     {
         profiler->startWitnessSearch();

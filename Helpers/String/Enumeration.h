@@ -19,7 +19,8 @@ class Enumeration {
 public:
     template <typename T>
     friend inline Enumeration& operator<<(Enumeration& out, const T& en);
-    friend inline std::ostream& operator<<(std::ostream& out, const Enumeration& en);
+    friend inline std::ostream& operator<<(std::ostream& out,
+        const Enumeration& en);
 
 public:
     Enumeration(const std::string& sep = "")
@@ -27,20 +28,11 @@ public:
     {
     }
 
-    inline operator std::string() const noexcept
-    {
-        return state.str();
-    }
+    inline operator std::string() const noexcept { return state.str(); }
 
-    inline std::string str() const noexcept
-    {
-        return state.str();
-    }
+    inline std::string str() const noexcept { return state.str(); }
 
-    inline bool empty() noexcept
-    {
-        return state.str().size() == 0;
-    }
+    inline bool empty() noexcept { return state.str().size() == 0; }
 
 private:
     std::stringstream state;

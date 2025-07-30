@@ -14,7 +14,8 @@
 
 class ThreadScheduler {
 public:
-    ThreadScheduler(const std::string strategy, const size_t nt = omp_get_num_procs())
+    ThreadScheduler(const std::string strategy,
+        const size_t nt = omp_get_num_procs())
         : numLogicalCpus(omp_get_max_threads())
         , numThreads(nt)
         , numNumaNodes(1)
@@ -27,14 +28,8 @@ public:
         initialize(strategy);
     }
 
-    inline size_t numThreadsUsed() const
-    {
-        return numThreads;
-    }
-    inline size_t getNumNumaNodesUsed() const
-    {
-        return numNumaNodesUsed;
-    }
+    inline size_t numThreadsUsed() const { return numThreads; }
+    inline size_t getNumNumaNodesUsed() const { return numNumaNodesUsed; }
 
     inline size_t getNumaNodeFromThreadId(const size_t threadId) const
     {
@@ -83,7 +78,8 @@ protected:
             std::cout << std::endl;
         }
         if (verbose)
-            std::cout << "Distributing threads according to strategy: " << strategy << std::endl;
+            std::cout << "Distributing threads according to strategy: " << strategy
+                      << std::endl;
         if (strategy == "R")
             distributeRoundRobin();
         if (strategy == "F")
@@ -107,10 +103,12 @@ protected:
         if (verbose) {
             std::cout << "Logical CPUs (NUMA nodes) being used: " << std::flush;
             for (size_t t = 0; t < numThreads; ++t) {
-                std::cout << threadToLogicalCpu[t] << "(" << threadToNumaNode[t] << ")  " << std::flush;
+                std::cout << threadToLogicalCpu[t] << "(" << threadToNumaNode[t]
+                          << ")  " << std::flush;
             }
             std::cout << std::endl;
-            std::cout << "# NUMA nodes used in this setting: " << numNumaNodesUsed << std::endl;
+            std::cout << "# NUMA nodes used in this setting: " << numNumaNodesUsed
+                      << std::endl;
         }
         if (verbose)
             std::cout << std::endl;
@@ -125,7 +123,8 @@ protected:
             while (currentLogicalCpuIndex[currentNumaNode] >= numaNodeToLogicalCpus[currentNumaNode].size())
                 currentNumaNode = (currentNumaNode + 1) % numNumaNodes;
 
-            threadToLogicalCpu[t] = numaNodeToLogicalCpus[currentNumaNode][currentLogicalCpuIndex[currentNumaNode]++];
+            threadToLogicalCpu[t] = numaNodeToLogicalCpus[currentNumaNode]
+                                                         [currentLogicalCpuIndex[currentNumaNode]++];
 
             // Go to next numa node
             currentNumaNode = (currentNumaNode + 1) % numNumaNodes; // Next node
@@ -175,7 +174,9 @@ public:
     {
         pinThreadToCoreId((omp_get_thread_num() * pinMultiplier) % numberOfCores());
         AssertMsg(static_cast<size_t>(omp_get_num_threads()) == numberOfThreads,
-            "Number of threads is " << omp_get_num_threads() << ", but should be " << numberOfThreads << "!");
+            "Number of threads is " << omp_get_num_threads()
+                                    << ", but should be " << numberOfThreads
+                                    << "!");
     }
 
     size_t numberOfThreads;

@@ -22,10 +22,7 @@ public:
         {
             return i != other.i;
         }
-        inline auto operator*() const noexcept
-        {
-            return (*range)[i];
-        }
+        inline auto operator*() const noexcept { return (*range)[i]; }
         inline Iterator& operator++() noexcept
         {
             ++i;
@@ -57,7 +54,8 @@ public:
     {
     }
 
-    SubRange(const Range& range, const size_t beginIndex = 0, const size_t endIndex = 0)
+    SubRange(const Range& range, const size_t beginIndex = 0,
+        const size_t endIndex = 0)
         : range(&range)
         , beginIndex(beginIndex)
         , endIndex(endIndex)
@@ -65,7 +63,8 @@ public:
     }
 
     template <typename INDEX_TYPE_A, typename INDEX_TYPE_B>
-    SubRange(const Range& range, const std::vector<INDEX_TYPE_A>& indices, const INDEX_TYPE_B index)
+    SubRange(const Range& range, const std::vector<INDEX_TYPE_A>& indices,
+        const INDEX_TYPE_B index)
         : range(&range)
         , beginIndex(indices[index])
         , endIndex(indices[index + 1])
@@ -75,27 +74,17 @@ public:
     SubRange(const Range&&, const size_t = 0, const size_t = 0) = delete;
 
     template <typename INDEX_TYPE_A, typename INDEX_TYPE_B>
-    SubRange(const Range&& range, const std::vector<INDEX_TYPE_A>&, const INDEX_TYPE_B) = delete;
+    SubRange(const Range&& range, const std::vector<INDEX_TYPE_A>&,
+        const INDEX_TYPE_B)
+        = delete;
 
-    inline Iterator begin() const noexcept
-    {
-        return Iterator(range, beginIndex);
-    }
+    inline Iterator begin() const noexcept { return Iterator(range, beginIndex); }
 
-    inline Iterator end() const noexcept
-    {
-        return Iterator(range, endIndex);
-    }
+    inline Iterator end() const noexcept { return Iterator(range, endIndex); }
 
-    inline bool empty() const noexcept
-    {
-        return endIndex <= beginIndex;
-    }
+    inline bool empty() const noexcept { return endIndex <= beginIndex; }
 
-    inline size_t size() const noexcept
-    {
-        return endIndex - beginIndex;
-    }
+    inline size_t size() const noexcept { return endIndex - beginIndex; }
 
     inline auto operator[](const size_t i) const noexcept
     {

@@ -154,10 +154,7 @@ public:
         max = p;
     }
 
-    inline Point center() const noexcept
-    {
-        return 0.5 * (min + max);
-    }
+    inline Point center() const noexcept { return 0.5 * (min + max); }
 
     inline double area() const noexcept
     {
@@ -186,13 +183,11 @@ public:
         return (min.x <= max.x) || (min.y <= max.y);
     }
 
-    inline bool isPoint() const noexcept
-    {
-        return min == max;
-    }
+    inline bool isPoint() const noexcept { return min == max; }
 
     // String conversion
-    inline friend std::ostream& operator<<(std::ostream& os, const Rectangle& r) noexcept
+    inline friend std::ostream& operator<<(std::ostream& os,
+        const Rectangle& r) noexcept
     {
         std::stringstream ss;
         ss << "[" << r.min << " | " << r.max << "]";
@@ -200,14 +195,8 @@ public:
     }
 
     // Access
-    inline double dx() const noexcept
-    {
-        return max.x - min.x;
-    }
-    inline double dy() const noexcept
-    {
-        return max.y - min.y;
-    }
+    inline double dx() const noexcept { return max.x - min.x; }
+    inline double dy() const noexcept { return max.y - min.y; }
     inline double d(const int dimension) const noexcept
     {
         return max[dimension] - min[dimension];
@@ -225,7 +214,8 @@ public:
 };
 
 // Free functions
-inline double euclideanDistanceSquared(const Point& a, const Rectangle& b) noexcept
+inline double euclideanDistanceSquared(const Point& a,
+    const Rectangle& b) noexcept
 {
     return euclideanDistanceSquared(a, b.closestPoint(a));
 }
@@ -235,6 +225,7 @@ inline double euclideanDistance(const Point& a, const Rectangle& b) noexcept
     return std::sqrt(euclideanDistanceSquared(a, b));
 }
 
-static_assert(sizeof(Rectangle) == 2 * sizeof(Point), "Rectangle layout is broken");
+static_assert(sizeof(Rectangle) == 2 * sizeof(Point),
+    "Rectangle layout is broken");
 
 } // namespace Geometry

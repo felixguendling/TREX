@@ -45,45 +45,26 @@ public:
     {
     }
 
-    inline const std::vector<KeyType>& getKeys() const noexcept
+    inline const std::vector<KeyType>& getKeys() const noexcept { return keys; }
+
+    inline const std::vector<Value>& getValues() const noexcept { return values; }
+
+    inline SimultaneousRange<std::vector<KeyType>, std::vector<Value>>
+    map() const noexcept
     {
-        return keys;
+        return SimultaneousRange<std::vector<KeyType>, std::vector<Value>>(keys,
+            values);
     }
 
-    inline const std::vector<Value>& getValues() const noexcept
-    {
-        return values;
-    }
+    inline Iterator begin() const noexcept { return values.begin(); }
 
-    inline SimultaneousRange<std::vector<KeyType>, std::vector<Value>> map() const noexcept
-    {
-        return SimultaneousRange<std::vector<KeyType>, std::vector<Value>>(keys, values);
-    }
+    inline Iterator end() const noexcept { return values.end(); }
 
-    inline Iterator begin() const noexcept
-    {
-        return values.begin();
-    }
+    inline size_t size() const noexcept { return values.size(); }
 
-    inline Iterator end() const noexcept
-    {
-        return values.end();
-    }
+    inline bool empty() const noexcept { return values.empty(); }
 
-    inline size_t size() const noexcept
-    {
-        return values.size();
-    }
-
-    inline bool empty() const noexcept
-    {
-        return values.empty();
-    }
-
-    inline size_t capacity() const noexcept
-    {
-        return indices.size();
-    }
+    inline size_t capacity() const noexcept { return indices.size(); }
 
     inline bool contains(const KeyType key) noexcept
     {
@@ -98,7 +79,8 @@ public:
 
     inline const Value& operator[](const KeyType key) const noexcept
     {
-        AssertMsg((size_t)key < capacity(), "No value for key " << key << " contained!");
+        AssertMsg((size_t)key < capacity(),
+            "No value for key " << key << " contained!");
         return values[indices[key]];
     }
 
@@ -143,10 +125,7 @@ public:
         values.clear();
     }
 
-    inline bool isSortedByKeys() const noexcept
-    {
-        return Vector::isSorted(keys);
-    }
+    inline bool isSortedByKeys() const noexcept { return Vector::isSorted(keys); }
 
     inline void sortKeys() noexcept
     {
@@ -166,7 +145,9 @@ public:
     template <typename LESS>
     inline void sortLastNKeys(const size_t n, const LESS& less) noexcept
     {
-        AssertMsg(n <= indices.size(), "n = " << n << " is greater than the number of keys = " << indices.size());
+        AssertMsg(n <= indices.size(),
+            "n = " << n << " is greater than the number of keys = "
+                   << indices.size());
         if (n == 0)
             return;
         std::sort(keys.end() - n, keys.end(), less);

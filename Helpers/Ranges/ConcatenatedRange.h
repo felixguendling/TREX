@@ -56,22 +56,17 @@ public:
     {
     }
 
-    ConcatenatedRange(const Range& firstRange, const Range& secondRange, const Element offset)
+    ConcatenatedRange(const Range& firstRange, const Range& secondRange,
+        const Element offset)
         : firstRange(firstRange)
         , secondRange(secondRange)
         , offset(offset)
     {
     }
 
-    inline Iterator begin() const noexcept
-    {
-        return Iterator(this, 0);
-    }
+    inline Iterator begin() const noexcept { return Iterator(this, 0); }
 
-    inline Iterator end() const noexcept
-    {
-        return Iterator(this, size());
-    }
+    inline Iterator end() const noexcept { return Iterator(this, size()); }
 
     inline bool empty() const noexcept
     {

@@ -19,12 +19,9 @@ typedef enum {
 } Phase;
 
 constexpr const char* PhaseNames[] = {
-    "Load and build Query Graph   ",
-    "Initialize Source Labels     ",
-    "Evaluate Query Graph         ",
-    "Clear all Datastructures     ",
-    "Clearing the Query Graph     ",
-    "Clearing the Priority Queue  ",
+    "Load and build Query Graph   ", "Initialize Source Labels     ",
+    "Evaluate Query Graph         ", "Clear all Datastructures     ",
+    "Clearing the Query Graph     ", "Clearing the Priority Queue  ",
     "Extract Journeys             "
 };
 
@@ -38,43 +35,27 @@ typedef enum {
 } Metric;
 
 constexpr const char* MetricNames[] = {
-    "# Vertices in Query Graph    ",
-    "# Edges in Query Graph       ",
-    "# Settled Vertices           ",
-    "# Relaxed Transfer Edges     ",
+    "# Vertices in Query Graph    ", "# Edges in Query Graph       ",
+    "# Settled Vertices           ", "# Relaxed Transfer Edges     ",
     "# Added Labels into bags     "
 };
 
 class NoProfiler {
 public:
-    inline void registerPhases(const std::initializer_list<Phase>&) const noexcept
-    {
-    }
-    inline void registerMetrics(const std::initializer_list<Metric>&) const noexcept
-    {
-    }
+    inline void
+    registerPhases(const std::initializer_list<Phase>&) const noexcept { }
+    inline void
+    registerMetrics(const std::initializer_list<Metric>&) const noexcept { }
 
-    inline void start() const noexcept
-    {
-    }
-    inline void done() const noexcept
-    {
-    }
+    inline void start() const noexcept { }
+    inline void done() const noexcept { }
 
-    inline void startPhase() const noexcept
-    {
-    }
-    inline void donePhase(const Phase) const noexcept
-    {
-    }
+    inline void startPhase() const noexcept { }
+    inline void donePhase(const Phase) const noexcept { }
 
-    inline void countMetric(const Metric) const noexcept
-    {
-    }
+    inline void countMetric(const Metric) const noexcept { }
 
-    inline void printStatistics() const noexcept
-    {
-    }
+    inline void printStatistics() const noexcept { }
 };
 
 class AggregateProfiler : public NoProfiler {
@@ -87,24 +68,23 @@ public:
     {
     }
 
-    inline void registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
+    inline void
+    registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
     {
         for (const Phase phase : phaseList) {
             phases.push_back(phase);
         }
     }
 
-    inline void registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
+    inline void
+    registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
     {
         for (const Metric metric : metricList) {
             metrics.push_back(metric);
         }
     }
 
-    inline void start() noexcept
-    {
-        totalTimer.restart();
-    }
+    inline void start() noexcept { totalTimer.restart(); }
 
     inline void done() noexcept
     {
@@ -112,10 +92,7 @@ public:
         numQueries++;
     }
 
-    inline void startPhase() noexcept
-    {
-        phaseTimer.restart();
-    }
+    inline void startPhase() noexcept { phaseTimer.restart(); }
 
     inline void donePhase(const Phase phase) noexcept
     {
@@ -127,10 +104,7 @@ public:
         metricValue[metric]++;
     }
 
-    inline double getTotalTime() const noexcept
-    {
-        return totalTime / numQueries;
-    }
+    inline double getTotalTime() const noexcept { return totalTime / numQueries; }
 
     inline double getPhaseTime(const Phase phase) const noexcept
     {
@@ -146,13 +120,17 @@ public:
     {
         for (const Metric metric : metrics) {
             std::cout << MetricNames[metric] << ": "
-                      << String::prettyDouble(metricValue[metric] / static_cast<double>(numQueries), 2) << std::endl;
+                      << String::prettyDouble(
+                             metricValue[metric] / static_cast<double>(numQueries), 2)
+                      << std::endl;
         }
         for (const Phase phase : phases) {
             std::cout << PhaseNames[phase] << ": "
-                      << String::musToString(phaseTime[phase] / static_cast<double>(numQueries)) << std::endl;
+                      << String::musToString(phaseTime[phase] / static_cast<double>(numQueries))
+                      << std::endl;
         }
-        std::cout << "Total Time                   : " << String::musToString(totalTime / numQueries) << std::endl;
+        std::cout << "Total Time                   : "
+                  << String::musToString(totalTime / numQueries) << std::endl;
     }
 
 private:
@@ -166,4 +144,4 @@ private:
     size_t numQueries;
 };
 
-}
+} // namespace TransferPattern

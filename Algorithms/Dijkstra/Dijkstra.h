@@ -63,7 +63,8 @@ public:
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    Dijkstra(const GRAPH& graph, const AttributeNameWrapper<ATTRIBUTE_NAME> weight)
+    Dijkstra(const GRAPH& graph,
+        const AttributeNameWrapper<ATTRIBUTE_NAME> weight)
         : Dijkstra(graph, graph[weight])
     {
     }
@@ -75,18 +76,24 @@ public:
     template <AttributeNameType ATTRIBUTE_NAME>
     Dijkstra(const GRAPH&&, const AttributeNameWrapper<ATTRIBUTE_NAME>) = delete;
 
-    template <typename SETTLE = NO_OPERATION, typename STOP = NO_OPERATION, typename PRUNE_EDGE = NO_OPERATION>
-    inline void run(const Vertex source, const Vertex target = noVertex, const SETTLE& settle = NoOperation,
-        const STOP& stop = NoOperation, const PRUNE_EDGE& pruneEdge = NoOperation) noexcept
+    template <typename SETTLE = NO_OPERATION, typename STOP = NO_OPERATION,
+        typename PRUNE_EDGE = NO_OPERATION>
+    inline void run(const Vertex source, const Vertex target = noVertex,
+        const SETTLE& settle = NoOperation,
+        const STOP& stop = NoOperation,
+        const PRUNE_EDGE& pruneEdge = NoOperation) noexcept
     {
         clear();
         addSource(source);
         run(target, settle, stop, pruneEdge);
     }
 
-    template <typename SETTLE = NO_OPERATION, typename STOP = NO_OPERATION, typename PRUNE_EDGE = NO_OPERATION>
-    inline void run(const Vertex source, IndexedSet<false, Vertex>& targets, const SETTLE& settle = NoOperation,
-        const STOP& stop = NoOperation, const PRUNE_EDGE& pruneEdge = NoOperation) noexcept
+    template <typename SETTLE = NO_OPERATION, typename STOP = NO_OPERATION,
+        typename PRUNE_EDGE = NO_OPERATION>
+    inline void run(const Vertex source, IndexedSet<false, Vertex>& targets,
+        const SETTLE& settle = NoOperation,
+        const STOP& stop = NoOperation,
+        const PRUNE_EDGE& pruneEdge = NoOperation) noexcept
     {
         clear();
         addSource(source);
@@ -99,10 +106,13 @@ public:
             [&]() { return stop() || targets.empty(); }, pruneEdge);
     }
 
-    template <typename SOURCE_CONTAINER, typename SETTLE = NO_OPERATION, typename STOP = NO_OPERATION,
-        typename PRUNE_EDGE = NO_OPERATION, typename = decltype(std::declval<SOURCE_CONTAINER>().begin())>
-    inline void run(const SOURCE_CONTAINER& sources, const Vertex target = noVertex, const SETTLE& settle = NoOperation,
-        const STOP& stop = NoOperation, const PRUNE_EDGE& pruneEdge = NoOperation) noexcept
+    template <typename SOURCE_CONTAINER, typename SETTLE = NO_OPERATION,
+        typename STOP = NO_OPERATION, typename PRUNE_EDGE = NO_OPERATION,
+        typename = decltype(std::declval<SOURCE_CONTAINER>().begin())>
+    inline void
+    run(const SOURCE_CONTAINER& sources, const Vertex target = noVertex,
+        const SETTLE& settle = NoOperation, const STOP& stop = NoOperation,
+        const PRUNE_EDGE& pruneEdge = NoOperation) noexcept
     {
         clear();
         for (const Vertex source : sources) {
@@ -133,9 +143,11 @@ public:
         run(noVertex, NoOperation, NoOperation, NoOperation);
     }
 
-    template <typename SETTLE, typename STOP = NO_OPERATION, typename PRUNE_EDGE = NO_OPERATION,
+    template <typename SETTLE, typename STOP = NO_OPERATION,
+        typename PRUNE_EDGE = NO_OPERATION,
         typename = decltype(std::declval<SETTLE>()(std::declval<Vertex>()))>
-    inline void run(const Vertex target, const SETTLE& settle, const STOP& stop = NoOperation,
+    inline void run(const Vertex target, const SETTLE& settle,
+        const STOP& stop = NoOperation,
         const PRUNE_EDGE& pruneEdge = NoOperation) noexcept
     {
         while (!Q.empty()) {
@@ -162,8 +174,10 @@ public:
                 settleCount++;
         }
         if constexpr (Debug) {
-            std::cout << "Settled Vertices = " << String::prettyInt(settleCount) << std::endl;
-            std::cout << "Time = " << String::msToString(timer.elapsedMilliseconds()) << std::endl;
+            std::cout << "Settled Vertices = " << String::prettyInt(settleCount)
+                      << std::endl;
+            std::cout << "Time = " << String::msToString(timer.elapsedMilliseconds())
+                      << std::endl;
         }
     }
 
@@ -229,10 +243,7 @@ public:
         return Vector::reverse(getReversePath(to));
     }
 
-    inline int getSettleCount() const noexcept
-    {
-        return settleCount;
-    }
+    inline int getSettleCount() const noexcept { return settleCount; }
 
 private:
     inline VertexLabel& getLabel(const Vertex vertex) noexcept

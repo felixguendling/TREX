@@ -24,15 +24,9 @@ public:
     {
     }
 
-    inline operator const ValueType&() const noexcept
-    {
-        return internalValue;
-    }
+    inline operator const ValueType&() const noexcept { return internalValue; }
 
-    inline const ValueType& value() const noexcept
-    {
-        return internalValue;
-    }
+    inline const ValueType& value() const noexcept { return internalValue; }
 
 private:
     const ValueType& internalValue;
@@ -47,19 +41,15 @@ public:
     using Type = AttributeNameWrapper<Name>;
 
 public:
-    constexpr AttributeNameWrapper()
-    {
-    }
+    constexpr AttributeNameWrapper() { }
 
     // Automatic conversion back to plain AttributeNameType, which will be used
     // as template parameter
-    constexpr inline operator AttributeNameType() const noexcept
-    {
-        return Name;
-    }
+    constexpr inline operator AttributeNameType() const noexcept { return Name; }
 
     template <typename TYPE>
-    inline AttributeValueWrapper<Name, TYPE> operator()(const TYPE& value) const noexcept
+    inline AttributeValueWrapper<Name, TYPE>
+    operator()(const TYPE& value) const noexcept
     {
         return AttributeValueWrapper<Name, TYPE>(value);
     }
@@ -112,7 +102,11 @@ using ARCFlag = AttributeNameWrapper<28>;
 using LocalLevel = AttributeNameWrapper<29>;
 using Hop = AttributeNameWrapper<30>;
 
-using UnknownType = AttributeNameWrapper<31>;
+using DurationFunction = AttributeNameWrapper<31>;
+using TransferCost = AttributeNameWrapper<32>;
+using RouteVertex = AttributeNameWrapper<33>;
+using StopVertex = AttributeNameWrapper<34>;
+using UnknownType = AttributeNameWrapper<35>;
 // Ensure that Unknown is the last entry!
 
 } // namespace ImplementationDetail
@@ -148,6 +142,10 @@ constexpr ImplementationDetail::BundleSizeType BundleSize;
 constexpr ImplementationDetail::ARCFlag ARCFlag;
 constexpr ImplementationDetail::LocalLevel LocalLevel;
 constexpr ImplementationDetail::Hop Hop;
+constexpr ImplementationDetail::DurationFunction DurationFunction;
+constexpr ImplementationDetail::TransferCost TransferCost;
+constexpr ImplementationDetail::RouteVertex RouteVertex;
+constexpr ImplementationDetail::StopVertex StopVertex;
 constexpr ImplementationDetail::UnknownType Unknown;
 // Ensure that Unknown is the last entry!
 
@@ -185,7 +183,11 @@ constexpr const char* AttributeNameStrings[] = {
     /* 28 */ "ARCFlag",
     /* 29 */ "LocalLevel",
     /* 30 */ "Hop",
-    /* 31 */ "Unknown"
+    /* 31 */ "DurationFunction",
+    /* 32 */ "TransferCost",
+    /* 33 */ "RouteVertex",
+    /* 34 */ "StopVertex",
+    /* 35 */ "Unknown"
     // Ensure that Unknown is the last entry!
 };
 
@@ -196,34 +198,43 @@ constexpr const char* AttributeNameStrings[] = {
 constexpr std::size_t NumberOfAttributeNames = sizeof(ImplementationDetail::AttributeNameStrings) / sizeof(char*);
 
 // Converts an attribute (as runtime parameter) to the corresponding string
-inline constexpr const char* attributeToString(const AttributeNameType name) noexcept
+inline constexpr const char*
+attributeToString(const AttributeNameType name) noexcept
 {
-    return (name >= NumberOfAttributeNames) ? "Unknown" : ImplementationDetail::AttributeNameStrings[name];
+    return (name >= NumberOfAttributeNames)
+        ? "Unknown"
+        : ImplementationDetail::AttributeNameStrings[name];
 }
 
 // Converts an attribute (as template parameter) to the corresponding string
 template <AttributeNameType ATTRIBUTE_NAME>
 inline constexpr const char* attributeToString() noexcept
 {
-    return (ATTRIBUTE_NAME >= NumberOfAttributeNames) ? "Unknown"
-                                                      : ImplementationDetail::AttributeNameStrings[ATTRIBUTE_NAME];
+    return (ATTRIBUTE_NAME >= NumberOfAttributeNames)
+        ? "Unknown"
+        : ImplementationDetail::AttributeNameStrings[ATTRIBUTE_NAME];
 }
 
 template <AttributeNameType ATTRIBUTE_NAME, typename TYPE>
-inline TYPE getAttributeValue(const AttributeNameWrapper<ATTRIBUTE_NAME>, const TYPE& defaultValue) noexcept
+inline TYPE getAttributeValue(const AttributeNameWrapper<ATTRIBUTE_NAME>,
+    const TYPE& defaultValue) noexcept
 {
     return defaultValue;
 }
 
-template <AttributeNameType ATTRIBUTE_NAME, typename TYPE, AttributeNameType HEAD_NAME, typename HEAD_TYPE,
-    typename... TAIL>
-inline TYPE getAttributeValue(const AttributeNameWrapper<ATTRIBUTE_NAME>, const TYPE& defaultValue,
-    const AttributeValueWrapper<HEAD_NAME, HEAD_TYPE>& head, const TAIL&... tail) noexcept
+template <AttributeNameType ATTRIBUTE_NAME, typename TYPE,
+    AttributeNameType HEAD_NAME, typename HEAD_TYPE, typename... TAIL>
+inline TYPE
+getAttributeValue(const AttributeNameWrapper<ATTRIBUTE_NAME>,
+    const TYPE& defaultValue,
+    const AttributeValueWrapper<HEAD_NAME, HEAD_TYPE>& head,
+    const TAIL&... tail) noexcept
 {
     if constexpr ((HEAD_NAME == ATTRIBUTE_NAME) || ((HEAD_NAME == AnyAttribute) && (std::is_convertible<HEAD_TYPE, TYPE>::value))) {
         return head.value();
     } else {
-        return getAttributeValue(AttributeNameWrapper<ATTRIBUTE_NAME>(), defaultValue, tail...);
+        return getAttributeValue(AttributeNameWrapper<ATTRIBUTE_NAME>(),
+            defaultValue, tail...);
     }
 }
 
@@ -236,13 +247,12 @@ public:
     using Type = NameChange<OldName, NewName>;
 
 public:
-    constexpr NameChange()
-    {
-    }
+    constexpr NameChange() { }
 };
 
 template <AttributeNameType OLD_NAME, AttributeNameType NEW_NAME>
-constexpr inline NameChange<OLD_NAME, NEW_NAME> operator<<(const AttributeNameWrapper<NEW_NAME>,
+constexpr inline NameChange<OLD_NAME, NEW_NAME>
+operator<<(const AttributeNameWrapper<NEW_NAME>,
     const AttributeNameWrapper<OLD_NAME>) noexcept
 {
     return NameChange<OLD_NAME, NEW_NAME>();
@@ -254,26 +264,33 @@ template <AttributeNameType NAME, typename LIST, typename... NAME_CHANGES>
 struct GetOldAttributeName;
 
 template <AttributeNameType NAME>
-struct GetOldAttributeName<NAME, Meta::List<>> : AttributeNameWrapper<NAME> {
-};
+struct GetOldAttributeName<NAME, Meta::List<>> : AttributeNameWrapper<NAME> { };
 
-template <AttributeNameType NAME, AttributeNameType OLD_NAME, AttributeNameType NEW_NAME, typename... NAME_CHANGES>
-struct GetOldAttributeName<NAME, Meta::List<NameChange<OLD_NAME, NEW_NAME>, NAME_CHANGES...>>
-    : Meta::IF<(NAME == OLD_NAME), UnknownType, GetOldAttributeName<NAME, Meta::List<NAME_CHANGES...>>> {
-};
+template <AttributeNameType NAME, AttributeNameType OLD_NAME,
+    AttributeNameType NEW_NAME, typename... NAME_CHANGES>
+struct GetOldAttributeName<
+    NAME, Meta::List<NameChange<OLD_NAME, NEW_NAME>, NAME_CHANGES...>>
+    : Meta::IF<(NAME == OLD_NAME), UnknownType,
+          GetOldAttributeName<NAME, Meta::List<NAME_CHANGES...>>> { };
 
-template <AttributeNameType NAME, AttributeNameType OLD_NAME, AttributeNameType NEW_NAME, typename... NAME_CHANGES,
+template <AttributeNameType NAME, AttributeNameType OLD_NAME,
+    AttributeNameType NEW_NAME, typename... NAME_CHANGES,
     typename... LIST>
-struct GetOldAttributeName<NAME, Meta::List<LIST...>, NameChange<OLD_NAME, NEW_NAME>, NAME_CHANGES...>
+struct GetOldAttributeName<NAME, Meta::List<LIST...>,
+    NameChange<OLD_NAME, NEW_NAME>, NAME_CHANGES...>
     : Meta::IF<(NAME == NEW_NAME), AttributeNameWrapper<OLD_NAME>,
-          GetOldAttributeName<NAME, Meta::List<NameChange<OLD_NAME, NEW_NAME>, LIST...>, NAME_CHANGES...>> {
-};
+          GetOldAttributeName<
+              NAME, Meta::List<NameChange<OLD_NAME, NEW_NAME>, LIST...>,
+              NAME_CHANGES...>> { };
 
 } // namespace ImplementationDetail
 
 template <AttributeNameType NAME, typename... NAME_CHANGES>
-inline constexpr ImplementationDetail::GetOldAttributeName<NAME, Meta::List<>, NAME_CHANGES...> getOldAttributeName(
-    const AttributeNameWrapper<NAME>, const NAME_CHANGES...) noexcept
+inline constexpr ImplementationDetail::GetOldAttributeName<NAME, Meta::List<>,
+    NAME_CHANGES...>
+getOldAttributeName(const AttributeNameWrapper<NAME>,
+    const NAME_CHANGES...) noexcept
 {
-    return ImplementationDetail::GetOldAttributeName<NAME, Meta::List<>, NAME_CHANGES...>();
+    return ImplementationDetail::GetOldAttributeName<NAME, Meta::List<>,
+        NAME_CHANGES...>();
 }

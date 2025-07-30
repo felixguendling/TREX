@@ -3,7 +3,8 @@
 namespace TransferPattern {
 
 struct LowerBound {
-    LowerBound(std::vector<int> travelTimes = {}, std::vector<uint8_t> numberOfTrips = {})
+    LowerBound(std::vector<int> travelTimes = {},
+        std::vector<uint8_t> numberOfTrips = {})
         : travelTimes(travelTimes)
         , numberOfTrips(numberOfTrips)
     {
@@ -39,4 +40,4 @@ struct LowerBound {
     std::vector<uint8_t> numberOfTrips;
 };
 
-}
+} // namespace TransferPattern

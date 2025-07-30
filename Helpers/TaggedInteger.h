@@ -7,14 +7,16 @@
 #include "Meta.h"
 #include "String/String.h"
 
-template <int TAG, typename VALUE_TYPE, VALUE_TYPE INVALID, VALUE_TYPE DEFAULT = INVALID, typename... ADDITIONAL_CASTS>
+template <int TAG, typename VALUE_TYPE, VALUE_TYPE INVALID,
+    VALUE_TYPE DEFAULT = INVALID, typename... ADDITIONAL_CASTS>
 class TaggedInteger {
 public:
     using ValueType = VALUE_TYPE;
     constexpr static ValueType InvalidValue = INVALID;
     constexpr static ValueType DefaultValue = DEFAULT;
     using AdditionalCasts = Meta::List<ADDITIONAL_CASTS...>;
-    using Type = TaggedInteger<TAG, ValueType, InvalidValue, DefaultValue, ADDITIONAL_CASTS...>;
+    using Type = TaggedInteger<TAG, ValueType, InvalidValue, DefaultValue,
+        ADDITIONAL_CASTS...>;
 
     using iterator_category = std::random_access_iterator_tag;
     using value_type = ValueType;
@@ -48,28 +50,16 @@ public:
     {
         return internalValue;
     }
-    constexpr inline const Type& operator*() const noexcept
-    {
-        return *this;
-    }
+    constexpr inline const Type& operator*() const noexcept { return *this; }
 
-    constexpr static Type Invalid()
-    {
-        return TaggedInteger(InvalidValue);
-    }
+    constexpr static Type Invalid() { return TaggedInteger(InvalidValue); }
 
-    inline bool isValid() const noexcept
-    {
-        return internalValue != InvalidValue;
-    }
+    inline bool isValid() const noexcept { return internalValue != InvalidValue; }
     inline bool isInvalid() const noexcept
     {
         return internalValue == InvalidValue;
     }
-    inline void invalidate() noexcept
-    {
-        internalValue = InvalidValue;
-    }
+    inline void invalidate() noexcept { internalValue = InvalidValue; }
 
     inline bool operator<(const Type& other) const noexcept
     {
@@ -127,7 +117,8 @@ public:
     inline Type& operator*=(const Type& other) noexcept
     {
         AssertMsg(isValid(), "Cannot multiply something with an Invalid value.");
-        AssertMsg(other.isValid(), "Cannot multiply an Invalid value with something.");
+        AssertMsg(other.isValid(),
+            "Cannot multiply an Invalid value with something.");
         internalValue *= other.internalValue;
         return *this;
     }
@@ -175,7 +166,8 @@ public:
     inline Type operator*(const Type& other) const noexcept
     {
         AssertMsg(isValid(), "Cannot multiply something with an Invalid value.");
-        AssertMsg(other.isValid(), "Cannot multiply an Invalid value with something.");
+        AssertMsg(other.isValid(),
+            "Cannot multiply an Invalid value with something.");
         return Type(internalValue * other.internalValue);
     }
 
@@ -214,13 +206,15 @@ public:
         return Type(internalValue + 1);
     }
 
-    inline friend std::istream& operator>>(std::istream& in, Type& type) noexcept
+    inline friend std::istream& operator>>(std::istream& in,
+        Type& type) noexcept
     {
         in >> type.internalValue;
         return in;
     }
 
-    inline friend std::ostream& operator<<(std::ostream& out, const Type& type) noexcept
+    inline friend std::ostream& operator<<(std::ostream& out,
+        const Type& type) noexcept
     {
         if (type.isValid()) {
             return out << String::prettyInt(type.internalValue);
@@ -229,14 +223,16 @@ public:
         }
     }
 
-    inline friend std::string operator+(const std::string& string, const Type& type) noexcept
+    inline friend std::string operator+(const std::string& string,
+        const Type& type) noexcept
     {
         std::stringstream result;
         result << string << type;
         return result.str();
     }
 
-    inline friend std::string operator+(const char string[], const Type& type) noexcept
+    inline friend std::string operator+(const char string[],
+        const Type& type) noexcept
     {
         std::stringstream result;
         result << string << type;
@@ -248,4 +244,5 @@ private:
 };
 
 template <int TAG, typename DEPENDENCE>
-using DependentTaggedInteger = TaggedInteger<TAG, typename DEPENDENCE::ValueType, DEPENDENCE::InvalidValue, DEPENDENCE::DefaultValue, DEPENDENCE>;
+using DependentTaggedInteger = TaggedInteger<TAG, typename DEPENDENCE::ValueType, DEPENDENCE::InvalidValue,
+    DEPENDENCE::DefaultValue, DEPENDENCE>;

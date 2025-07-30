@@ -10,16 +10,14 @@ namespace GTFS {
 
 class Agency {
 public:
-    Agency(const std::string& agencyId = "", const std::string& name = "", const std::string& timezone = "")
+    Agency(const std::string& agencyId = "", const std::string& name = "",
+        const std::string& timezone = "")
         : agencyId(agencyId)
         , name(name)
         , timezone(timezone)
     {
     }
-    Agency(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Agency(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     inline bool validate() noexcept
     {
@@ -30,7 +28,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const Agency& a)
     {
-        return out << "Agency{" << a.agencyId << ", " << a.name << ", " << a.timezone << "}";
+        return out << "Agency{" << a.agencyId << ", " << a.name << ", "
+                   << a.timezone << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept

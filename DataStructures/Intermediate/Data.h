@@ -37,9 +37,7 @@ using TransferGraph = DynamicTransferGraph;
 
 class Index {
 public:
-    Index()
-    {
-    }
+    Index() { }
     Index(const std::string& fileNameBase, const bool verbose = true)
     {
         readCSV(fileNameBase, verbose);
@@ -48,30 +46,41 @@ public:
 public:
     inline void writeCSV(const std::string& fileNameBase) const noexcept
     {
-        writeMap(fileNameBase + "gtfsStopIdToIntermediateStopId.csv", gtfsStopIdToIntermediateStopId, "gtfs_stop_id",
+        writeMap(fileNameBase + "gtfsStopIdToIntermediateStopId.csv",
+            gtfsStopIdToIntermediateStopId, "gtfs_stop_id",
             "intermediate_stop_id");
-        writeMap(fileNameBase + "gtfsTripIdToIntermediateTripId.csv", gtfsTripIdToIntermediateTripId, "gtfs_trip_id",
+        writeMap(fileNameBase + "gtfsTripIdToIntermediateTripId.csv",
+            gtfsTripIdToIntermediateTripId, "gtfs_trip_id",
             "intermediate_trip_id");
         writeVector(fileNameBase + "gtfsStopSequenceToIntermediateTripIndex.csv",
-            gtfsStopSequenceToIntermediateTripIndex, "gtfs_stop_sequence", "intermediate_trip_index");
-        writeVector(fileNameBase + "gtfsStopIdToIntermediateTripIndex.csv", gtfsStopIdToIntermediateTripIndex,
-            "gtfs_stop_id", "intermediate_trip_index");
+            gtfsStopSequenceToIntermediateTripIndex, "gtfs_stop_sequence",
+            "intermediate_trip_index");
+        writeVector(fileNameBase + "gtfsStopIdToIntermediateTripIndex.csv",
+            gtfsStopIdToIntermediateTripIndex, "gtfs_stop_id",
+            "intermediate_trip_index");
     }
 
-    inline void readCSV(const std::string& fileNameBase, const bool verbose = true) noexcept
+    inline void readCSV(const std::string& fileNameBase,
+        const bool verbose = true) noexcept
     {
-        readMap(fileNameBase + "gtfsStopIdToIntermediateStopId.csv", gtfsStopIdToIntermediateStopId, "gtfs_stop_id",
+        readMap(fileNameBase + "gtfsStopIdToIntermediateStopId.csv",
+            gtfsStopIdToIntermediateStopId, "gtfs_stop_id",
             "intermediate_stop_id", verbose);
-        readMap(fileNameBase + "gtfsTripIdToIntermediateTripId.csv", gtfsTripIdToIntermediateTripId, "gtfs_trip_id",
+        readMap(fileNameBase + "gtfsTripIdToIntermediateTripId.csv",
+            gtfsTripIdToIntermediateTripId, "gtfs_trip_id",
             "intermediate_trip_id", verbose);
         readVector(fileNameBase + "gtfsStopSequenceToIntermediateTripIndex.csv",
-            gtfsStopSequenceToIntermediateTripIndex, "gtfs_stop_sequence", "intermediate_trip_index", verbose);
-        readVector(fileNameBase + "gtfsStopIdToIntermediateTripIndex.csv", gtfsStopIdToIntermediateTripIndex,
-            "gtfs_stop_id", "intermediate_trip_index", verbose);
+            gtfsStopSequenceToIntermediateTripIndex, "gtfs_stop_sequence",
+            "intermediate_trip_index", verbose);
+        readVector(fileNameBase + "gtfsStopIdToIntermediateTripIndex.csv",
+            gtfsStopIdToIntermediateTripIndex, "gtfs_stop_id",
+            "intermediate_trip_index", verbose);
     }
 
 private:
-    inline void writeMap(const std::string& fileName, const Map<std::string, int>& map, const std::string& indexHeader,
+    inline void writeMap(const std::string& fileName,
+        const Map<std::string, int>& map,
+        const std::string& indexHeader,
         const std::string& valueHeader) const noexcept
     {
         std::ofstream file(fileName);
@@ -84,13 +93,16 @@ private:
         file.close();
     }
 
-    inline void writeVector(const std::string& fileName, const std::vector<Map<int, int>>& vector,
-        const std::string& indexHeader, const std::string& valueHeader) const noexcept
+    inline void writeVector(const std::string& fileName,
+        const std::vector<Map<int, int>>& vector,
+        const std::string& indexHeader,
+        const std::string& valueHeader) const noexcept
     {
         std::ofstream file(fileName);
         AssertMsg(file, "Cannot open file " << fileName << '!');
         AssertMsg(file.is_open(), "Cannot open file " << fileName << '!');
-        file << "intermediate_trip_id," << indexHeader << ',' << valueHeader << '\n';
+        file << "intermediate_trip_id," << indexHeader << ',' << valueHeader
+             << '\n';
         for (size_t i = 0; i < vector.size(); ++i) {
             for (const auto& entry : vector[i]) {
                 file << i << ',' << entry.first << ',' << entry.second << '\n';
@@ -99,14 +111,17 @@ private:
         file.close();
     }
 
-    inline void readMap(const std::string& fileName, Map<std::string, int>& map, const std::string& indexHeader,
-        const std::string& valueHeader, const bool verbose = true) const noexcept
+    inline void readMap(const std::string& fileName, Map<std::string, int>& map,
+        const std::string& indexHeader,
+        const std::string& valueHeader,
+        const bool verbose = true) const noexcept
     {
         IO::readFile(
             fileName, "Map",
             [&]() {
                 int count = 0;
-                IO::CSVReader<2, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
+                IO::CSVReader<2, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
                 in.readHeader(indexHeader, valueHeader);
                 std::string index;
                 int value;
@@ -119,15 +134,18 @@ private:
             verbose);
     }
 
-    inline void readVector(const std::string& fileName, std::vector<Map<int, int>>& vector,
-        const std::string& indexHeader, const std::string& valueHeader,
+    inline void readVector(const std::string& fileName,
+        std::vector<Map<int, int>>& vector,
+        const std::string& indexHeader,
+        const std::string& valueHeader,
         const bool verbose = true) const noexcept
     {
         IO::readFile(
             fileName, "Vector",
             [&]() {
                 int count = 0;
-                IO::CSVReader<3, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
+                IO::CSVReader<3, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
                 in.readHeader("intermediate_trip_id", indexHeader, valueHeader);
                 size_t tripID;
                 size_t index;
@@ -152,14 +170,9 @@ public:
 
 class Data {
 public:
-    Data()
-    {
-    }
+    Data() { }
 
-    Data(const std::string& fileName)
-    {
-        deserialize(fileName);
-    }
+    Data(const std::string& fileName) { deserialize(fileName); }
 
     inline static Data FromBinary(const std::string& fileName) noexcept
     {
@@ -168,11 +181,15 @@ public:
         return data;
     }
 
-    inline static Data FromGTFS(const GTFS::Data& gtfs, const int startDate, const int endDate,
-        const bool ignoreDaysOfOperation = false, const bool ignoreFrequencies = false) noexcept
+    inline static Data FromGTFS(const GTFS::Data& gtfs, const int startDate,
+        const int endDate,
+        const bool ignoreDaysOfOperation = false,
+        const bool ignoreFrequencies = false) noexcept
     {
-        std::cout << "Extracting timetable from " << dayToString(startDate) << " to " << dayToString(endDate) << ", "
-                  << (ignoreDaysOfOperation ? "ignoring" : ", applying") << " days of operation" << std::endl;
+        std::cout << "Extracting timetable from " << dayToString(startDate)
+                  << " to " << dayToString(endDate) << ", "
+                  << (ignoreDaysOfOperation ? "ignoring" : ", applying")
+                  << " days of operation" << std::endl;
         Data data;
         Map<std::string, std::vector<int>> calendars = gtfs.unrollCalendarDates(startDate, endDate, ignoreDaysOfOperation);
         Map<std::string, int> routeIds = gtfs.routeIds();
@@ -226,20 +243,24 @@ public:
                         continue;
                     for (const int i : frequencyIds[tripId]) {
                         const GTFS::Frequency& frequency = gtfs.frequencies[i];
-                        for (int time = frequency.startTime; time <= frequency.endTime; time += frequency.headwaySecs) {
-                            data.buildTrip(gtfs, stopIds, stopTimes, seconds - stopTimes[0].departureTime + time,
+                        for (int time = frequency.startTime; time <= frequency.endTime;
+                             time += frequency.headwaySecs) {
+                            data.buildTrip(gtfs, stopIds, stopTimes,
+                                seconds - stopTimes[0].departureTime + time,
                                 trip.name, route.name, route.type);
                         }
                     }
                 } else {
-                    data.buildTrip(gtfs, stopIds, stopTimes, seconds, trip.name, route.name, route.type);
+                    data.buildTrip(gtfs, stopIds, stopTimes, seconds, trip.name,
+                        route.name, route.type);
                 }
             }
         }
         emptyTrips -= timeTravelTrips;
-        std::cout << "Removed " << String::prettyInt(timeTravelTrips) << " Trips, due to negative travel times."
-                  << std::endl;
-        std::cout << "Removed " << String::prettyInt(emptyTrips) << " Trips, because they were empty." << std::endl;
+        std::cout << "Removed " << String::prettyInt(timeTravelTrips)
+                  << " Trips, due to negative travel times." << std::endl;
+        std::cout << "Removed " << String::prettyInt(emptyTrips)
+                  << " Trips, because they were empty." << std::endl;
         data.transferGraph.addVertices(data.stops.size());
         for (const StopId stop : data.stopIds()) {
             data.transferGraph.set(Coordinates, stop, data.stops[stop].coordinates);
@@ -256,10 +277,13 @@ public:
             if (!data.transferGraph.isVertex(toStopId))
                 continue;
             if (fromStopId == toStopId) {
-                data.stops[fromStopId].minTransferTime = std::max(data.stops[fromStopId].minTransferTime, transfer.minTransferTime);
+                data.stops[fromStopId].minTransferTime = std::max(
+                    data.stops[fromStopId].minTransferTime, transfer.minTransferTime);
             } else {
-                data.transferGraph.addEdge(fromStopId, toStopId).set(TravelTime, transfer.minTransferTime);
-                data.transferGraph.addEdge(toStopId, fromStopId).set(TravelTime, transfer.minTransferTime);
+                data.transferGraph.addEdge(fromStopId, toStopId)
+                    .set(TravelTime, transfer.minTransferTime);
+                data.transferGraph.addEdge(toStopId, fromStopId)
+                    .set(TravelTime, transfer.minTransferTime);
             }
         }
         data.transferGraph.reduceMultiEdgesBy(TravelTime);
@@ -267,9 +291,11 @@ public:
             for (const Edge a : data.transferGraph.edgesFrom(vertex)) {
                 const Edge b = data.transferGraph.findReverseEdge(a);
                 if (data.transferGraph.get(TravelTime, a) < data.transferGraph.get(TravelTime, b)) {
-                    data.transferGraph.set(TravelTime, b, data.transferGraph.get(TravelTime, a));
+                    data.transferGraph.set(TravelTime, b,
+                        data.transferGraph.get(TravelTime, a));
                 } else if (data.transferGraph.get(TravelTime, b) < data.transferGraph.get(TravelTime, a)) {
-                    data.transferGraph.set(TravelTime, a, data.transferGraph.get(TravelTime, b));
+                    data.transferGraph.set(TravelTime, a,
+                        data.transferGraph.get(TravelTime, b));
                 }
             }
         }
@@ -279,7 +305,9 @@ public:
         return data;
     }
 
-    inline static Data FromCSV(const std::string& fileNameBase, const std::string& stopFileName = "stops.csv",
+    inline static Data
+    FromCSV(const std::string& fileNameBase,
+        const std::string& stopFileName = "stops.csv",
         const std::string& stopEventFileName = "stopEvents.csv",
         const std::string& tripFileName = "trips.csv",
         const std::string& transferFileName = "transfers.csv") noexcept
@@ -293,7 +321,8 @@ public:
     }
 
     template <typename CSA>
-    inline static Data FromCSA(const CSA& csa, const bool validate = false) noexcept
+    inline static Data FromCSA(const CSA& csa,
+        const bool validate = false) noexcept
     {
         Intermediate::Data data;
         for (const auto& stop : csa.stopData) {
@@ -305,10 +334,13 @@ public:
         for (const auto& connection : csa.connections) {
             Trip& trip = data.trips[connection.tripId];
             if (trip.stopEvents.empty()) {
-                trip.stopEvents.emplace_back(connection.departureStopId, connection.departureTime,
+                trip.stopEvents.emplace_back(connection.departureStopId,
+                    connection.departureTime,
                     connection.departureTime);
             }
-            trip.stopEvents.emplace_back(connection.arrivalStopId, connection.arrivalTime, connection.arrivalTime);
+            trip.stopEvents.emplace_back(connection.arrivalStopId,
+                connection.arrivalTime,
+                connection.arrivalTime);
             StopEvent& a = trip.stopEvents[trip.stopEvents.size() - 2];
             StopEvent& b = trip.stopEvents[trip.stopEvents.size() - 1];
             a.departureTime = std::max(a.arrivalTime, connection.departureTime);
@@ -323,7 +355,8 @@ public:
     }
 
     template <typename RAPTOR>
-    inline static Data FromRAPTOR(const RAPTOR& raptor, const bool validate = false) noexcept
+    inline static Data FromRAPTOR(const RAPTOR& raptor,
+        const bool validate = false) noexcept
     {
         Intermediate::Data data;
         RAPTOR raptorCopy = raptor;
@@ -334,11 +367,14 @@ public:
         }
         for (const auto& route : raptorCopy.routes()) {
             for (size_t i = 0; i < raptorCopy.numberOfTripsInRoute(route); ++i) {
-                data.trips.emplace_back("", raptorCopy.routeData[route].name, raptorCopy.routeData[route].type);
-                for (StopIndex stopIndex(0); stopIndex < raptorCopy.numberOfStopsInRoute(route); ++stopIndex) {
+                data.trips.emplace_back("", raptorCopy.routeData[route].name,
+                    raptorCopy.routeData[route].type);
+                for (StopIndex stopIndex(0);
+                     stopIndex < raptorCopy.numberOfStopsInRoute(route); ++stopIndex) {
                     const StopId stop = raptorCopy.stopArrayOfRoute(route)[stopIndex];
                     const auto& stopEvent = raptorCopy.tripOfRoute(route, i)[stopIndex];
-                    data.trips.back().stopEvents.emplace_back(stop, stopEvent.arrivalTime, stopEvent.departureTime);
+                    data.trips.back().stopEvents.emplace_back(stop, stopEvent.arrivalTime,
+                        stopEvent.departureTime);
                 }
             }
         }
@@ -350,7 +386,8 @@ public:
 
 protected:
     inline void buildTrip(const GTFS::Data& gtfs, Map<std::string, int>& stopIds,
-        const std::vector<GTFS::StopTime>& stopTimes, const int offset, const std::string& tripName,
+        const std::vector<GTFS::StopTime>& stopTimes,
+        const int offset, const std::string& tripName,
         const std::string& routeName, const int type)
     {
         trips.emplace_back(tripName, routeName, type);
@@ -361,7 +398,8 @@ protected:
                 stops.emplace_back(gtfs.stops[stopId]);
                 stopId = -stops.size();
             }
-            trip.stopEvents.emplace_back(StopId(-(stopId + 1)), stopTime.arrivalTime + offset,
+            trip.stopEvents.emplace_back(StopId(-(stopId + 1)),
+                stopTime.arrivalTime + offset,
                 stopTime.departureTime + offset);
         }
         if (trip.stopEvents.empty()) {
@@ -373,10 +411,7 @@ protected:
     }
 
 public:
-    inline size_t numberOfStops() const noexcept
-    {
-        return stops.size();
-    }
+    inline size_t numberOfStops() const noexcept { return stops.size(); }
     inline bool isStop(const Vertex stop) const noexcept
     {
         return stop < numberOfStops();
@@ -386,10 +421,7 @@ public:
         return Range<StopId>(StopId(0), StopId(numberOfStops()));
     }
 
-    inline size_t numberOfTrips() const noexcept
-    {
-        return trips.size();
-    }
+    inline size_t numberOfTrips() const noexcept { return trips.size(); }
     inline bool isTrip(const TripId trip) const noexcept
     {
         return trip < numberOfTrips();
@@ -399,29 +431,41 @@ public:
         return Range<TripId>(TripId(0), TripId(numberOfTrips()));
     }
 
-    inline void addBoundedTransferGraph(const TransferGraph& graph, const double maxUnificationDistanceInCM = 500,
+    inline void
+    addBoundedTransferGraph(const TransferGraph& graph,
+        const double maxUnificationDistanceInCM = 500,
         const double maxConnectingDistanceInCM = 5000,
         const double speedInKMH = 4.5) noexcept
     {
         TransferGraph boundedGraph = graph;
         Graph::applyBoundingBox(boundedGraph, boundingBox());
-        addTransferGraph(boundedGraph, maxUnificationDistanceInCM, maxConnectingDistanceInCM, speedInKMH);
+        addTransferGraph(boundedGraph, maxUnificationDistanceInCM,
+            maxConnectingDistanceInCM, speedInKMH);
     }
 
-    inline void connectIsolatedStops(const double maxConnectingDistanceInCM = 1000,
+    inline void
+    connectIsolatedStops(const double maxConnectingDistanceInCM = 1000,
         const double speedInKMH = 4.5) noexcept
     {
         std::cout << "Connecting Isolated Stops." << std::endl;
         size_t edgeCount = 0;
-        CoordinateTree<Geometry::GeoMetric> ct(Geometry::GeoMetric(), transferGraph[Coordinates]);
+        CoordinateTree<Geometry::GeoMetric> ct(Geometry::GeoMetric(),
+            transferGraph[Coordinates]);
         for (const StopId stop : stopIds()) {
             if (transferGraph.outDegree(stop) > 0)
                 continue;
-            for (const Vertex other : ct.getNeighbors(transferGraph.get(Coordinates, stop), maxConnectingDistanceInCM)) {
+            for (const Vertex other :
+                ct.getNeighbors(transferGraph.get(Coordinates, stop),
+                    maxConnectingDistanceInCM)) {
                 if (other == stop)
                     continue;
-                const double distance = std::max(1.0, Geometry::geoDistanceInCM(transferGraph.get(Coordinates, stop), transferGraph.get(Coordinates, other)));
-                AssertMsg(distance <= maxConnectingDistanceInCM, "CoordinateTree returned a neighbor with distance " << distance << " > " << maxConnectingDistanceInCM << "!");
+                const double distance = std::max(
+                    1.0,
+                    Geometry::geoDistanceInCM(transferGraph.get(Coordinates, stop),
+                        transferGraph.get(Coordinates, other)));
+                AssertMsg(distance <= maxConnectingDistanceInCM,
+                    "CoordinateTree returned a neighbor with distance "
+                        << distance << " > " << maxConnectingDistanceInCM << "!");
                 const double travelTime = (distance / speedInKMH) * 0.036;
                 transferGraph.addEdge(other, stop).set(TravelTime, travelTime);
                 transferGraph.addEdge(stop, other).set(TravelTime, travelTime);
@@ -429,7 +473,8 @@ public:
             }
         }
         transferGraph.packEdges();
-        std::cout << "   added " << String::prettyInt(edgeCount) << " edges." << std::endl;
+        std::cout << "   added " << String::prettyInt(edgeCount) << " edges."
+                  << std::endl;
     }
 
     inline void makeImpassableVertices() noexcept
@@ -438,42 +483,55 @@ public:
         size_t isolatedVertices = 0;
         for (const Vertex vertex : transferGraph.vertices()) {
             if (isStop(vertex)) {
-                newGraph.set(Coordinates, newGraph.addVertex(), transferGraph.get(Coordinates, vertex));
+                newGraph.set(Coordinates, newGraph.addVertex(),
+                    transferGraph.get(Coordinates, vertex));
             } else {
-                newGraph.set(Coordinates, newGraph.addVertex(), transferGraph.get(Coordinates, vertex));
-                newGraph.set(Coordinates, newGraph.addVertex(), transferGraph.get(Coordinates, vertex));
+                newGraph.set(Coordinates, newGraph.addVertex(),
+                    transferGraph.get(Coordinates, vertex));
+                newGraph.set(Coordinates, newGraph.addVertex(),
+                    transferGraph.get(Coordinates, vertex));
                 if (transferGraph.inDegree(vertex) == 0 || transferGraph.outDegree(vertex) == 0) {
                     ++isolatedVertices;
                 }
             }
         }
-        std::cout << "   Number of isolated vertices: " << String::prettyInt(isolatedVertices) << std::endl;
+        std::cout << "   Number of isolated vertices: "
+                  << String::prettyInt(isolatedVertices) << std::endl;
         for (const Vertex vertex : transferGraph.vertices()) {
-            const Vertex from = (isStop(vertex)) ? (vertex) : (Vertex((vertex << 1) - numberOfStops()));
+            const Vertex from = (isStop(vertex))
+                ? (vertex)
+                : (Vertex((vertex << 1) - numberOfStops()));
             for (const Edge edge : transferGraph.edgesFrom(vertex)) {
                 Vertex to = transferGraph.get(ToVertex, edge);
                 to = (isStop(to)) ? (to) : (Vertex((to << 1) - numberOfStops() + 1));
-                newGraph.addEdge(from, to).set(TravelTime, transferGraph.get(TravelTime, edge));
+                newGraph.addEdge(from, to).set(TravelTime,
+                    transferGraph.get(TravelTime, edge));
             }
         }
         transferGraph = std::move(newGraph);
     }
 
-    inline void addTransferGraph(const TransferGraph& graph, const double maxUnificationDistanceInCM = 500,
-        const double maxConnectingDistanceInCM = 10000, const double speedInKMH = 4.5,
+    inline void addTransferGraph(const TransferGraph& graph,
+        const double maxUnificationDistanceInCM = 500,
+        const double maxConnectingDistanceInCM = 10000,
+        const double speedInKMH = 4.5,
         const bool connectStopsOnly = false) noexcept
     {
         std::cout << "Matching stops to nearest graph vertices." << std::endl;
         Geometry::Rectangle boundingBox = Geometry::Rectangle::BoundingBox(graph[Coordinates]);
-        Geometry::GeoMetricAproximation metric = Geometry::GeoMetricAproximation::ComputeCorrection(boundingBox.center());
-        CoordinateTree<Geometry::GeoMetricAproximation> ct(metric, graph[Coordinates]);
+        Geometry::GeoMetricAproximation metric = Geometry::GeoMetricAproximation::ComputeCorrection(
+            boundingBox.center());
+        CoordinateTree<Geometry::GeoMetricAproximation> ct(metric,
+            graph[Coordinates]);
         std::vector<std::vector<Vertex>> nearestOldVerticesOfNewVertex = std::vector<std::vector<Vertex>>(graph.numVertices());
-        std::vector<double> distanceToNewVertex(transferGraph.numVertices(), maxConnectingDistanceInCM);
+        std::vector<double> distanceToNewVertex(transferGraph.numVertices(),
+            maxConnectingDistanceInCM);
         for (const Vertex oldVertex : transferGraph.vertices()) {
             if (connectStopsOnly && !isStop(oldVertex))
                 break;
             const Vertex newVertex = ct.getNearestNeighbor(transferGraph.get(Coordinates, oldVertex));
-            const double distance = Geometry::geoDistanceInCM(transferGraph.get(Coordinates, oldVertex), graph.get(Coordinates, newVertex));
+            const double distance = Geometry::geoDistanceInCM(transferGraph.get(Coordinates, oldVertex),
+                graph.get(Coordinates, newVertex));
             if (distance <= maxConnectingDistanceInCM) {
                 nearestOldVerticesOfNewVertex[newVertex].emplace_back(oldVertex);
                 distanceToNewVertex[oldVertex] = distance;
@@ -484,7 +542,9 @@ public:
         std::vector<Vertex> oldVertexOfNewVertex(graph.numVertices());
         for (const Vertex newVertex : graph.vertices()) {
             sort(nearestOldVerticesOfNewVertex[newVertex],
-                [&](const Vertex a, const Vertex b) { return distanceToNewVertex[a] < distanceToNewVertex[b]; });
+                [&](const Vertex a, const Vertex b) {
+                    return distanceToNewVertex[a] < distanceToNewVertex[b];
+                });
             Vertex from;
             if (nearestOldVerticesOfNewVertex[newVertex].empty() || distanceToNewVertex[nearestOldVerticesOfNewVertex[newVertex][0]] > maxUnificationDistanceInCM) {
                 from = transferGraph.addVertex();
@@ -493,7 +553,8 @@ public:
                 from = nearestOldVerticesOfNewVertex[newVertex][0];
             }
             oldVertexOfNewVertex[newVertex] = from;
-            for (size_t i = 0; i < nearestOldVerticesOfNewVertex[newVertex].size(); ++i) {
+            for (size_t i = 0; i < nearestOldVerticesOfNewVertex[newVertex].size();
+                 ++i) {
                 const Vertex oldVertex = nearestOldVerticesOfNewVertex[newVertex][i];
                 if (i > 0 || distanceToNewVertex[oldVertex] > maxUnificationDistanceInCM) {
                     if (distanceToNewVertex[oldVertex] <= maxConnectingDistanceInCM) {
@@ -525,7 +586,8 @@ public:
     {
         std::cout << "Reducing multi edges." << std::endl;
         transferGraph.reduceMultiEdgesBy(TravelTime);
-        std::cout << "Contracting vertices with degree less than three." << std::endl;
+        std::cout << "Contracting vertices with degree less than three."
+                  << std::endl;
         std::vector<bool> deleteVertex(transferGraph.numVertices(), false);
         std::vector<Vertex> vertices;
         for (const Vertex vertex : transferGraph.vertices()) {
@@ -579,7 +641,8 @@ public:
         transferGraph.deleteVertices(deleteVertex, true);
         transferGraph.packEdges();
         validate();
-        std::cout << "   removed " << String::prettyInt(deletionCount) << " vertices." << std::endl;
+        std::cout << "   removed " << String::prettyInt(deletionCount)
+                  << " vertices." << std::endl;
         return deletionCount;
     }
 
@@ -604,10 +667,12 @@ public:
         }
     }
 
-    inline void applyBoundingBox(const Geometry::Rectangle& boundingBox) noexcept
+    inline void
+    applyBoundingBox(const Geometry::Rectangle& boundingBox) noexcept
     {
-        deleteVertices(
-            [&](const Vertex vertex) { return !boundingBox.contains(transferGraph.get(Coordinates, vertex)); });
+        deleteVertices([&](const Vertex vertex) {
+            return !boundingBox.contains(transferGraph.get(Coordinates, vertex));
+        });
     }
 
     template <typename DELETE_VERTEX>
@@ -635,11 +700,13 @@ public:
         validate();
     }
 
-    inline void makeDirectTransfers(const double maxTransferTravelTime, const bool verbose = false) noexcept
+    inline void makeDirectTransfers(const double maxTransferTravelTime,
+        const bool verbose = false) noexcept
     {
         TransferGraph graph;
         graph.addVertices(stops.size());
-        Dijkstra<TransferGraph, false> dijkstra(transferGraph, transferGraph[TravelTime]);
+        Dijkstra<TransferGraph, false> dijkstra(transferGraph,
+            transferGraph[TravelTime]);
         Progress progress(stops.size(), verbose);
         for (const StopId stop : stopIds()) {
             graph.set(Coordinates, stop, stops[stop].coordinates);
@@ -652,7 +719,9 @@ public:
                     graph.addEdge(stop, u).set(TravelTime, travelTime);
                     graph.addEdge(u, stop).set(TravelTime, travelTime);
                 },
-                [&]() { return dijkstra.getDistance(dijkstra.getQFront()) > maxTransferTravelTime; });
+                [&]() {
+                    return dijkstra.getDistance(dijkstra.getQFront()) > maxTransferTravelTime;
+                });
             progress++;
         }
         graph.packEdges();
@@ -662,27 +731,78 @@ public:
             std::cout << " done." << std::endl;
     }
 
-    inline void makeDirectTransfersByGeoDistance(const double maxDistance, const double speedInKMH,
-        const bool verbose = false) noexcept
+    /* inline void makeDirectTransfersByGeoDistance(const double maxDistance,
+     * const double speedInKMH, */
+    /*     const bool verbose = false) noexcept */
+    /* { */
+    /*     TransferGraph graph; */
+    /*     graph.addVertices(stops.size()); */
+    /*     Progress progress(stops.size(), verbose); */
+    /*     for (const StopId from : stopIds()) { */
+    /*         graph.set(Coordinates, from, stops[from].coordinates); */
+    /*         for (const StopId to : stopIds()) { */
+    /*             const Geometry::Point& a = transferGraph.get(Coordinates,
+     * from); */
+    /*             const Geometry::Point& b = graph.get(Coordinates, to); */
+    /*             const double distance = Geometry::geoDistanceInCM(a, b); */
+    /*             if (distance <= maxDistance) { */
+    /*                 const int travelTime = (distance / speedInKMH) * 0.036; */
+    /*                 graph.addEdge(from, to).set(TravelTime, travelTime); */
+    /*             } */
+    /*         } */
+    /*         progress++; */
+    /*     } */
+    /*     graph.packEdges(); */
+    /*     Graph::move(std::move(graph), transferGraph); */
+    /*     validate(); */
+    /*     if (verbose) */
+    /*         std::cout << " done." << std::endl; */
+    /* } */
+
+    inline void makeDirectTransfersByGeoDistance(
+        const double maxConnectingDistanceInCM = 40000,
+        const double speedInKMH = 5.1, const bool verbose = false) noexcept
     {
-        TransferGraph graph;
-        graph.addVertices(stops.size());
-        Progress progress(stops.size(), verbose);
-        for (const StopId from : stopIds()) {
-            graph.set(Coordinates, from, stops[from].coordinates);
-            for (const StopId to : stopIds()) {
-                const Geometry::Point& a = transferGraph.get(Coordinates, from);
-                const Geometry::Point& b = graph.get(Coordinates, to);
-                const double distance = Geometry::geoDistanceInCM(a, b);
-                if (distance <= maxDistance) {
-                    const int travelTime = (distance / speedInKMH) * 0.036;
-                    graph.addEdge(from, to).set(TravelTime, travelTime);
-                }
+        std::cout << "Creating transfers between all pairs of stops within the "
+                     "given distance."
+                  << std::endl;
+
+        DynamicTransferGraph dynamicTransferGraph;
+        dynamicTransferGraph.addVertices(transferGraph.numVertices());
+        Progress progress(transferGraph.numVertices(), verbose);
+
+        CoordinateTree<Geometry::GeoMetric> ct(Geometry::GeoMetric(),
+            transferGraph[Coordinates]);
+        for (const Vertex stop : transferGraph.vertices()) {
+            dynamicTransferGraph.set(Coordinates, stop,
+                transferGraph.get(Coordinates, stop));
+
+            for (const Vertex other :
+                ct.getNeighbors(transferGraph.get(Coordinates, stop),
+                    maxConnectingDistanceInCM)) {
+                if (other == stop)
+                    continue;
+                const double distance = std::max(
+                    1.0,
+                    Geometry::geoDistanceInCM(transferGraph.get(Coordinates, stop),
+                        transferGraph.get(Coordinates, other)));
+                AssertMsg(distance <= maxConnectingDistanceInCM,
+                    "CoordinateTree returned a neighbor with distance "
+                        << distance << " > " << maxConnectingDistanceInCM << "!");
+                const double travelTime = (distance / speedInKMH) * 0.036;
+                dynamicTransferGraph.addEdge(other, Vertex(stop))
+                    .set(TravelTime, travelTime);
+                dynamicTransferGraph.addEdge(Vertex(stop), other)
+                    .set(TravelTime, travelTime);
             }
+
             progress++;
         }
-        graph.packEdges();
-        Graph::move(std::move(graph), transferGraph);
+
+        progress.finished();
+
+        Graph::move(std::move(dynamicTransferGraph), transferGraph);
+        transferGraph.packEdges();
         validate();
         if (verbose)
             std::cout << " done." << std::endl;
@@ -697,11 +817,14 @@ public:
                 const Vertex to = transferGraph.get(ToVertex, edge);
                 if (from < stops.size() && to < stops.size())
                     continue;
-                graph.addEdge(from, to).set(TravelTime, transferGraph.get(TravelTime, edge));
+                graph.addEdge(from, to).set(TravelTime,
+                    transferGraph.get(TravelTime, edge));
             }
         }
-        transferGraph.deleteVertices([&](const Vertex vertex) { return vertex >= stops.size(); });
-        Dijkstra<TransferGraph, false> dijkstra(transferGraph, transferGraph[TravelTime]);
+        transferGraph.deleteVertices(
+            [&](const Vertex vertex) { return vertex >= stops.size(); });
+        Dijkstra<TransferGraph, false> dijkstra(transferGraph,
+            transferGraph[TravelTime]);
         Progress progress(stops.size(), verbose);
         for (const StopId stop : stopIds()) {
             graph.set(Coordinates, stop, stops[stop].coordinates);
@@ -787,7 +910,8 @@ public:
                 }
             }
         }
-        for (Vertex vertex = Vertex(numberOfStops()); vertex < transferGraph.numVertices(); vertex++) {
+        for (Vertex vertex = Vertex(numberOfStops());
+             vertex < transferGraph.numVertices(); vertex++) {
             if (deleteVertex[vertex]) {
                 deletions.emplace_back(vertex);
             } else {
@@ -797,17 +921,23 @@ public:
         Order order = Order(newStops + newVertices + deletions);
         Permutation permutation(Construct::Invert, order);
         transferGraph.applyVertexPermutation(permutation);
-        transferGraph.deleteVertices([&](Vertex vertex) { return vertex >= newStops.size() + newVertices.size(); });
+        transferGraph.deleteVertices([&](Vertex vertex) {
+            return vertex >= newStops.size() + newVertices.size();
+        });
         if (invalidTrips > 0)
-            std::cout << "Deleting " << invalidTrips << " trips, because they contain invalid stops or stop events!"
+            std::cout << "Deleting " << invalidTrips
+                      << " trips, because they contain invalid stops or stop events!"
                       << std::endl;
         if (duplicateTrips.size() > 0)
-            std::cout << "Deleting " << duplicateTrips.size() << " trips, because they are duplicates!" << std::endl;
+            std::cout << "Deleting " << duplicateTrips.size()
+                      << " trips, because they are duplicates!" << std::endl;
         if (oldStops.size() > 0)
-            std::cout << "Deleting " << oldStops.size() << " stops, because they are not used by any Trip/Connection!"
+            std::cout << "Deleting " << oldStops.size()
+                      << " stops, because they are not used by any Trip/Connection!"
                       << std::endl;
         if (deletions.size() > 0)
-            std::cout << "Deleting " << deletions.size() << " vertices, because they are isolated!" << std::endl;
+            std::cout << "Deleting " << deletions.size()
+                      << " vertices, because they are isolated!" << std::endl;
         order = Order(newStops + oldStops);
         permutation = Permutation(Construct::Invert, order);
         permutation.permutate(stops);
@@ -820,11 +950,13 @@ public:
         transferGraph.packEdges();
         for (const StopId stop : stopIds()) {
             AssertMsg(stops[stop].coordinates == transferGraph.get(Coordinates, stop),
-                "Transit stop " << stop << " does no match with its transfer vertex!");
+                "Transit stop " << stop
+                                << " does no match with its transfer vertex!");
         }
     }
 
-    inline void removeTripsWithoutBicycleTransport(const std::vector<bool>& bicycleTransportIsAllowedForTrip) noexcept
+    inline void removeTripsWithoutBicycleTransport(
+        const std::vector<bool>& bicycleTransportIsAllowedForTrip) noexcept
     {
         std::vector<Trip> filteredTrips;
         for (size_t i = 0; i < trips.size(); ++i) {
@@ -838,7 +970,8 @@ public:
 private:
     template <typename SAME_ROUTE>
     inline void appendRoutes(std::vector<std::vector<Intermediate::Trip>>& routes,
-        const std::vector<Intermediate::Trip>& trips, const SAME_ROUTE& sameRoute) const noexcept
+        const std::vector<Intermediate::Trip>& trips,
+        const SAME_ROUTE& sameRoute) const noexcept
     {
         size_t j = routes.size();
         routes.emplace_back(std::vector<Intermediate::Trip> { trips[0] });
@@ -863,8 +996,8 @@ private:
     }
 
 public:
-    inline std::vector<std::vector<Intermediate::Trip>> fifoBikeRoutes(
-        const std::vector<bool>& bicycleTransportIsAllowedForTrip,
+    inline std::vector<std::vector<Intermediate::Trip>>
+    fifoBikeRoutes(const std::vector<bool>& bicycleTransportIsAllowedForTrip,
         size_t& numberOfBicycleTransportRoutes) const noexcept
     {
         std::vector<Intermediate::Trip> sortedTripsWithBicycleTransport;
@@ -876,8 +1009,10 @@ public:
                 sortedTripsWithoutBicycleTransport.emplace_back(trips[trip]);
             }
         }
-        std::sort(sortedTripsWithBicycleTransport.begin(), sortedTripsWithBicycleTransport.end());
-        std::sort(sortedTripsWithoutBicycleTransport.begin(), sortedTripsWithoutBicycleTransport.end());
+        std::sort(sortedTripsWithBicycleTransport.begin(),
+            sortedTripsWithBicycleTransport.end());
+        std::sort(sortedTripsWithoutBicycleTransport.begin(),
+            sortedTripsWithoutBicycleTransport.end());
         std::vector<std::vector<Intermediate::Trip>> routes;
         appendRoutes(routes, sortedTripsWithBicycleTransport,
             [](const Trip& a, const Trip& b) { return isFiFo(a, b); });
@@ -887,18 +1022,20 @@ public:
         return routes;
     }
 
-    inline std::vector<std::vector<Intermediate::Trip>> greedyfifoRoutes() const noexcept
+    inline std::vector<std::vector<Intermediate::Trip>>
+    greedyfifoRoutes() const noexcept
     {
         std::vector<Intermediate::Trip> sortedTrips = trips;
         std::sort(sortedTrips.begin(), sortedTrips.end());
         std::vector<std::vector<Intermediate::Trip>> routes;
-        appendRoutes(routes, sortedTrips, [](const Trip& a, const Trip& b) { return isFiFo(a, b); });
+        appendRoutes(routes, sortedTrips,
+            [](const Trip& a, const Trip& b) { return isFiFo(a, b); });
         return routes;
     }
 
-    // this does not implement the algorithm to create an ortientation for transitive graphs
-    // this method just checks if for every edge A->B and B->C, if A->C is present
-    // NOTE: even vertices are in one side, odd in the other
+    // this does not implement the algorithm to create an ortientation for
+    // transitive graphs this method just checks if for every edge A->B and B->C,
+    // if A->C is present NOTE: even vertices are in one side, odd in the other
     inline bool checkFlowGraph(const DynamicFlowGraph& graph) const
     {
         for (Vertex A(0); A < graph.numVertices(); A += 2) {
@@ -948,29 +1085,38 @@ public:
                 for (size_t j(i + 1); j < (right - left); ++j) {
                     bool before = true;
 
-                    for (size_t stopIndex(0); before && stopIndex < trips[left + i].stopEvents.size(); ++stopIndex) {
+                    for (size_t stopIndex(0);
+                         before && stopIndex < trips[left + i].stopEvents.size();
+                         ++stopIndex) {
                         before &= (trips[left + i].stopEvents[stopIndex].departureTime <= trips[left + j].stopEvents[stopIndex].departureTime);
                         before &= (trips[left + i].stopEvents[stopIndex].arrivalTime <= trips[left + j].stopEvents[stopIndex].arrivalTime);
                     }
 
                     if (before) {
-                        AssertMsg(flowGraph.isVertex(Vertex(i << 1)), i << " is not a valid vertex?");
-                        AssertMsg(flowGraph.isVertex(Vertex(j << 1)), j << " is not a valid vertex?");
+                        AssertMsg(flowGraph.isVertex(Vertex(i << 1)),
+                            i << " is not a valid vertex?");
+                        AssertMsg(flowGraph.isVertex(Vertex(j << 1)),
+                            j << " is not a valid vertex?");
 
-                        flowGraph.addEdge(Vertex(i << 1), Vertex((j << 1) + 1)).set(Capacity, 1);
-                        flowGraph.addEdge(Vertex((j << 1) + 1), Vertex(i << 1)).set(Capacity, 0);
+                        flowGraph.addEdge(Vertex(i << 1), Vertex((j << 1) + 1))
+                            .set(Capacity, 1);
+                        flowGraph.addEdge(Vertex((j << 1) + 1), Vertex(i << 1))
+                            .set(Capacity, 0);
                     }
                 }
             }
 
-            AssertMsg(checkFlowGraph(flowGraph), "Edges are missing, this is not the wanted representation of the flowgraph!");
+            AssertMsg(checkFlowGraph(flowGraph),
+                "Edges are missing, this is not the wanted representation of "
+                "the flowgraph!");
 
             std::vector<Dinic::CutEdge> cutEdges = maximumBipartiteMatching(flowGraph);
 
             std::sort(cutEdges.begin(), cutEdges.end());
 
             for (Dinic::CutEdge& cutEdge : cutEdges) {
-                AssertMsg(!(cutEdge.from & 1) && (cutEdge.to & 1), "Edge is in the wrong direction?");
+                AssertMsg(!(cutEdge.from & 1) && (cutEdge.to & 1),
+                    "Edge is in the wrong direction?");
 
                 TripId fromTrip = TripId(left + (cutEdge.from >> 1));
                 TripId toTrip = TripId(left + ((cutEdge.to - 1) >> 1));
@@ -979,9 +1125,8 @@ public:
                     newRouteIdOfTrip[fromTrip] = routes.size();
                     newRouteIdOfTrip[toTrip] = routes.size();
 
-                    routes.emplace_back(std::vector<Intermediate::Trip> {
-                        trips[fromTrip],
-                        trips[toTrip] });
+                    routes.emplace_back(
+                        std::vector<Intermediate::Trip> { trips[fromTrip], trips[toTrip] });
                 } else {
                     newRouteIdOfTrip[toTrip] = newRouteIdOfTrip[fromTrip];
 
@@ -1000,20 +1145,24 @@ public:
             left = right;
         }
 
-        AssertMsg(std::find(newRouteIdOfTrip.begin(), newRouteIdOfTrip.end(), -1) == newRouteIdOfTrip.end(), "Trip has not been assigned!");
+        AssertMsg(std::find(newRouteIdOfTrip.begin(), newRouteIdOfTrip.end(), -1) == newRouteIdOfTrip.end(),
+            "Trip has not been assigned!");
         return routes;
     }
 
-    inline std::vector<std::vector<Intermediate::Trip>> offsetRoutes() const noexcept
+    inline std::vector<std::vector<Intermediate::Trip>>
+    offsetRoutes() const noexcept
     {
         std::vector<Intermediate::Trip> sortedTrips = trips;
         std::sort(sortedTrips.begin(), sortedTrips.end());
         std::vector<std::vector<Intermediate::Trip>> routes;
-        appendRoutes(routes, sortedTrips, [](const Trip& a, const Trip& b) { return isOffset(a, b); });
+        appendRoutes(routes, sortedTrips,
+            [](const Trip& a, const Trip& b) { return isOffset(a, b); });
         return routes;
     }
 
-    inline std::vector<std::vector<Intermediate::Trip>> geographicRoutes() const noexcept
+    inline std::vector<std::vector<Intermediate::Trip>>
+    geographicRoutes() const noexcept
     {
         std::vector<Intermediate::Trip> sortedTrips = trips;
         std::sort(sortedTrips.begin(), sortedTrips.end());
@@ -1038,7 +1187,8 @@ public:
                 if (trip.stopEvents[i - 1].stopId == trip.stopEvents[i].stopId)
                     continue;
                 const size_t numEdges = result.numEdges();
-                const Edge newEdge = result.findOrAddEdge(trip.stopEvents[i - 1].stopId, trip.stopEvents[i].stopId);
+                const Edge newEdge = result.findOrAddEdge(trip.stopEvents[i - 1].stopId,
+                    trip.stopEvents[i].stopId);
                 if (result.numEdges() != numEdges) {
                     result.set(TravelTime, newEdge, intMax);
                 }
@@ -1059,10 +1209,12 @@ public:
                     result.set(TravelTime, newEdge, intMax);
                 }
                 result.set(TravelTime, newEdge,
-                    std::min(result.get(TravelTime, newEdge), transferGraph.get(TravelTime, edge)));
+                    std::min(result.get(TravelTime, newEdge),
+                        transferGraph.get(TravelTime, edge)));
             }
         }
-        result.deleteEdges([&](Edge edge) { return result.get(TravelTime, edge) >= intMax; });
+        result.deleteEdges(
+            [&](Edge edge) { return result.get(TravelTime, edge) >= intMax; });
         result.packEdges();
         return result;
     }
@@ -1070,7 +1222,8 @@ public:
     inline void scaleTimes(const double factor) noexcept
     {
         for (const Edge edge : transferGraph.edges()) {
-            transferGraph.set(TravelTime, edge, transferGraph.get(TravelTime, edge) * factor);
+            transferGraph.set(TravelTime, edge,
+                transferGraph.get(TravelTime, edge) * factor);
         }
         for (Trip& trip : trips) {
             for (StopEvent& stopEvent : trip.stopEvents) {
@@ -1121,14 +1274,19 @@ public:
         return TripId(trips.size() - 1);
     }
 
-    inline Edge addOrUpdateTransfer(Vertex from, Vertex to, int transferTime) noexcept
+    inline Edge addOrUpdateTransfer(Vertex from, Vertex to,
+        int transferTime) noexcept
     {
         Edge edge = transferGraph.findOrAddEdge(from, to);
-        transferGraph.set(TravelTime, edge, std::max(transferGraph.get(TravelTime, edge), transferTime));
+        transferGraph.set(
+            TravelTime, edge,
+            std::max(transferGraph.get(TravelTime, edge), transferTime));
         return edge;
     }
 
-    inline void applyVertexPermutation(const Permutation& permutation, const bool permutateStops = true) noexcept
+    inline void
+    applyVertexPermutation(const Permutation& permutation,
+        const bool permutateStops = true) noexcept
     {
         Permutation splitPermutation = permutation.splitAt(numberOfStops());
         if (!permutateStops) {
@@ -1141,9 +1299,11 @@ public:
         permutate(splitPermutation, stopPermutation);
     }
 
-    inline void applyVertexOrder(const Order& order, const bool permutateStops = true) noexcept
+    inline void applyVertexOrder(const Order& order,
+        const bool permutateStops = true) noexcept
     {
-        applyVertexPermutation(Permutation(Construct::Invert, order), permutateStops);
+        applyVertexPermutation(Permutation(Construct::Invert, order),
+            permutateStops);
     }
 
     inline void applyStopPermutation(const Permutation& permutation) noexcept
@@ -1165,7 +1325,8 @@ public:
         std::vector<size_t> stopEventsPerStop(numberOfStops(), 0);
         std::vector<size_t> stopEventsPerDay;
         for (const Trip& trip : trips) {
-            AssertMsg(trip.stopEvents.size() >= 2, "Trip contains an insufficient number of stops!");
+            AssertMsg(trip.stopEvents.size() >= 2,
+                "Trip contains an insufficient number of stops!");
             numberOfStopEvents += trip.stopEvents.size();
             if (firstDay > trip.stopEvents.front().departureTime)
                 firstDay = trip.stopEvents.front().departureTime;
@@ -1184,31 +1345,37 @@ public:
             }
         }
         std::cout << "Intermediate public transit data:" << std::endl;
-        std::cout << "   Number of Stops:          " << std::setw(12) << String::prettyInt(stops.size()) << std::endl;
-        std::cout << "   Number of Trips:          " << std::setw(12) << String::prettyInt(trips.size()) << std::endl;
-        std::cout << "   Number of Stop Events:    " << std::setw(12) << String::prettyInt(numberOfStopEvents)
-                  << std::endl;
+        std::cout << "   Number of Stops:          " << std::setw(12)
+                  << String::prettyInt(stops.size()) << std::endl;
+        std::cout << "   Number of Trips:          " << std::setw(12)
+                  << String::prettyInt(trips.size()) << std::endl;
+        std::cout << "   Number of Stop Events:    " << std::setw(12)
+                  << String::prettyInt(numberOfStopEvents) << std::endl;
         std::cout << "   Number of Connections:    " << std::setw(12)
-                  << String::prettyInt(numberOfStopEvents - trips.size()) << std::endl;
-        std::cout << "   Number of Vertices:       " << std::setw(12) << String::prettyInt(transferGraph.numVertices())
+                  << String::prettyInt(numberOfStopEvents - trips.size())
                   << std::endl;
-        std::cout << "   Number of Edges:          " << std::setw(12) << String::prettyInt(transferGraph.numEdges())
-                  << std::endl;
-        std::cout << "   First Day:                " << std::setw(12) << String::prettyInt(firstDay / (60 * 60 * 24))
-                  << std::endl;
-        std::cout << "   Last Day:                 " << std::setw(12) << String::prettyInt(lastDay / (60 * 60 * 24))
-                  << std::endl;
+        std::cout << "   Number of Vertices:       " << std::setw(12)
+                  << String::prettyInt(transferGraph.numVertices()) << std::endl;
+        std::cout << "   Number of Edges:          " << std::setw(12)
+                  << String::prettyInt(transferGraph.numEdges()) << std::endl;
+        std::cout << "   First Day:                " << std::setw(12)
+                  << String::prettyInt(firstDay / (60 * 60 * 24)) << std::endl;
+        std::cout << "   Last Day:                 " << std::setw(12)
+                  << String::prettyInt(lastDay / (60 * 60 * 24)) << std::endl;
         for (size_t day = 0; day < stopEventsPerDay.size(); day++) {
-            std::cout << "      Stop Events at day " << std::setw(4) << std::left << (std::to_string(day) + ":")
-                      << std::right << std::setw(12) << String::prettyInt(stopEventsPerDay[day]) << std::endl;
+            std::cout << "      Stop Events at day " << std::setw(4) << std::left
+                      << (std::to_string(day) + ":") << std::right << std::setw(12)
+                      << String::prettyInt(stopEventsPerDay[day]) << std::endl;
         }
         std::cout << "   Min Stop Events per Stop: " << std::setw(12)
                   << String::prettyInt(Vector::min(stopEventsPerStop)) << std::endl;
         std::cout << "   Number of empty Stops:    " << std::setw(12)
-                  << String::prettyInt(Vector::count(stopEventsPerStop, size_t(0))) << std::endl;
-        std::cout << "   Number of empty Trips:    " << std::setw(12) << String::prettyInt(numberOfEmptyTrips)
+                  << String::prettyInt(Vector::count(stopEventsPerStop, size_t(0)))
                   << std::endl;
-        std::cout << "   Bounding Box:             " << std::setw(12) << boundingBox() << std::endl;
+        std::cout << "   Number of empty Trips:    " << std::setw(12)
+                  << String::prettyInt(numberOfEmptyTrips) << std::endl;
+        std::cout << "   Bounding Box:             " << std::setw(12)
+                  << boundingBox() << std::endl;
         std::vector<int> componentOfStop(numberOfStops(), -1);
         std::vector<int> sizeOfComponent;
         int numberOfIsolatedStops = 0;
@@ -1233,12 +1400,12 @@ public:
             }
         }
         std::cout << "Transfer graph statistics:" << std::endl;
-        std::cout << "   Number of Components:     " << std::setw(12) << String::prettyInt(sizeOfComponent.size())
-                  << std::endl;
-        std::cout << "   Maximum Component Size:   " << std::setw(12) << String::prettyInt(maxComponentSize)
-                  << std::endl;
-        std::cout << "   Number of isolated Stops: " << std::setw(12) << String::prettyInt(numberOfIsolatedStops)
-                  << std::endl;
+        std::cout << "   Number of Components:     " << std::setw(12)
+                  << String::prettyInt(sizeOfComponent.size()) << std::endl;
+        std::cout << "   Maximum Component Size:   " << std::setw(12)
+                  << String::prettyInt(maxComponentSize) << std::endl;
+        std::cout << "   Number of isolated Stops: " << std::setw(12)
+                  << String::prettyInt(numberOfIsolatedStops) << std::endl;
         Graph::printInfo(transferGraph);
         transferGraph.printAnalysis();
     }
@@ -1264,7 +1431,9 @@ public:
         transferGraph.readBinary(fileName + ".graph");
     }
 
-    inline void writeCSV(const std::string& fileNameBase, const std::string& stopFileName = "stops.csv",
+    inline void writeCSV(
+        const std::string& fileNameBase,
+        const std::string& stopFileName = "stops.csv",
         const std::string& stopEventFileName = "stopEvents.csv",
         const std::string& tripFileName = "trips.csv",
         const std::string& transferFileName = "transfers.csv") const noexcept
@@ -1275,7 +1444,8 @@ public:
         writeTransferCSV(fileNameBase + transferFileName);
     }
 
-    inline void writeCSV(const std::string& fileNameBase, const std::vector<size_t> tripIds,
+    inline void writeCSV(const std::string& fileNameBase,
+        const std::vector<size_t> tripIds,
         const std::string& stopEventFileName = "stopEvents.realtime.csv") const noexcept
     {
         writeStopEventCSV(fileNameBase + stopEventFileName, tripIds);
@@ -1300,7 +1470,8 @@ public:
 
 protected:
     template <typename TYPE>
-    inline void writeVectorCSV(const std::string& fileName, const std::vector<TYPE>& data,
+    inline void
+    writeVectorCSV(const std::string& fileName, const std::vector<TYPE>& data,
         const std::string& idHeader = "id") const noexcept
     {
         std::ofstream file(fileName);
@@ -1314,7 +1485,8 @@ protected:
     }
 
     template <typename TRIPS_IDS>
-    inline void writeStopEventCSV(const std::string& fileName, const TRIPS_IDS& tripIds) const noexcept
+    inline void writeStopEventCSV(const std::string& fileName,
+        const TRIPS_IDS& tripIds) const noexcept
     {
         std::ofstream file(fileName);
         AssertMsg(file, "Cannot open file " << fileName << "!");
@@ -1340,27 +1512,32 @@ protected:
             for (const Edge edge : transferGraph.edgesFrom(vertex)) {
                 if (!isStop(transferGraph.get(ToVertex, edge)))
                     continue;
-                file << edge << "," << vertex << "," << transferGraph.get(ToVertex, edge) << ","
+                file << edge << "," << vertex << ","
+                     << transferGraph.get(ToVertex, edge) << ","
                      << transferGraph.get(TravelTime, edge) << "\n";
             }
         }
         file.close();
     }
 
-    inline void readStops(const std::string& fileName, const bool verbose = true)
+    inline void readStops(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Stops",
             [&]() {
                 size_t count = 0;
-                IO::CSVReader<5, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
+                IO::CSVReader<5, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
                 in.readHeader("stop_id", "lon", "lat", "name", "change_time");
                 StopId stopID;
                 Stop stop;
-                while (in.readRow(stopID, stop.coordinates.longitude, stop.coordinates.latitude, stop.name,
+                while (in.readRow(stopID, stop.coordinates.longitude,
+                    stop.coordinates.latitude, stop.name,
                     stop.minTransferTime)) {
                     if (stopID >= stops.size())
-                        stops.resize(stopID + 1, Stop("NOT_NAMED", Geometry::Point(), -1));
+                        stops.resize(stopID + 1,
+                            Stop("NOT_NAMED", Geometry::Point(), -1));
                     stops[stopID] = stop;
                     ++count;
                 }
@@ -1369,15 +1546,17 @@ protected:
             verbose);
     }
 
-    inline void readTrips(const std::string& fileName, const bool verbose = true)
+    inline void readTrips(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Trips",
             [&]() {
                 size_t count = 0;
-                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader(IO::IGNORE_EXTRA_COLUMN | IO::IGNORE_MISSING_COLUMN, "trip_id", "name", "route",
-                    "vehicle");
+                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
+                in.readHeader(IO::IGNORE_EXTRA_COLUMN | IO::IGNORE_MISSING_COLUMN,
+                    "trip_id", "name", "route", "vehicle");
                 TripId tripID;
                 Trip trip;
                 while (in.readRow(tripID, trip.tripName, trip.routeName, trip.type)) {
@@ -1391,18 +1570,22 @@ protected:
             verbose);
     }
 
-    inline void readStopEvents(const std::string& fileName, const bool verbose = true)
+    inline void readStopEvents(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "StopEvents",
             [&]() {
                 size_t count = 0;
-                IO::CSVReader<5, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader("trip_id", "stop_event_index", "stop_id", "arr_time", "dep_time");
+                IO::CSVReader<5, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
+                in.readHeader("trip_id", "stop_event_index", "stop_id", "arr_time",
+                    "dep_time");
                 TripId tripID;
                 size_t index;
                 StopEvent stopEvent;
-                while (in.readRow(tripID, index, stopEvent.stopId, stopEvent.arrivalTime, stopEvent.departureTime)) {
+                while (in.readRow(tripID, index, stopEvent.stopId,
+                    stopEvent.arrivalTime, stopEvent.departureTime)) {
                     if (tripID >= trips.size())
                         trips.resize(tripID + 1, Trip("NOT_NAMED", "NOT_NAMED", -1));
                     Trip& trip = trips[tripID];
@@ -1416,7 +1599,8 @@ protected:
             verbose);
     }
 
-    inline void readTransfers(const std::string& fileName, const bool verbose = true)
+    inline void readTransfers(const std::string& fileName,
+        const bool verbose = true)
     {
         transferGraph.clear();
         transferGraph.addVertices(stops.size());
@@ -1427,7 +1611,8 @@ protected:
             fileName, "Transfers",
             [&]() {
                 size_t count = 0;
-                IO::CSVReader<3, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
+                IO::CSVReader<3, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
                 in.readHeader("dep_stop", "arr_stop", "duration");
                 Vertex from;
                 Vertex to;
@@ -1448,14 +1633,19 @@ protected:
     }
 
 private:
-    inline void permutate(const Permutation& fullPermutation, const Permutation& stopPermutation) noexcept
+    inline void permutate(const Permutation& fullPermutation,
+        const Permutation& stopPermutation) noexcept
     {
         AssertMsg(fullPermutation.size() == transferGraph.numVertices(),
-            "Full permutation size (" << fullPermutation.size() << ") must be the same as number of vertices ("
-                                      << transferGraph.numVertices() << ")!");
+            "Full permutation size ("
+                << fullPermutation.size()
+                << ") must be the same as number of vertices ("
+                << transferGraph.numVertices() << ")!");
         AssertMsg(stopPermutation.size() == numberOfStops(),
-            "Stop permutation size (" << stopPermutation.size() << ") must be the same as number of stops ("
-                                      << numberOfStops() << ")!");
+            "Stop permutation size ("
+                << stopPermutation.size()
+                << ") must be the same as number of stops ("
+                << numberOfStops() << ")!");
 
         stopPermutation.permutate(stops);
         for (Trip& trip : trips) {

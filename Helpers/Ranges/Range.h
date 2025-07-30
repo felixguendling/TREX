@@ -21,10 +21,7 @@ public:
         {
             return i != other.i;
         }
-        inline Element operator*() const noexcept
-        {
-            return i;
-        }
+        inline Element operator*() const noexcept { return i; }
         inline Iterator& operator++() noexcept
         {
             ++i;
@@ -48,7 +45,8 @@ public:
         Element i;
     };
 
-    Range(const Element beginElement = Element(0), const Element endElement = Element(0))
+    Range(const Element beginElement = Element(0),
+        const Element endElement = Element(0))
         : beginElement(beginElement)
         , endElement(endElement)
     {
@@ -61,25 +59,13 @@ public:
     {
     }
 
-    inline Iterator begin() const noexcept
-    {
-        return Iterator(beginElement);
-    }
+    inline Iterator begin() const noexcept { return Iterator(beginElement); }
 
-    inline Iterator end() const noexcept
-    {
-        return Iterator(endElement);
-    }
+    inline Iterator end() const noexcept { return Iterator(endElement); }
 
-    inline bool empty() const noexcept
-    {
-        return endElement <= beginElement;
-    }
+    inline bool empty() const noexcept { return endElement <= beginElement; }
 
-    inline size_t size() const noexcept
-    {
-        return endElement - beginElement;
-    }
+    inline size_t size() const noexcept { return endElement - beginElement; }
 
     inline Element operator[](const size_t i) const noexcept
     {

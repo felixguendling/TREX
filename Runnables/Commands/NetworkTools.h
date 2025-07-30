@@ -17,7 +17,8 @@ using namespace Shell;
 class DuplicateTrips : public ParameterizedCommand {
 public:
     DuplicateTrips(BasicShell& shell)
-        : ParameterizedCommand(shell, "duplicateTrips",
+        : ParameterizedCommand(
+            shell, "duplicateTrips",
             "Duplicates all trips and shifts them by the given time offset.")
     {
         addParameter("Intermediate binary");
@@ -42,7 +43,9 @@ public:
 class ReverseRAPTORNetwork : public ParameterizedCommand {
 public:
     ReverseRAPTORNetwork(BasicShell& shell)
-        : ParameterizedCommand(shell, "reverseRAPTORNetwork", "Generates a reversed copy of the given RAPTOR network.")
+        : ParameterizedCommand(
+            shell, "reverseRAPTORNetwork",
+            "Generates a reversed copy of the given RAPTOR network.")
     {
         addParameter("RAPTOR binary");
         addParameter("Output file");
@@ -64,7 +67,9 @@ public:
 class AddGraph : public ParameterizedCommand {
 public:
     AddGraph(BasicShell& shell)
-        : ParameterizedCommand(shell, "addGraph", "Adds a transfer graph to the intermediate network data.")
+        : ParameterizedCommand(
+            shell, "addGraph",
+            "Adds a transfer graph to the intermediate network data.")
     {
         addParameter("Intermediate file");
         addParameter("Graph file");
@@ -92,7 +97,8 @@ public:
 class ReplaceGraph : public ParameterizedCommand {
 public:
     ReplaceGraph(BasicShell& shell)
-        : ParameterizedCommand(shell, "replaceGraph", "Replaces the transfer graph of a network.")
+        : ParameterizedCommand(shell, "replaceGraph",
+            "Replaces the transfer graph of a network.")
     {
         addParameter("Input file");
         addParameter("Graph file");
@@ -134,7 +140,9 @@ private:
         }
     }
 
-    template <typename GRAPH, typename NETWORK, typename = std::enable_if_t<std::is_rvalue_reference<GRAPH&&>::value>>
+    template <
+        typename GRAPH, typename NETWORK,
+        typename = std::enable_if_t<std::is_rvalue_reference<GRAPH&&>::value>>
     inline void replaceGraph(GRAPH&& graph, NETWORK& network) noexcept
     {
         const std::string outputFile = getParameter("Output file");
@@ -152,7 +160,8 @@ private:
 class IntermediateMakeTransitive : public ParameterizedCommand {
 public:
     IntermediateMakeTransitive(BasicShell& shell)
-        : ParameterizedCommand(shell, "makeIntermediateTransitive",
+        : ParameterizedCommand(
+            shell, "makeIntermediateTransitive",
             "Makes the Intermediate Transfergraph transitive closed.")
     {
         addParameter("Intermediate file");
@@ -175,7 +184,8 @@ public:
 class ReduceGraph : public ParameterizedCommand {
 public:
     ReduceGraph(BasicShell& shell)
-        : ParameterizedCommand(shell, "reduceGraph", "Contracts vertices with degree <= 2.")
+        : ParameterizedCommand(shell, "reduceGraph",
+            "Contracts vertices with degree <= 2.")
     {
         addParameter("Intermediate file");
         addParameter("Output file");
@@ -215,8 +225,12 @@ public:
         StronglyConnectedComponents<Intermediate::TransferGraph, true> scc(graph);
         scc.run();
         const int maxComponent = scc.maxComponent();
-        std::cout << "Max component size: " << String::prettyInt(scc.getComponentSize(maxComponent)) << std::endl;
-        inter.deleteVertices([&](const Vertex vertex) { return scc.getComponent(vertex) != maxComponent; });
+        std::cout << "Max component size: "
+                  << String::prettyInt(scc.getComponentSize(maxComponent))
+                  << std::endl;
+        inter.deleteVertices([&](const Vertex vertex) {
+            return scc.getComponent(vertex) != maxComponent;
+        });
         inter.printInfo();
         inter.serialize(getParameter("Output file"));
         for (const Intermediate::Stop& stop : inter.stops) {
@@ -229,10 +243,12 @@ public:
     }
 };
 
-class ReduceToMaximumConnectedComponentWithTransitive : public ParameterizedCommand {
+class ReduceToMaximumConnectedComponentWithTransitive
+    : public ParameterizedCommand {
 public:
     ReduceToMaximumConnectedComponentWithTransitive(BasicShell& shell)
-        : ParameterizedCommand(shell, "reduceToMaximumConnectedComponentWithTransitive",
+        : ParameterizedCommand(
+            shell, "reduceToMaximumConnectedComponentWithTransitive",
             "Removes everything that is not part of the largest connected "
             "component in the full network and reduces the transitive network "
             "accordingly.")
@@ -253,8 +269,12 @@ public:
         StronglyConnectedComponents<Intermediate::TransferGraph, true> scc(graph);
         scc.run();
         const int maxComponent = scc.maxComponent();
-        std::cout << "Max component size: " << String::prettyInt(scc.getComponentSize(maxComponent)) << std::endl;
-        fullData.deleteVertices([&](const Vertex vertex) { return scc.getComponent(vertex) != maxComponent; });
+        std::cout << "Max component size: "
+                  << String::prettyInt(scc.getComponentSize(maxComponent))
+                  << std::endl;
+        fullData.deleteVertices([&](const Vertex vertex) {
+            return scc.getComponent(vertex) != maxComponent;
+        });
         fullData.printInfo();
         fullData.serialize(getParameter("Full output file"));
         for (const Intermediate::Stop& stop : fullData.stops) {
@@ -265,9 +285,12 @@ public:
             warning(stop);
         }
 
-        Intermediate::Data transitiveData(getParameter("Transitive intermediate file"));
+        Intermediate::Data transitiveData(
+            getParameter("Transitive intermediate file"));
         transitiveData.printInfo();
-        transitiveData.deleteVertices([&](const Vertex vertex) { return scc.getComponent(vertex) != maxComponent; });
+        transitiveData.deleteVertices([&](const Vertex vertex) {
+            return scc.getComponent(vertex) != maxComponent;
+        });
         transitiveData.printInfo();
         transitiveData.serialize(getParameter("Transitive output file"));
     }
@@ -276,10 +299,13 @@ public:
 class ApplyBoundingBox : public ParameterizedCommand {
 public:
     ApplyBoundingBox(BasicShell& shell)
-        : ParameterizedCommand(shell, "applyBoundingBox", "Applies a bounding box to the intermediate network data.")
+        : ParameterizedCommand(
+            shell, "applyBoundingBox",
+            "Applies a bounding box to the intermediate network data.")
     {
         addParameter("Intermediate binary");
-        addParameter("Bounding box", { "germany", "deutschland", "switzerland", "bern", "london" });
+        addParameter("Bounding box",
+            { "germany", "deutschland", "switzerland", "bern", "london" });
         addParameter("Output file");
     }
 
@@ -306,12 +332,16 @@ public:
 
 private:
     const Geometry::Rectangle Switzerland = Geometry::Rectangle::BoundingBox(
-        Geometry::Point(Construct::XY, 5.826, 45.487), Geometry::Point(Construct::XY, 10.819, 48.142));
-    const Geometry::Rectangle Bern = Geometry::Rectangle::BoundingBox(Geometry::Point(Construct::XY, 7.307, 46.868),
+        Geometry::Point(Construct::XY, 5.826, 45.487),
+        Geometry::Point(Construct::XY, 10.819, 48.142));
+    const Geometry::Rectangle Bern = Geometry::Rectangle::BoundingBox(
+        Geometry::Point(Construct::XY, 7.307, 46.868),
         Geometry::Point(Construct::XY, 7.563, 47.085));
     const Geometry::Rectangle Germany = Geometry::Rectangle::BoundingBox(
-        Geometry::Point(Construct::XY, 5.730, 47.160), Geometry::Point(Construct::XY, 15.130, 55.070));
-    const Geometry::Rectangle London = Geometry::Rectangle::BoundingBox(Geometry::Point(Construct::XY, -0.612, 51.233),
+        Geometry::Point(Construct::XY, 5.730, 47.160),
+        Geometry::Point(Construct::XY, 15.130, 55.070));
+    const Geometry::Rectangle London = Geometry::Rectangle::BoundingBox(
+        Geometry::Point(Construct::XY, -0.612, 51.233),
         Geometry::Point(Construct::XY, 0.715, 51.707));
 };
 
@@ -419,7 +449,8 @@ public:
 class ApplyMaxTransferSpeed : public ParameterizedCommand {
 public:
     ApplyMaxTransferSpeed(BasicShell& shell)
-        : ParameterizedCommand(shell, "applyMaxTransferSpeed", "Applies a speed limit to all transfers.")
+        : ParameterizedCommand(shell, "applyMaxTransferSpeed",
+            "Applies a speed limit to all transfers.")
     {
         addParameter("Intermediate binary");
         addParameter("Max speed in km/h");
@@ -443,7 +474,8 @@ public:
 class ApplyConstantTransferSpeed : public ParameterizedCommand {
 public:
     ApplyConstantTransferSpeed(BasicShell& shell)
-        : ParameterizedCommand(shell, "applyConstantTransferSpeed", "Applies a constant speed to all transfers.")
+        : ParameterizedCommand(shell, "applyConstantTransferSpeed",
+            "Applies a constant speed to all transfers.")
     {
         addParameter("Graph binary");
         addParameter("Speed in km/h");
@@ -470,7 +502,9 @@ public:
 class ApplyMinTransferTravelTime : public ParameterizedCommand {
 public:
     ApplyMinTransferTravelTime(BasicShell& shell)
-        : ParameterizedCommand(shell, "applyMinTransferTravelTime", "Applies a minimum travel time to all transfers.")
+        : ParameterizedCommand(
+            shell, "applyMinTransferTravelTime",
+            "Applies a minimum travel time to all transfers.")
     {
         addParameter("Network binary");
         addParameter("Network type", { "intermediate", "raptor", "csa" });
@@ -499,7 +533,8 @@ public:
 
 private:
     template <typename NETWORK_TYPE>
-    inline static void applyMinTravelTime(NETWORK_TYPE& network, const double minTravelTime,
+    inline static void
+    applyMinTravelTime(NETWORK_TYPE& network, const double minTravelTime,
         const std::string& outputFile) noexcept
     {
         network.printInfo();

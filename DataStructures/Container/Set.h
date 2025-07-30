@@ -83,35 +83,17 @@ public:
         return values;
     }
 
-    inline void sortValues() noexcept
-    {
-        sort(values);
-    }
+    inline void sortValues() noexcept { sort(values); }
 
-    inline Iterator begin() const noexcept
-    {
-        return values.begin();
-    }
+    inline Iterator begin() const noexcept { return values.begin(); }
 
-    inline Iterator end() const noexcept
-    {
-        return values.end();
-    }
+    inline Iterator end() const noexcept { return values.end(); }
 
-    inline size_t size() const noexcept
-    {
-        return values.size();
-    }
+    inline size_t size() const noexcept { return values.size(); }
 
-    inline bool empty() const noexcept
-    {
-        return values.empty();
-    }
+    inline bool empty() const noexcept { return values.empty(); }
 
-    inline size_t capacity() const noexcept
-    {
-        return indices.size();
-    }
+    inline size_t capacity() const noexcept { return indices.size(); }
 
     inline ValueType operator[](const size_t i) const noexcept
     {
@@ -143,7 +125,8 @@ public:
             if ((size_t)value >= capacity())
                 indices.resize(value + 1, NotContained);
         } else {
-            AssertMsg((size_t)value < capacity(), "Value " << value << " is out of range!");
+            AssertMsg((size_t)value < capacity(),
+                "Value " << value << " is out of range!");
         }
         return indices[value] != NotContained;
     }
@@ -249,10 +232,7 @@ public:
         {
             return i != other.i;
         }
-        inline ValueType operator*() const noexcept
-        {
-            return ValueType(i);
-        }
+        inline ValueType operator*() const noexcept { return ValueType(i); }
         inline Iterator& operator++() noexcept
         {
             do {
@@ -281,9 +261,7 @@ public:
     };
 
 public:
-    SmallSet()
-    {
-    }
+    SmallSet() { }
     SmallSet(const std::vector<ValueType>& values)
     {
         for (const ValueType value : values) {
@@ -300,30 +278,15 @@ public:
         return values;
     }
 
-    inline Iterator begin() const noexcept
-    {
-        return ++Iterator(&data, -1);
-    }
+    inline Iterator begin() const noexcept { return ++Iterator(&data, -1); }
 
-    inline Iterator end() const noexcept
-    {
-        return Iterator(&data, Capacity);
-    }
+    inline Iterator end() const noexcept { return Iterator(&data, Capacity); }
 
-    inline size_t size() const noexcept
-    {
-        return data.count();
-    }
+    inline size_t size() const noexcept { return data.count(); }
 
-    inline bool empty() const noexcept
-    {
-        return data.none();
-    }
+    inline bool empty() const noexcept { return data.none(); }
 
-    inline size_t capacity() const noexcept
-    {
-        return Capacity;
-    }
+    inline size_t capacity() const noexcept { return Capacity; }
 
     inline ValueType operator[](const size_t i) const noexcept
     {
@@ -353,10 +316,7 @@ public:
         return true;
     }
 
-    inline void clear() noexcept
-    {
-        data.reset();
-    }
+    inline void clear() noexcept { data.reset(); }
 
 private:
     std::bitset<Capacity> data;

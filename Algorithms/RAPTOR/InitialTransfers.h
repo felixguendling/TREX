@@ -14,7 +14,8 @@ class TransitiveInitialTransfers {
 public:
     using Graph = TransferGraph;
 
-    TransitiveInitialTransfers(const TransferGraph& forwardGraph, const TransferGraph& backwardGraph)
+    TransitiveInitialTransfers(const TransferGraph& forwardGraph,
+        const TransferGraph& backwardGraph)
         : graph { forwardGraph, backwardGraph }
         , distance { std::vector<int>(forwardGraph.numVertices(), INFTY),
             std::vector<int>(backwardGraph.numVertices(), INFTY) }
@@ -25,14 +26,16 @@ public:
     }
 
     template <typename ATTRIBUTE>
-    TransitiveInitialTransfers(const TransferGraph& forwardGraph, const TransferGraph& backwardGraph,
+    TransitiveInitialTransfers(const TransferGraph& forwardGraph,
+        const TransferGraph& backwardGraph,
         const Vertex::ValueType, const ATTRIBUTE)
         : TransitiveInitialTransfers(forwardGraph, backwardGraph)
     {
     }
 
     template <bool TARGET_PRUNING = true>
-    inline void run(const Vertex from, const Vertex to, const double = 1) noexcept
+    inline void run(const Vertex from, const Vertex to,
+        const double = 1) noexcept
     {
         clear<FORWARD>();
         clear<BACKWARD>();
@@ -127,32 +130,41 @@ public:
     using Graph = typename InitialTransferType::Graph;
     using Type = MultimodalInitialTransfers<NumTransferModes, InitialTransferType>;
 
-    MultimodalInitialTransfers(TransitiveInitialTransfers& transitiveInitialTransfers,
-        std::vector<InitialTransferType>& transfers, const std::vector<size_t>& modes,
-        const size_t numVertices, const Vertex::ValueType endOfPOIs)
+    MultimodalInitialTransfers(
+        TransitiveInitialTransfers& transitiveInitialTransfers,
+        std::vector<InitialTransferType>& transfers,
+        const std::vector<size_t>& modes, const size_t numVertices,
+        const Vertex::ValueType endOfPOIs)
         : transitiveInitialTransfers(transitiveInitialTransfers)
         , initialTransfers(transfers)
         , modes(modes)
-        , distance { std::vector<int>(numVertices, INFTY), std::vector<int>(numVertices, INFTY) }
-        , reachedPOIs { IndexedSet<false, Vertex>(endOfPOIs), IndexedSet<false, Vertex>(endOfPOIs) }
+        , distance { std::vector<int>(numVertices, INFTY),
+            std::vector<int>(numVertices, INFTY) }
+        , reachedPOIs { IndexedSet<false, Vertex>(endOfPOIs),
+            IndexedSet<false, Vertex>(endOfPOIs) }
         , targetDistance(INFTY)
     {
-        AssertMsg(initialTransfers.size() == NumTransferModes, "Wrong number of modes");
+        AssertMsg(initialTransfers.size() == NumTransferModes,
+            "Wrong number of modes");
         AssertMsg(modes.size() == NumTransferModes, "Wrong number of modes");
     }
 
     template <bool TARGET_PRUNING = true>
-    inline void run(const Vertex from, const Vertex to, const double targetPruningFactor = 1) noexcept
+    inline void run(const Vertex from, const Vertex to,
+        const double targetPruningFactor = 1) noexcept
     {
         clear<FORWARD>();
         clear<BACKWARD>();
         targetDistance = INFTY;
 
-        transitiveInitialTransfers.template run<TARGET_PRUNING>(from, to, targetPruningFactor);
+        transitiveInitialTransfers.template run<TARGET_PRUNING>(
+            from, to, targetPruningFactor);
         evaluateTransfers<TARGET_PRUNING>(transitiveInitialTransfers, 0);
         for (const size_t i : modes) {
-            initialTransfers[i].template run<TARGET_PRUNING>(from, to, targetPruningFactor);
-            evaluateTransfers<TARGET_PRUNING>(initialTransfers[i], TransferModeOverhead[modes[i]]);
+            initialTransfers[i].template run<TARGET_PRUNING>(from, to,
+                targetPruningFactor);
+            evaluateTransfers<TARGET_PRUNING>(initialTransfers[i],
+                TransferModeOverhead[modes[i]]);
         }
     }
 
@@ -202,15 +214,18 @@ private:
     }
 
     template <bool TARGET_PRUNING, typename TRANSFERS>
-    inline void evaluateTransfers(TRANSFERS& transfers, const int overhead) noexcept
+    inline void evaluateTransfers(TRANSFERS& transfers,
+        const int overhead) noexcept
     {
         for (const Vertex vertex : transfers.getForwardPOIs()) {
             reachedPOIs[FORWARD].insert(vertex);
-            distance[FORWARD][vertex] = std::min(distance[FORWARD][vertex], transfers.getForwardDistance(vertex) + overhead);
+            distance[FORWARD][vertex] = std::min(distance[FORWARD][vertex],
+                transfers.getForwardDistance(vertex) + overhead);
         }
         for (const Vertex vertex : transfers.getBackwardPOIs()) {
             reachedPOIs[BACKWARD].insert(vertex);
-            distance[BACKWARD][vertex] = std::min(distance[BACKWARD][vertex], transfers.getBackwardDistance(vertex) + overhead);
+            distance[BACKWARD][vertex] = std::min(distance[BACKWARD][vertex],
+                transfers.getBackwardDistance(vertex) + overhead);
         }
         targetDistance = std::min(targetDistance, transfers.getDistance() + overhead);
     }

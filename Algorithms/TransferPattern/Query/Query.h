@@ -43,7 +43,9 @@ public:
         {
         }
 
-        DijkstraLabel(const int newArrivalTime, const int newParentDepartureTime, const int newNumberOfTrips, const RouteId newRouteId, const StopId parentStop, const size_t parentIndex)
+        DijkstraLabel(const int newArrivalTime, const int newParentDepartureTime,
+            const int newNumberOfTrips, const RouteId newRouteId,
+            const StopId parentStop, const size_t parentIndex)
             : arrivalTime(newArrivalTime)
             , parentDepartureTime(newParentDepartureTime)
             , numberOfTrips(newNumberOfTrips)
@@ -63,7 +65,9 @@ public:
         {
         }
 
-        inline void set(const int newArrivalTime, const int newParentDepartureTime, const int newNumberOfTrips, const RouteId newRouteId, const StopId newParentStop, const size_t newParentIndex)
+        inline void set(const int newArrivalTime, const int newParentDepartureTime,
+            const int newNumberOfTrips, const RouteId newRouteId,
+            const StopId newParentStop, const size_t newParentIndex)
         {
             arrivalTime = newArrivalTime;
             parentDepartureTime = newParentDepartureTime;
@@ -73,10 +77,7 @@ public:
             parentIndex = newParentIndex;
         }
 
-        inline int getKey() const
-        {
-            return arrivalTime;
-        }
+        inline int getKey() const { return arrivalTime; }
 
         inline bool hasSmallerKey(const DijkstraLabel* const other) const
         {
@@ -91,7 +92,8 @@ public:
 
         friend std::ostream& operator<<(std::ostream& out, const DijkstraLabel& r)
         {
-            return out << r.arrivalTime << "," << (int)r.numberOfTrips << "," << (int)r.parentStop << "," << (int)r.routeId;
+            return out << r.arrivalTime << "," << (int)r.numberOfTrips << ","
+                       << (int)r.parentStop << "," << (int)r.routeId;
         }
 
         int arrivalTime;
@@ -121,18 +123,25 @@ public:
     {
         profiler.registerPhases({ PHASE_EXTRACT_QUERY_GRAPH, PHASE_CLEAR,
             /* PHASE_CLEAR_QUERY_GRAPH, PHASE_CLEAR_PQ, */
-            PHASE_INIT_SOURCE_LABELS, PHASE_EVAL_GRAPH, PHASE_EXTRACT_JOURNEYS });
-        profiler.registerMetrics({ METRIC_NUM_VERTICES_QUERY_GRAPH, METRIC_NUM_EDGES_QUERY_GRAPH, METRIC_SEETLED_VERTICES,
-            METRIC_RELAXED_TRANSFER_EDGES, METRIC_INCORPERATED_LABELS });
+            PHASE_INIT_SOURCE_LABELS, PHASE_EVAL_GRAPH,
+            PHASE_EXTRACT_JOURNEYS });
+        profiler.registerMetrics(
+            { METRIC_NUM_VERTICES_QUERY_GRAPH, METRIC_NUM_EDGES_QUERY_GRAPH,
+                METRIC_SEETLED_VERTICES, METRIC_RELAXED_TRANSFER_EDGES,
+                METRIC_INCORPERATED_LABELS });
     }
 
     // ######
 
-    // * the two main methods, call to run a query from source to target departing @ departureTime
-    inline void run(const Vertex source, const int departureTime, const Vertex target)
+    // * the two main methods, call to run a query from source to target departing
+    // @ departureTime
+    inline void run(const Vertex source, const int departureTime,
+        const Vertex target)
     {
-        AssertMsg(data.raptorData.isStop(source), "Source " << (int)source << " is not a valid stop!");
-        AssertMsg(data.raptorData.isStop(target), "Target " << (int)target << " is not a valid stop!");
+        AssertMsg(data.raptorData.isStop(source),
+            "Source " << (int)source << " is not a valid stop!");
+        AssertMsg(data.raptorData.isStop(target),
+            "Target " << (int)target << " is not a valid stop!");
 
         run(StopId(source), departureTime, StopId(target));
     }
@@ -168,19 +177,17 @@ public:
         return journeys;
     }
 
-    inline void getJourney(std::vector<RAPTOR::Journey>& journeys, Vertex vertex, size_t index)
+    inline void getJourney(std::vector<RAPTOR::Journey>& journeys, Vertex vertex,
+        size_t index)
     {
         RAPTOR::Journey journey;
         do {
-            AssertMsg(timestampsForBags[vertex] == currentTimestamp, "Something is wrong!");
+            AssertMsg(timestampsForBags[vertex] == currentTimestamp,
+                "Something is wrong!");
             DijkstraLabel& label = dijkstraBags[vertex].access(index);
-            journey.emplace_back(
-                label.parentStop,
-                StopId(vertex),
-                label.parentDepartureTime,
-                label.arrivalTime,
-                label.routeId != noRouteId,
-                label.routeId);
+            journey.emplace_back(label.parentStop, StopId(vertex),
+                label.parentDepartureTime, label.arrivalTime,
+                label.routeId != noRouteId, label.routeId);
             vertex = Vertex(label.parentStop);
             index = label.parentIndex;
         } while (journey.back().from != sourceStop);
@@ -201,7 +208,8 @@ private:
         queryGraph.addVertices(data.raptorData.numberOfStops());
 
         // should prop be evaluated which reserve size is fastest
-        queryGraph.reserve(data.raptorData.numberOfStops(), data.raptorData.numberOfStops() << 1);
+        queryGraph.reserve(data.raptorData.numberOfStops(),
+            data.raptorData.numberOfStops() << 1);
         /* profiler.donePhase(PHASE_CLEAR_QUERY_GRAPH); */
 
         left = 0;
@@ -259,9 +267,9 @@ private:
                 if (hasWalkingEdge && hasRouteEdge)
                     continue;
                 if ((sourceTP.get(TravelTime, edge) == -1 && !hasRouteEdge) || (!hasWalkingEdge)) {
-                    queryGraph.addEdge(
-                                  sourceTP.get(ViaVertex, successor),
-                                  sourceTP.get(ViaVertex, currentVertex))
+                    queryGraph
+                        .addEdge(sourceTP.get(ViaVertex, successor),
+                            sourceTP.get(ViaVertex, currentVertex))
                         .set(TravelTime, sourceTP.get(TravelTime, edge));
                     profiler.countMetric(METRIC_NUM_EDGES_QUERY_GRAPH);
                 }
@@ -297,10 +305,7 @@ private:
         return queue[left++];
     }
 
-    inline bool queueIsNotEmpty() noexcept
-    {
-        return left < right;
-    }
+    inline bool queueIsNotEmpty() noexcept { return left < right; }
 
     inline void prepBag(const Vertex vertex)
     {
@@ -369,12 +374,8 @@ private:
                     usedRoute = pair.first;
                 }
 
-                vLabel.set(newArrivalTime,
-                    uLabel.arrivalTime,
-                    newNumberOfTrips,
-                    usedRoute,
-                    StopId(u),
-                    parentIndex);
+                vLabel.set(newArrivalTime, uLabel.arrivalTime, newNumberOfTrips,
+                    usedRoute, StopId(u), parentIndex);
 
                 arrivalByEdge(v, vLabel);
             }
@@ -389,15 +390,18 @@ private:
         AssertMsg(label.arrivalTime >= sourceDepartureTime,
             "Arriving by route BEFORE departing from the source (source "
             "departure time: "
-                << String::secToTime(sourceDepartureTime) << " [" << sourceDepartureTime << "], arrival time: "
-                << String::secToTime(label.arrivalTime) << " [" << label.arrivalTime << "])!");
+                << String::secToTime(sourceDepartureTime) << " ["
+                << sourceDepartureTime
+                << "], arrival time: " << String::secToTime(label.arrivalTime)
+                << " [" << label.arrivalTime << "])!");
 
         profiler.countMetric(METRIC_RELAXED_TRANSFER_EDGES);
         // Target Pruning
         if (dijkstraBags[targetStop].dominates(label))
             return false;
         prepBag(vertex);
-        // normal (?) pruning... if the label is already dominated by other labels in it's bag, don't add it
+        // normal (?) pruning... if the label is already dominated by other labels
+        // in it's bag, don't add it
         if (!dijkstraBags[vertex].merge(label))
             return false;
 
@@ -411,16 +415,22 @@ private:
 
     // * eval direct connection
 
-    inline std::pair<RouteId, int> directConnectionIntersection(const Vertex from, const Vertex to, const int departureTime)
+    inline std::pair<RouteId, int>
+    directConnectionIntersection(const Vertex from, const Vertex to,
+        const int departureTime)
     {
-        AssertMsg(data.raptorData.isStop(StopId(from)), "From " << from << " is not a valid stop");
-        AssertMsg(data.raptorData.isStop(StopId(to)), "To " << to << "is not a valid stop");
+        AssertMsg(data.raptorData.isStop(StopId(from)),
+            "From " << from << " is not a valid stop");
+        AssertMsg(data.raptorData.isStop(StopId(to)),
+            "To " << to << "is not a valid stop");
 
         std::vector<RAPTOR::RouteSegment>& fromLookup = data.stopLookup[from].incidentLines;
         std::vector<RAPTOR::RouteSegment>& toLookup = data.stopLookup[to].incidentLines;
 
-        AssertMsg(std::is_sorted(fromLookup.begin(), fromLookup.end()), "StopLookup from From is not sorted!");
-        AssertMsg(std::is_sorted(toLookup.begin(), toLookup.end()), "StopLookup from From is not sorted!");
+        AssertMsg(std::is_sorted(fromLookup.begin(), fromLookup.end()),
+            "StopLookup from From is not sorted!");
+        AssertMsg(std::is_sorted(toLookup.begin(), toLookup.end()),
+            "StopLookup from From is not sorted!");
 
         std::pair<RouteId, int> result = std::make_pair(noRouteId, INFTY);
 
@@ -437,20 +447,16 @@ private:
             if (fromLookup[i].routeId == toLookup[j].routeId && fromLookup[i].stopIndex < toLookup[j].stopIndex) {
                 // get the first reachable trip departing >= departureTime
                 firstReachableTripIndex = data.earliestTripIndexOfLineByStopIndex(
-                    fromLookup[i].stopIndex,
-                    fromLookup[i].routeId,
-                    departureTime);
+                    fromLookup[i].stopIndex, fromLookup[i].routeId, departureTime);
 
-                // is this firstReachableTripIndex valid? I.e., firstReachableTripIndex != (-1)
+                // is this firstReachableTripIndex valid? I.e., firstReachableTripIndex
+                // != (-1)
                 if (firstReachableTripIndex != (size_t)-1) {
-                    currentArrivalTime = data.getArrivalTime(
-                        fromLookup[i].routeId,
+                    currentArrivalTime = data.getArrivalTime(fromLookup[i].routeId,
                         firstReachableTripIndex,
                         toLookup[j].stopIndex);
                     if (currentArrivalTime < result.second) {
-                        result = std::make_pair(
-                            fromLookup[i].routeId,
-                            currentArrivalTime);
+                        result = std::make_pair(fromLookup[i].routeId, currentArrivalTime);
                     }
                 }
                 ++i;
@@ -468,10 +474,7 @@ private:
     }
 
 public:
-    inline Profiler& getProfiler() noexcept
-    {
-        return profiler;
-    }
+    inline Profiler& getProfiler() noexcept { return profiler; }
 
 private:
     Data& data;
@@ -493,4 +496,4 @@ private:
     Profiler profiler;
 };
 
-}
+} // namespace TransferPattern

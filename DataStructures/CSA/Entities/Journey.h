@@ -10,8 +10,9 @@ namespace CSA {
 
 class JourneyLeg {
 public:
-    JourneyLeg(const Vertex from = noVertex, const Vertex to = noVertex, const int departureTime = never,
-        const int arrivalTime = never, const Edge transferId = noEdge)
+    JourneyLeg(const Vertex from = noVertex, const Vertex to = noVertex,
+        const int departureTime = never, const int arrivalTime = never,
+        const Edge transferId = noEdge)
         : from(from)
         , to(to)
         , departureTime(departureTime)
@@ -21,7 +22,8 @@ public:
     {
     }
 
-    JourneyLeg(const Vertex from, const Vertex to, const int departureTime, const int arrivalTime, const TripId tripId)
+    JourneyLeg(const Vertex from, const Vertex to, const int departureTime,
+        const int arrivalTime, const TripId tripId)
         : from(from)
         , to(to)
         , departureTime(departureTime)
@@ -31,10 +33,13 @@ public:
     {
     }
 
-    inline friend std::ostream& operator<<(std::ostream& out, const JourneyLeg& leg) noexcept
+    inline friend std::ostream& operator<<(std::ostream& out,
+        const JourneyLeg& leg) noexcept
     {
-        return out << "from: " << leg.from << ", to: " << leg.to << ", dep-Time: " << leg.departureTime
-                   << ", arr-Time: " << leg.arrivalTime << (leg.usesTrip ? ", trip: " : ", transfer: ") << leg.tripId;
+        return out << "from: " << leg.from << ", to: " << leg.to
+                   << ", dep-Time: " << leg.departureTime
+                   << ", arr-Time: " << leg.arrivalTime
+                   << (leg.usesTrip ? ", trip: " : ", transfer: ") << leg.tripId;
     }
 
 public:

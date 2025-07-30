@@ -21,7 +21,8 @@
 
 using namespace Shell;
 
-inline TransferGraph getOverheadGraph(const RAPTOR::Data& raptorData, const size_t mode) noexcept
+inline TransferGraph getOverheadGraph(const RAPTOR::Data& raptorData,
+    const size_t mode) noexcept
 {
     DynamicTransferGraph temp;
     Graph::copy(raptorData.transferGraph, temp);
@@ -37,7 +38,8 @@ inline TransferGraph getOverheadGraph(const RAPTOR::Data& raptorData, const size
     temp.applyVertexPermutation(permutation);
     for (const StopId stop : raptorData.stops()) {
         const Vertex stopVertex(stop + raptorData.transferGraph.numVertices());
-        temp.addEdge(stop, stopVertex).set(TravelTime, RAPTOR::TransferModeOverhead[mode]);
+        temp.addEdge(stop, stopVertex)
+            .set(TravelTime, RAPTOR::TransferModeOverhead[mode]);
         temp.addEdge(stopVertex, stop).set(TravelTime, 0);
     }
     TransferGraph result;
@@ -48,7 +50,8 @@ inline TransferGraph getOverheadGraph(const RAPTOR::Data& raptorData, const size
 class ComputeStopToStopShortcuts : public ParameterizedCommand {
 public:
     ComputeStopToStopShortcuts(BasicShell& shell)
-        : ParameterizedCommand(shell, "computeStopToStopShortcuts",
+        : ParameterizedCommand(
+            shell, "computeStopToStopShortcuts",
             "Computes stop-to-stop transfer shortcuts using ULTRA.")
     {
         addParameter("Input file");
@@ -102,11 +105,15 @@ private:
         data.useImplicitDepartureBufferTimes();
         data.printInfo();
 
-        RAPTOR::ULTRA::Builder<false, COUNT_OPTIMAL_CANDIDATES, IGNORE_ISOLATED_CANDIDATES> shortcutGraphBuilder(data);
-        std::cout << "Computing stop-to-stop ULTRA shortcuts (parallel with " << numberOfThreads << " threads)."
-                  << std::endl;
-        shortcutGraphBuilder.computeShortcuts(ThreadPinning(numberOfThreads, pinMultiplier), witnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getShortcutGraph()), data.transferGraph);
+        RAPTOR::ULTRA::Builder<false, COUNT_OPTIMAL_CANDIDATES,
+            IGNORE_ISOLATED_CANDIDATES>
+            shortcutGraphBuilder(data);
+        std::cout << "Computing stop-to-stop ULTRA shortcuts (parallel with "
+                  << numberOfThreads << " threads)." << std::endl;
+        shortcutGraphBuilder.computeShortcuts(
+            ThreadPinning(numberOfThreads, pinMultiplier), witnessLimit);
+        Graph::move(std::move(shortcutGraphBuilder.getShortcutGraph()),
+            data.transferGraph);
 
         data.dontUseImplicitDepartureBufferTimes();
         Graph::printInfo(data.transferGraph);
@@ -118,7 +125,8 @@ private:
 class ComputeMcStopToStopShortcuts : public ParameterizedCommand {
 public:
     ComputeMcStopToStopShortcuts(BasicShell& shell)
-        : ParameterizedCommand(shell, "computeMcStopToStopShortcuts",
+        : ParameterizedCommand(
+            shell, "computeMcStopToStopShortcuts",
             "Computes stop-to-stop transfer shortcuts using ULTRA.")
     {
         addParameter("Input file");
@@ -174,13 +182,16 @@ private:
         data.useImplicitDepartureBufferTimes();
         data.printInfo();
 
-        RAPTOR::ULTRA::McBuilder<false, USE_ARRIVAL_KEY, FULL_ROUTE_SCANS> shortcutGraphBuilder(data);
+        RAPTOR::ULTRA::McBuilder<false, USE_ARRIVAL_KEY, FULL_ROUTE_SCANS>
+            shortcutGraphBuilder(data);
         std::cout << "Computing multicriteria stop-to-stop ULTRA shortcuts "
                      "(parallel with "
                   << numberOfThreads << " threads)." << std::endl;
-        shortcutGraphBuilder.computeShortcuts(ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
+        shortcutGraphBuilder.computeShortcuts(
+            ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
             finalWitnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getShortcutGraph()), data.transferGraph);
+        Graph::move(std::move(shortcutGraphBuilder.getShortcutGraph()),
+            data.transferGraph);
 
         data.dontUseImplicitDepartureBufferTimes();
         Graph::printInfo(data.transferGraph);
@@ -251,15 +262,19 @@ private:
         data.printInfo();
         data.transferGraph = getOverheadGraph(data, mode);
         TransferGraph transitiveTransferGraph;
-        transitiveTransferGraph.readBinary(getParameter("Transitive transfer graph"));
+        transitiveTransferGraph.readBinary(
+            getParameter("Transitive transfer graph"));
 
-        RAPTOR::ULTRA::MultimodalMcBuilder<false, TIME_FACTOR> shortcutGraphBuilder(data, transitiveTransferGraph);
+        RAPTOR::ULTRA::MultimodalMcBuilder<false, TIME_FACTOR> shortcutGraphBuilder(
+            data, transitiveTransferGraph);
         std::cout << "Computing multimodal multicriteria stop-to-stop ULTRA "
                      "shortcuts (parallel with "
                   << numberOfThreads << " threads)." << std::endl;
-        shortcutGraphBuilder.computeShortcuts(ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
+        shortcutGraphBuilder.computeShortcuts(
+            ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
             finalWitnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getShortcutGraph()), data.transferGraph);
+        Graph::move(std::move(shortcutGraphBuilder.getShortcutGraph()),
+            data.transferGraph);
 
         data.dontUseImplicitDepartureBufferTimes();
         Graph::printInfo(data.transferGraph);
@@ -272,7 +287,10 @@ class ComputeTransitiveEventToEventShortcuts : public ParameterizedCommand {
 
 public:
     ComputeTransitiveEventToEventShortcuts(BasicShell& shell)
-        : ParameterizedCommand(shell, "computeTransitiveEventToEventShortcuts", "Computes transitive event-to-event transfer shortcuts using ULTRA and saves the resulting network in Trip-Based format.")
+        : ParameterizedCommand(
+            shell, "computeTransitiveEventToEventShortcuts",
+            "Computes transitive event-to-event transfer shortcuts using ULTRA "
+            "and saves the resulting network in Trip-Based format.")
     {
         addParameter("Input file");
         addParameter("Output file");
@@ -292,9 +310,13 @@ public:
         TripBased::Data data(raptor);
 
         TripBased::ULTRABuilderTransitive<false> shortcutGraphBuilder(data);
-        std::cout << "Computing transitive event-to-event ULTRA shortcuts (parallel with " << numberOfThreads << " threads)." << std::endl;
-        shortcutGraphBuilder.computeShortcuts(ThreadPinning(numberOfThreads, pinMultiplier));
-        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()), data.stopEventGraph);
+        std::cout
+            << "Computing transitive event-to-event ULTRA shortcuts (parallel with "
+            << numberOfThreads << " threads)." << std::endl;
+        shortcutGraphBuilder.computeShortcuts(
+            ThreadPinning(numberOfThreads, pinMultiplier));
+        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
+            data.stopEventGraph);
 
         data.printInfo();
         data.serialize(outputFile);
@@ -314,7 +336,8 @@ private:
 class RAPTORToTripBased : public ParameterizedCommand {
 public:
     RAPTORToTripBased(BasicShell& shell)
-        : ParameterizedCommand(shell, "raptorToTripBased",
+        : ParameterizedCommand(
+            shell, "raptorToTripBased",
             "Converts stop-to-stop transfers to event-to-event transfers and "
             "saves the resulting network in Trip-Based format.")
     {
@@ -345,7 +368,8 @@ public:
             }
         } else {
             if (routeBasedPruning) {
-                TripBased::ComputeStopEventGraphRouteBased(data, numberOfThreads, pinMultiplier);
+                TripBased::ComputeStopEventGraphRouteBased(data, numberOfThreads,
+                    pinMultiplier);
             } else {
                 TripBased::ComputeStopEventGraph(data, numberOfThreads, pinMultiplier);
             }
@@ -369,7 +393,8 @@ private:
 class ComputeEventToEventShortcuts : public ParameterizedCommand {
 public:
     ComputeEventToEventShortcuts(BasicShell& shell)
-        : ParameterizedCommand(shell, "computeEventToEventShortcuts",
+        : ParameterizedCommand(
+            shell, "computeEventToEventShortcuts",
             "Computes event-to-event transfer shortcuts using ULTRA and saves "
             "the resulting network in Trip-Based format.")
     {
@@ -413,11 +438,14 @@ private:
         raptor.printInfo();
         TripBased::Data data(raptor);
 
-        TripBased::ULTRABuilder<false, IGNORE_ISOLATED_CANDIDATES> shortcutGraphBuilder(data);
-        std::cout << "Computing event-to-event ULTRA shortcuts (parallel with " << numberOfThreads << " threads)."
-                  << std::endl;
-        shortcutGraphBuilder.computeShortcuts(ThreadPinning(numberOfThreads, pinMultiplier), witnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()), data.stopEventGraph);
+        TripBased::ULTRABuilder<false, IGNORE_ISOLATED_CANDIDATES>
+            shortcutGraphBuilder(data);
+        std::cout << "Computing event-to-event ULTRA shortcuts (parallel with "
+                  << numberOfThreads << " threads)." << std::endl;
+        shortcutGraphBuilder.computeShortcuts(
+            ThreadPinning(numberOfThreads, pinMultiplier), witnessLimit);
+        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
+            data.stopEventGraph);
 
         data.printInfo();
         data.serialize(outputFile);
@@ -427,7 +455,8 @@ private:
 class ComputeMcEventToEventShortcuts : public ParameterizedCommand {
 public:
     ComputeMcEventToEventShortcuts(BasicShell& shell)
-        : ParameterizedCommand(shell, "computeMcEventToEventShortcuts",
+        : ParameterizedCommand(
+            shell, "computeMcEventToEventShortcuts",
             "Computes multicriteria event-to-event transfer shortcuts using "
             "ULTRA and saves the resulting network in Trip-Based format.")
     {
@@ -484,13 +513,16 @@ private:
         raptor.printInfo();
         TripBased::Data data(raptor);
 
-        TripBased::McULTRABuilder<false, USE_ARRIVAL_KEY, FULL_ROUTE_SCANS> shortcutGraphBuilder(data);
+        TripBased::McULTRABuilder<false, USE_ARRIVAL_KEY, FULL_ROUTE_SCANS>
+            shortcutGraphBuilder(data);
         std::cout << "Computing multicriteria event-to-event ULTRA shortcuts "
                      "(parallel with "
                   << numberOfThreads << " threads)." << std::endl;
-        shortcutGraphBuilder.computeShortcuts(ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
+        shortcutGraphBuilder.computeShortcuts(
+            ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
             finalWitnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()), data.stopEventGraph);
+        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
+            data.stopEventGraph);
 
         data.printInfo();
         data.serialize(outputFile);
@@ -560,15 +592,19 @@ private:
         raptor.transferGraph = getOverheadGraph(raptor, mode);
         TripBased::Data data(raptor);
         TransferGraph transitiveTransferGraph;
-        transitiveTransferGraph.readBinary(getParameter("Transitive transfer graph"));
+        transitiveTransferGraph.readBinary(
+            getParameter("Transitive transfer graph"));
 
-        TripBased::MultimodalMcULTRABuilder<false, TIME_FACTOR> shortcutGraphBuilder(data, transitiveTransferGraph);
+        TripBased::MultimodalMcULTRABuilder<false, TIME_FACTOR>
+            shortcutGraphBuilder(data, transitiveTransferGraph);
         std::cout << "Computing multimodal multicriteria event-to-event ULTRA "
                      "shortcuts (parallel with "
                   << numberOfThreads << " threads)." << std::endl;
-        shortcutGraphBuilder.computeShortcuts(ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
+        shortcutGraphBuilder.computeShortcuts(
+            ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
             finalWitnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()), data.stopEventGraph);
+        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
+            data.stopEventGraph);
 
         data.printInfo();
         data.serialize(outputFile);
@@ -578,7 +614,8 @@ private:
 class AugmentTripBasedShortcuts : public ParameterizedCommand {
 public:
     AugmentTripBasedShortcuts(BasicShell& shell)
-        : ParameterizedCommand(shell, "augmentTripBasedData",
+        : ParameterizedCommand(
+            shell, "augmentTripBasedData",
             "Augments Trip-Based shortcuts for bounded multicriteria search.")
     {
         addParameter("Input file");
@@ -601,10 +638,12 @@ public:
     }
 };
 
-inline void validateShortcutGraph(const TransferGraph& original, const TransferGraph& shortcuts,
+inline void validateShortcutGraph(const TransferGraph& original,
+    const TransferGraph& shortcuts,
     const Vertex maxVertex) noexcept
 {
-    std::vector<int> shortcutDistance(std::max(original.numVertices(), shortcuts.numVertices()), 0);
+    std::vector<int> shortcutDistance(
+        std::max(original.numVertices(), shortcuts.numVertices()), 0);
     IndexedSet<false, Vertex> targets(shortcutDistance.size());
     Dijkstra<RAPTOR::TransferGraph, false> originalDijkstra(original);
     Dijkstra<RAPTOR::TransferGraph, false> shortcutDijkstra(shortcuts);
@@ -627,28 +666,31 @@ inline void validateShortcutGraph(const TransferGraph& original, const TransferG
             if (targets.contains(other)) {
                 if (originalDijkstra.getDistance(other) < shortcutDistance[other]) {
                     longCount++;
-                    std::cout << "\nShortcut from " << vertex << " to " << other << " is too long (Distance should be "
-                              << originalDijkstra.getDistance(other) << ", but is " << shortcutDistance[other] << ")!"
-                              << std::endl;
+                    std::cout << "\nShortcut from " << vertex << " to " << other
+                              << " is too long (Distance should be "
+                              << originalDijkstra.getDistance(other) << ", but is "
+                              << shortcutDistance[other] << ")!" << std::endl;
                     shortcutDijkstra.run(vertex, other);
                     if (shortcutDijkstra.getDistance(other) == originalDijkstra.getDistance(other)) {
-                        std::cout << "   But a path of the same length still exists." << std::endl;
+                        std::cout << "   But a path of the same length still exists."
+                                  << std::endl;
                     } else {
                         longPathCount++;
                         std::cout << "   No path of the same length exists." << std::endl;
                     }
                 } else if (originalDijkstra.getDistance(other) > shortcutDistance[other]) {
                     shortCount++;
-                    std::cout << "\nShortcut from " << vertex << " to " << other << " is too short (Distance should be "
-                              << originalDijkstra.getDistance(other) << ", but is " << shortcutDistance[other] << ")!"
-                              << std::endl;
+                    std::cout << "\nShortcut from " << vertex << " to " << other
+                              << " is too short (Distance should be "
+                              << originalDijkstra.getDistance(other) << ", but is "
+                              << shortcutDistance[other] << ")!" << std::endl;
                 }
             }
         });
         for (const Vertex other : targets) {
             missingCount++;
-            std::cout << "\nOriginal graph does not contain a path from " << vertex << " to " << other << "!"
-                      << std::endl;
+            std::cout << "\nOriginal graph does not contain a path from " << vertex
+                      << " to " << other << "!" << std::endl;
         }
         progress++;
     }
@@ -656,22 +698,29 @@ inline void validateShortcutGraph(const TransferGraph& original, const TransferG
     if (longCount == 0) {
         std::cout << green("No shortcut is too long!") << std::endl;
     } else {
-        std::cout << yellow("Number of shortcuts that are too long: ", longCount) << std::endl;
+        std::cout << yellow("Number of shortcuts that are too long: ", longCount)
+                  << std::endl;
         if (longPathCount == 0) {
             std::cout << green("No shortest path is too long!") << std::endl;
         } else {
-            std::cout << red("Number of shortest paths that are too long: ", longPathCount) << std::endl;
+            std::cout << red("Number of shortest paths that are too long: ",
+                longPathCount)
+                      << std::endl;
         }
     }
     if (shortCount == 0) {
         std::cout << green("No shortcut is too short!") << std::endl;
     } else {
-        std::cout << red("Number of shortcuts that are too short: ", shortCount) << std::endl;
+        std::cout << red("Number of shortcuts that are too short: ", shortCount)
+                  << std::endl;
     }
     if (missingCount == 0) {
         std::cout << green("All shortcuts represent existing paths!") << std::endl;
     } else {
-        std::cout << red("Number of shortcuts that do not exist in the original graph: ", missingCount) << std::endl;
+        std::cout
+            << red("Number of shortcuts that do not exist in the original graph: ",
+                   missingCount)
+            << std::endl;
     }
 }
 
@@ -696,7 +745,8 @@ public:
         Graph::printInfo(shortcuts);
         shortcuts.printAnalysis();
         const int maxVertexNum = getParameter<int>("Max vertex");
-        const Vertex maxVertex(maxVertexNum == -1 ? shortcuts.numVertices() : maxVertexNum);
+        const Vertex maxVertex(maxVertexNum == -1 ? shortcuts.numVertices()
+                                                  : maxVertexNum);
         validateShortcutGraph(original, shortcuts, maxVertex);
     }
 };
@@ -725,15 +775,18 @@ public:
         for (const Vertex fromEventVertex : ultraTBData.stopEventGraph.vertices()) {
             const StopId fromStop = ultraTBData.getStopOfStopEvent(StopEventId(fromEventVertex));
             const int arrivalTime = ultraTBData.raptorData.stopEvents[fromEventVertex].arrivalTime;
-            for (const Edge edge : ultraTBData.stopEventGraph.edgesFrom(fromEventVertex)) {
+            for (const Edge edge :
+                ultraTBData.stopEventGraph.edgesFrom(fromEventVertex)) {
                 const Vertex toEventVertex = ultraTBData.stopEventGraph.get(ToVertex, edge);
                 const int departureTime = ultraTBData.raptorData.stopEvents[toEventVertex].departureTime;
                 const int travelTime = ultraTBData.stopEventGraph.get(TravelTime, edge);
                 if (travelTime > departureTime - arrivalTime) {
-                    std::cout << "\nShortcut from " << fromEventVertex << " to " << toEventVertex
+                    std::cout << "\nShortcut from " << fromEventVertex << " to "
+                              << toEventVertex
                               << " is too long to reach destination stop event! (Should "
                                  "be at most "
-                              << departureTime - arrivalTime << ", but is " << travelTime << ")!" << std::endl;
+                              << departureTime - arrivalTime << ", but is " << travelTime
+                              << ")!" << std::endl;
                 }
 
                 const StopId toStop = ultraTBData.getStopOfStopEvent(StopEventId(toEventVertex));
@@ -743,9 +796,11 @@ public:
                 } else {
                     const int realTravelTime = stopShortcuts.get(TravelTime, shortcutEdge);
                     if (realTravelTime != travelTime) {
-                        std::cout << "\nShortcut from " << fromEventVertex << " to " << toEventVertex
-                                  << " has inconsistent distance (Should be " << realTravelTime << ", but is "
-                                  << travelTime << ")!" << std::endl;
+                        std::cout << "\nShortcut from " << fromEventVertex << " to "
+                                  << toEventVertex
+                                  << " has inconsistent distance (Should be "
+                                  << realTravelTime << ", but is " << travelTime << ")!"
+                                  << std::endl;
                     }
                 }
             }

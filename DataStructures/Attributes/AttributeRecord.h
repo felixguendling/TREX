@@ -25,82 +25,53 @@ public:
     inline constexpr static size_t NumberOfAttributes = 0;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    using AttributeType = typename Meta::FindAttributeType<ATTRIBUTE_NAME, List<>>;
+    using AttributeType =
+        typename Meta::FindAttributeType<ATTRIBUTE_NAME, List<>>;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline constexpr static bool HasAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
+    inline constexpr static bool
+    HasAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
     {
         return false;
     }
 
 public:
-    AttributeRecord()
-    {
-    }
-    AttributeRecord(const Type&)
-    {
-    }
-    AttributeRecord(Type&&)
-    {
-    }
-    Type& operator=(const Type&) noexcept
-    {
-        return *this;
-    }
-    Type& operator=(Type&&) noexcept
-    {
-        return *this;
-    }
+    AttributeRecord() { }
+    AttributeRecord(const Type&) { }
+    AttributeRecord(Type&&) { }
+    Type& operator=(const Type&) noexcept { return *this; }
+    Type& operator=(Type&&) noexcept { return *this; }
 
     template <typename OTHER>
-    AttributeRecord(const OTHER&)
-    {
-    }
+    AttributeRecord(const OTHER&) { }
     template <typename OTHER>
-    AttributeRecord(OTHER&&)
-    {
-    }
+    AttributeRecord(OTHER&&) { }
     template <typename OTHER>
     Type& operator=(const OTHER&) noexcept
     {
         return *this;
     }
     template <typename OTHER>
-    Type& operator=(OTHER&&) noexcept
-    {
-        return *this;
-    }
+    Type& operator=(OTHER&&) noexcept { return *this; }
 
-    AttributeRecord(const Type&, const Type&)
-    {
-    }
+    AttributeRecord(const Type&, const Type&) { }
     template <typename ATTRIBUTES>
-    AttributeRecord(const ATTRIBUTES&, const size_t)
-    {
-    }
+    AttributeRecord(const ATTRIBUTES&, const size_t) { }
 
     template <typename FUNCTION>
-    inline void forEach(FUNCTION&) noexcept
-    {
-    }
+    inline void forEach(FUNCTION&) noexcept { }
     template <typename FUNCTION>
-    inline void forEach(const FUNCTION&) const noexcept
-    {
-    }
+    inline void forEach(const FUNCTION&) const noexcept { }
 
-    inline std::string toString() const noexcept
-    {
-        return "";
-    }
+    inline std::string toString() const noexcept { return ""; }
 
 protected:
-    inline void toString(Enumeration&) const noexcept
-    {
-    }
+    inline void toString(Enumeration&) const noexcept { }
 };
 
 template <typename ATTRIBUTE, typename... ATTRIBUTE_LIST>
-class AttributeRecord<List<ATTRIBUTE, ATTRIBUTE_LIST...>> : public AttributeRecord<List<ATTRIBUTE_LIST...>> {
+class AttributeRecord<List<ATTRIBUTE, ATTRIBUTE_LIST...>>
+    : public AttributeRecord<List<ATTRIBUTE_LIST...>> {
 public:
     template <typename T>
     friend class AttributeRecord;
@@ -116,37 +87,37 @@ private:
     using SuperByName = AttributeRecord<Meta::FindAttributeList<ATTRIBUTE_NAME, AttributeList>>;
 
     template <typename T, typename = void>
-    struct IsApplicable : Meta::False {
-    };
+    struct IsApplicable : Meta::False { };
 
     template <typename T>
-    struct IsApplicable<T, decltype(std::declval<T>()(std::declval<ValueType&>()), void())> : Meta::True {
-    };
+    struct IsApplicable<
+        T, decltype(std::declval<T>()(std::declval<ValueType&>()), void())>
+        : Meta::True { };
 
     template <typename T, typename = void>
-    struct IsApplicableWithName : Meta::False {
-    };
+    struct IsApplicableWithName : Meta::False { };
 
     template <typename T>
-    struct IsApplicableWithName<T, decltype(std::declval<T>()(std::declval<ValueType&>(), AttributeNameType()), void())> : Meta::True {
-    };
+    struct IsApplicableWithName<T, decltype(std::declval<T>()(std::declval<ValueType&>(), AttributeNameType()), void())> : Meta::True { };
 
 public:
     using Type = AttributeRecord<AttributeList>;
     inline constexpr static size_t NumberOfAttributes = Super::NumberOfAttributes + 1;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    using AttributeType = typename Meta::FindAttributeType<ATTRIBUTE_NAME, AttributeList>;
+    using AttributeType =
+        typename Meta::FindAttributeType<ATTRIBUTE_NAME, AttributeList>;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline constexpr static bool HasAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
+    inline constexpr static bool
+    HasAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
     {
         return Meta::ContainsAttribute<ATTRIBUTE_NAME, AttributeList>();
     }
 
-    inline constexpr static std::array<AttributeNameType, sizeof...(ATTRIBUTE_LIST) + 1> AttributeNames = {
-        ATTRIBUTE::Name, ATTRIBUTE_LIST::Name...
-    };
+    inline constexpr static std::array<AttributeNameType,
+        sizeof...(ATTRIBUTE_LIST) + 1>
+        AttributeNames = { ATTRIBUTE::Name, ATTRIBUTE_LIST::Name... };
 
 public:
     AttributeRecord()
@@ -263,7 +234,8 @@ public:
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline const AttributeType<ATTRIBUTE_NAME>& operator[](const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept
+    inline const AttributeType<ATTRIBUTE_NAME>&
+    operator[](const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept
     {
         static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
             "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
@@ -272,26 +244,8 @@ public:
         return SuperByName<ATTRIBUTE_NAME>::value;
     }
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline AttributeType<ATTRIBUTE_NAME>& operator[](const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
-    {
-        static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
-            "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
-            "ATTRIBUTE_LIST...>> does not contain an Attribute named "
-            "ATTRIBUTE_NAME");
-        return SuperByName<ATTRIBUTE_NAME>::value;
-    }
-
-    template <AttributeNameType ATTRIBUTE_NAME>
-    inline const AttributeType<ATTRIBUTE_NAME>& get(const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept
-    {
-        static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
-            "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
-            "ATTRIBUTE_LIST...>> does not contain an Attribute named "
-            "ATTRIBUTE_NAME");
-        return SuperByName<ATTRIBUTE_NAME>::value;
-    }
-    template <AttributeNameType ATTRIBUTE_NAME>
-    inline AttributeType<ATTRIBUTE_NAME>& get(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
+    inline AttributeType<ATTRIBUTE_NAME>&
+    operator[](const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
     {
         static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
             "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
@@ -301,7 +255,29 @@ public:
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline void set(const AttributeNameWrapper<ATTRIBUTE_NAME>, const AttributeType<ATTRIBUTE_NAME>& value) noexcept
+    inline const AttributeType<ATTRIBUTE_NAME>&
+    get(const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept
+    {
+        static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
+            "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
+            "ATTRIBUTE_LIST...>> does not contain an Attribute named "
+            "ATTRIBUTE_NAME");
+        return SuperByName<ATTRIBUTE_NAME>::value;
+    }
+    template <AttributeNameType ATTRIBUTE_NAME>
+    inline AttributeType<ATTRIBUTE_NAME>&
+    get(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
+    {
+        static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
+            "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
+            "ATTRIBUTE_LIST...>> does not contain an Attribute named "
+            "ATTRIBUTE_NAME");
+        return SuperByName<ATTRIBUTE_NAME>::value;
+    }
+
+    template <AttributeNameType ATTRIBUTE_NAME>
+    inline void set(const AttributeNameWrapper<ATTRIBUTE_NAME>,
+        const AttributeType<ATTRIBUTE_NAME>& value) noexcept
     {
         static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
             "Current instantiation of AttributeRecord<List<ATTRIBUTE, "

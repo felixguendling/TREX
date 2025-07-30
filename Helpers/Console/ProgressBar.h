@@ -7,7 +7,8 @@
 
 class ProgressBar {
 public:
-    ProgressBar(const long long n, const bool v = true, std::ostream& o = std::cout)
+    ProgressBar(const long long n, const bool v = true,
+        std::ostream& o = std::cout)
         : verbose(v)
         , os(o)
         , percentOutputStep(20)
@@ -48,22 +49,10 @@ public:
         draw(until);
     }
 
-    void operator++()
-    {
-        iterate();
-    }
-    void operator++(int)
-    {
-        iterate();
-    }
-    inline void SetDotOutputStep(const int d)
-    {
-        dotOutputStep = d;
-    }
-    inline void SetPercentOutputStep(const int p)
-    {
-        percentOutputStep = p;
-    }
+    void operator++() { iterate(); }
+    void operator++(int) { iterate(); }
+    inline void SetDotOutputStep(const int d) { dotOutputStep = d; }
+    inline void SetPercentOutputStep(const int p) { percentOutputStep = p; }
 
 protected:
     inline void draw(unsigned int until)

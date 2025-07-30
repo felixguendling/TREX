@@ -15,7 +15,8 @@ public:
     static const std::string CSV_HEADER;
 
 public:
-    StopEvent(const StopId stopId = noStop, const int arrivalTime = -1, const int departureTime = -2)
+    StopEvent(const StopId stopId = noStop, const int arrivalTime = -1,
+        const int departureTime = -2)
         : stopId(stopId)
         , arrivalTime(arrivalTime)
         , departureTime(departureTime)
@@ -39,7 +40,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const StopEvent& s)
     {
-        return out << "StopEvent{" << size_t(s.stopId) << ", " << s.arrivalTime << ", " << s.departureTime << "}";
+        return out << "StopEvent{" << size_t(s.stopId) << ", " << s.arrivalTime
+                   << ", " << s.departureTime << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept
@@ -71,7 +73,8 @@ public:
 
     inline void update(const StopEvent& other) noexcept
     {
-        AssertMsg(matches(other), "Updating a stop event with one that does not match!");
+        AssertMsg(matches(other),
+            "Updating a stop event with one that does not match!");
         stopId = other.stopId;
         departureTime = other.departureTime;
         arrivalTime = std::max(arrivalTime, other.arrivalTime);
@@ -90,7 +93,8 @@ public:
 
 const std::string StopEvent::CSV_HEADER = "stop_id,arr_time,dep_time";
 
-inline bool less(const std::vector<StopEvent>& a, const std::vector<StopEvent>& b) noexcept
+inline bool less(const std::vector<StopEvent>& a,
+    const std::vector<StopEvent>& b) noexcept
 {
     const size_t size = std::min(a.size(), b.size());
     for (size_t i = 0; i < size; i++) {
@@ -101,7 +105,8 @@ inline bool less(const std::vector<StopEvent>& a, const std::vector<StopEvent>& 
     return a.size() < b.size();
 }
 
-inline bool equals(const std::vector<StopEvent>& a, const std::vector<StopEvent>& b) noexcept
+inline bool equals(const std::vector<StopEvent>& a,
+    const std::vector<StopEvent>& b) noexcept
 {
     if (a.size() != b.size())
         return false;

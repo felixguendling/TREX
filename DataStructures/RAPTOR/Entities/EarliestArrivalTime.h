@@ -57,24 +57,16 @@ struct CombinedEarliestArrivalTime {
         arrivalTime = time;
     }
 
-    inline int getArrivalTimeByRoute() const noexcept
-    {
-        return arrivalTime;
-    }
+    inline int getArrivalTimeByRoute() const noexcept { return arrivalTime; }
 
-    inline int getArrivalTimeByTransfer() const noexcept
-    {
-        return arrivalTime;
-    }
+    inline int getArrivalTimeByTransfer() const noexcept { return arrivalTime; }
 
-    inline int getArrivalTime() const noexcept
-    {
-        return arrivalTime;
-    }
+    inline int getArrivalTime() const noexcept { return arrivalTime; }
 
     int arrivalTime;
 };
 
 template <bool SEPARATE>
-using EarliestArrivalTime = Meta::IF<SEPARATE, SeparatedEarliestArrivalTime, CombinedEarliestArrivalTime>;
+using EarliestArrivalTime = Meta::IF<SEPARATE, SeparatedEarliestArrivalTime,
+    CombinedEarliestArrivalTime>;
 } // namespace RAPTOR

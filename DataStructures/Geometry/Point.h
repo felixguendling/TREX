@@ -22,7 +22,8 @@ public:
         , x(x)
     {
     }
-    Point(const Construct::LatLongTag, const double& latitude, const double& longitude)
+    Point(const Construct::LatLongTag, const double& latitude,
+        const double& longitude)
         : latitude(latitude)
         , longitude(longitude)
     {
@@ -74,20 +75,11 @@ public:
         return (x == p.x) && (y == p.y);
     }
 
-    inline bool operator!=(const Point& p) const
-    {
-        return !operator==(p);
-    }
+    inline bool operator!=(const Point& p) const { return !operator==(p); }
 
-    inline double abs() const
-    {
-        return std::sqrt((x * x) + (y * y));
-    }
+    inline double abs() const { return std::sqrt((x * x) + (y * y)); }
 
-    inline double absSquared() const
-    {
-        return (x * x) + (y * y);
-    }
+    inline double absSquared() const { return (x * x) + (y * y); }
 
     inline friend Point operator*(const double scalar, const Point& point)
     {
@@ -210,9 +202,7 @@ inline double geoDistanceInCM(const Point& from, const Point& to)
     double heightTo(degreesToRadians(to.longitude));
     double widthFrom(degreesToRadians(from.latitude));
     double widthTo(degreesToRadians(to.latitude));
-    return acos(std::min(1.0,
-               sin(widthFrom) * sin(widthTo) + cos(widthFrom) * cos(widthTo) * cos(heightTo - heightFrom)))
-        * EARTH_RADIUS_IN_CENTIMETRE;
+    return acos(std::min(1.0, sin(widthFrom) * sin(widthTo) + cos(widthFrom) * cos(widthTo) * cos(heightTo - heightFrom))) * EARTH_RADIUS_IN_CENTIMETRE;
 }
 
 inline double euclideanDistanceSquared(const Point& a, const Point& b)

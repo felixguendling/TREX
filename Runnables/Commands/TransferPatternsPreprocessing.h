@@ -20,7 +20,9 @@ using namespace Shell;
 class RunTransferPatternQueries : public ParameterizedCommand {
 public:
     RunTransferPatternQueries(BasicShell& shell)
-        : ParameterizedCommand(shell, "runTPQueries", "Runs the given number of random Transfer Pattern Queries.")
+        : ParameterizedCommand(
+            shell, "runTPQueries",
+            "Runs the given number of random Transfer Pattern Queries.")
     {
         addParameter("Input file (TP Data)");
         addParameter("Number of queries");
@@ -39,7 +41,8 @@ public:
         const std::vector<StopQuery> queries = generateRandomStopQueries(data.raptorData.numberOfStops(), n);
 
         if (!useAStar) {
-            TransferPattern::Query<TransferPattern::AggregateProfiler> algorithm(data);
+            TransferPattern::Query<TransferPattern::AggregateProfiler> algorithm(
+                data);
             double numJourneys = 0;
             for (const StopQuery& query : queries) {
                 algorithm.run(query.source, query.departureTime, query.target);
@@ -48,9 +51,11 @@ public:
 
             std::cout << "#### Stats ####" << std::endl;
             algorithm.getProfiler().printStatistics();
-            std::cout << "Avg. journeys                : " << String::prettyDouble(numJourneys / n) << std::endl;
+            std::cout << "Avg. journeys                : "
+                      << String::prettyDouble(numJourneys / n) << std::endl;
         } else {
-            TransferPattern::QueryAStar<TransferPattern::AggregateProfiler> algorithm(data);
+            TransferPattern::QueryAStar<TransferPattern::AggregateProfiler> algorithm(
+                data);
             double numJourneys = 0;
             for (const StopQuery& query : queries) {
                 algorithm.run(query.source, query.departureTime, query.target);
@@ -59,7 +64,8 @@ public:
 
             std::cout << "#### Stats ####" << std::endl;
             algorithm.getProfiler().printStatistics();
-            std::cout << "Avg. journeys                : " << String::prettyDouble(numJourneys / n) << std::endl;
+            std::cout << "Avg. journeys                : "
+                      << String::prettyDouble(numJourneys / n) << std::endl;
         }
     }
 };
@@ -67,7 +73,9 @@ public:
 class ComputeTPUsingTB : public ParameterizedCommand {
 public:
     ComputeTPUsingTB(BasicShell& shell)
-        : ParameterizedCommand(shell, "computeTPUsingTB", "Computs all Transfer Patterns using TB Profile Queries!")
+        : ParameterizedCommand(
+            shell, "computeTPUsingTB",
+            "Computs all Transfer Patterns using TB Profile Queries!")
     {
         addParameter("Input file (TripBased Data)");
         addParameter("Output file (TP Data)");
@@ -87,12 +95,14 @@ public:
 
         TransferPattern::Data tpData(data.raptorData);
 
-        std::cout << "Computing Transfer Pattern with " << (int)numberOfThreads << " # of threads!" << std::endl;
+        std::cout << "Computing Transfer Pattern with " << (int)numberOfThreads
+                  << " # of threads!" << std::endl;
 
         if (numberOfThreads == 0) {
             TransferPattern::ComputeTransferPatternUsingTripBased(data, tpData);
         } else {
-            TransferPattern::ComputeTransferPatternUsingTripBased(data, tpData, numberOfThreads, pinMultiplier);
+            TransferPattern::ComputeTransferPatternUsingTripBased(
+                data, tpData, numberOfThreads, pinMultiplier);
         }
 
         long long totalNumVertices(0);
@@ -103,9 +113,14 @@ public:
             totalNumEdges += tpData.transferPatternOfStop[stop].numEdges();
         }
 
-        std::cout << "Total Size:       " << String::bytesToString(tpData.byteSize()) << std::endl;
-        std::cout << "Average # Nodes:  " << String::prettyDouble(totalNumVertices / data.raptorData.numberOfStops()) << std::endl;
-        std::cout << "Average # Edges:  " << String::prettyDouble(totalNumEdges / data.raptorData.numberOfStops()) << std::endl;
+        std::cout << "Total Size:       "
+                  << String::bytesToString(tpData.byteSize()) << std::endl;
+        std::cout << "Average # Nodes:  "
+                  << String::prettyDouble(totalNumVertices / data.raptorData.numberOfStops())
+                  << std::endl;
+        std::cout << "Average # Edges:  "
+                  << String::prettyDouble(totalNumEdges / data.raptorData.numberOfStops())
+                  << std::endl;
 
         tpData.serialize(outputFile);
     }
@@ -124,7 +139,9 @@ private:
 class ExportTPDAGOfStop : public ParameterizedCommand {
 public:
     ExportTPDAGOfStop(BasicShell& shell)
-        : ParameterizedCommand(shell, "exportTPDAGofStop", "Exports the computed Transfer Patterns of the given stop in the given type file.")
+        : ParameterizedCommand(shell, "exportTPDAGofStop",
+            "Exports the computed Transfer Patterns of the "
+            "given stop in the given type file.")
     {
         addParameter("Input file (TP Data)");
         addParameter("Output file");

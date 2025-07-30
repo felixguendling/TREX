@@ -27,38 +27,28 @@ class Deserialization;
 
 namespace ImplementationDetail {
     template <typename T, typename = void>
-    struct IsSerializable : Meta::False {
-    };
+    struct IsSerializable : Meta::False { };
 
     template <typename T>
-    struct IsSerializable<T, decltype(std::declval<const T>().serialize(std::declval<Serialization&>()), void())>
-        : Meta::True {
-    };
+    struct IsSerializable<T, decltype(std::declval<const T>().serialize(std::declval<Serialization&>()), void())> : Meta::True { };
 
     template <typename T, typename = void>
-    struct IsDeserializable : Meta::False {
-    };
+    struct IsDeserializable : Meta::False { };
 
     template <typename T>
-    struct IsDeserializable<T, decltype(std::declval<T>().deserialize(std::declval<Deserialization&>()), void())>
-        : Meta::True {
-    };
+    struct IsDeserializable<T, decltype(std::declval<T>().deserialize(std::declval<Deserialization&>()), void())> : Meta::True { };
 
     template <typename T, typename = void>
-    struct IsVectorType : Meta::False {
-    };
+    struct IsVectorType : Meta::False { };
 
     template <typename T>
-    struct IsVectorType<std::vector<T>, void> : Meta::True {
-    };
+    struct IsVectorType<std::vector<T>, void> : Meta::True { };
 
     template <typename T, typename = void>
-    struct IsArrayType : Meta::False {
-    };
+    struct IsArrayType : Meta::False { };
 
     template <typename T, size_t N>
-    struct IsArrayType<std::array<T, N>, void> : Meta::True {
-    };
+    struct IsArrayType<std::array<T, N>, void> : Meta::True { };
 } // namespace ImplementationDetail
 
 template <typename T>
@@ -116,9 +106,7 @@ public:
     }
 
 public:
-    inline void operator()() noexcept
-    {
-    }
+    inline void operator()() noexcept { }
 
     template <typename T, typename... Ts>
     inline void operator()(const T& object, const Ts&... objects) noexcept
@@ -127,15 +115,9 @@ public:
         operator()(objects...);
     }
 
-    inline const std::string& getFileName() const noexcept
-    {
-        return fileName;
-    }
+    inline const std::string& getFileName() const noexcept { return fileName; }
 
-    inline void version(const size_t versionId) noexcept
-    {
-        serialize(versionId);
-    }
+    inline void version(const size_t versionId) noexcept { serialize(versionId); }
 
 private:
     template <typename T>
@@ -153,7 +135,8 @@ private:
     {
         checkStream(os);
         serialize(stringObject.size());
-        os.write(reinterpret_cast<const char*>(stringObject.data()), stringObject.size());
+        os.write(reinterpret_cast<const char*>(stringObject.data()),
+            stringObject.size());
     }
 
     template <typename T>
@@ -170,7 +153,8 @@ private:
                 serialize(element);
             }
         } else {
-            os.write(reinterpret_cast<const char*>(vectorObject.data()), vectorObject.size() * sizeof(T));
+            os.write(reinterpret_cast<const char*>(vectorObject.data()),
+                vectorObject.size() * sizeof(T));
         }
     }
 
@@ -186,7 +170,8 @@ private:
                 serialize(element);
             }
         } else {
-            os.write(reinterpret_cast<const char*>(arrayObject.data()), arrayObject.size() * sizeof(T));
+            os.write(reinterpret_cast<const char*>(arrayObject.data()),
+                arrayObject.size() * sizeof(T));
         }
     }
 
@@ -207,7 +192,8 @@ public:
         checkStream(is, fileName);
         int header;
         deserialize(header);
-        Ensure(header == FileHeader, "No file header found, cannot read the file: " << fileName);
+        Ensure(header == FileHeader,
+            "No file header found, cannot read the file: " << fileName);
         operator()(object, objects...);
     }
     template <typename T>
@@ -222,15 +208,14 @@ public:
             // serialized using this code
             operator()(object);
         } else { // The following data was not serialized using this code
-            warning("Trying to deserialize a file (", fileName, ") without magic header,!");
+            warning("Trying to deserialize a file (", fileName,
+                ") without magic header,!");
             exit(1);
         }
     }
 
 public:
-    inline void operator()() noexcept
-    {
-    }
+    inline void operator()() noexcept { }
 
     template <typename T, typename... Ts>
     inline void operator()(T& object, Ts&... objects) noexcept
@@ -239,16 +224,15 @@ public:
         operator()(objects...);
     }
 
-    inline const std::string& getFileName() const noexcept
-    {
-        return fileName;
-    }
+    inline const std::string& getFileName() const noexcept { return fileName; }
 
     inline void version(const size_t expectedVersionId) noexcept
     {
         size_t fileVersionId = expectedVersionId - 1;
         deserialize(fileVersionId);
-        Ensure(fileVersionId == expectedVersionId, "Expected version " << expectedVersionId << ", but file " << fileName << " has version " << fileVersionId);
+        Ensure(fileVersionId == expectedVersionId,
+            "Expected version " << expectedVersionId << ", but file " << fileName
+                                << " has version " << fileVersionId);
     }
 
 private:
@@ -278,7 +262,11 @@ private:
         checkStream(is);
         std::string type;
         deserialize(type);
-        Ensure(type == Meta::type<T>(), "Trying to deserialize an std::vector<" << Meta::type<T>() << "> from a file that contains an std::vector<" << type << ">!");
+        Ensure(type == Meta::type<T>(),
+            "Trying to deserialize an std::vector<"
+                << Meta::type<T>()
+                << "> from a file that contains an std::vector<" << type
+                << ">!");
         decltype(vectorObject.size()) size = 0;
         deserialize(size);
         if constexpr (Meta::Equals<T, bool>()) {
@@ -303,7 +291,10 @@ private:
         checkStream(is);
         std::string type;
         deserialize(type);
-        Ensure(type == Meta::type<T>(), "Trying to deserialize an std::array<" << Meta::type<T>() << "> from a file that contains an std::array<" << type << ">!");
+        Ensure(type == Meta::type<T>(),
+            "Trying to deserialize an std::array<"
+                << Meta::type<T>()
+                << "> from a file that contains an std::array<" << type << ">!");
         decltype(arrayObject.size()) size = 0;
         deserialize(size);
         Ensure(size == N, "Trying to deserialize an array of size " << N << " from a file that contains an array of size " << size << "!");
@@ -324,13 +315,15 @@ private:
 // ################################################ File Utilities
 // #################################################################//
 template <typename... Ts>
-inline void serialize(const std::string& fileName, const Ts&... objects) noexcept
+inline void serialize(const std::string& fileName,
+    const Ts&... objects) noexcept
 {
     Serialization(fileName, objects...);
 }
 
 template <typename T, typename... Ts>
-inline void deserialize(const std::string& fileName, T& object, Ts&... objects) noexcept
+inline void deserialize(const std::string& fileName, T& object,
+    Ts&... objects) noexcept
 {
     Deserialization(fileName, object, objects...);
 }

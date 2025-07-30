@@ -43,12 +43,10 @@ struct FalseIfInstantiated {
 
 namespace Implementation {
     template <typename T, typename U>
-    struct Equals : False {
-    };
+    struct Equals : False { };
 
     template <typename T>
-    struct Equals<T, T> : True {
-    };
+    struct Equals<T, T> : True { };
 } // namespace Implementation
 
 template <typename T, typename U>
@@ -89,8 +87,7 @@ namespace Implementation {
     struct Head;
 
     template <typename HEAD, typename... TAIL>
-    struct Head<List<HEAD, TAIL...>> : ID<HEAD> {
-    };
+    struct Head<List<HEAD, TAIL...>> : ID<HEAD> { };
 } // namespace Implementation
 
 template <typename LIST>
@@ -103,8 +100,7 @@ namespace Implementation {
     struct Tail;
 
     template <typename HEAD, typename... TAIL>
-    struct Tail<List<HEAD, TAIL...>> : List<TAIL...> {
-    };
+    struct Tail<List<HEAD, TAIL...>> : List<TAIL...> { };
 } // namespace Implementation
 
 template <typename LIST>
@@ -117,8 +113,8 @@ namespace Implementation {
     struct Concat;
 
     template <typename... VALUES_A, typename... VALUES_B>
-    struct Concat<List<VALUES_A...>, List<VALUES_B...>> : List<VALUES_A..., VALUES_B...> {
-    };
+    struct Concat<List<VALUES_A...>, List<VALUES_B...>>
+        : List<VALUES_A..., VALUES_B...> { };
 } // namespace Implementation
 
 template <typename LIST_A, typename LIST_B>
@@ -131,12 +127,11 @@ namespace Implementation {
     struct Contains;
 
     template <typename T>
-    struct Contains<T, List<>> : False {
-    };
+    struct Contains<T, List<>> : False { };
 
     template <typename T, typename HEAD, typename... TAIL>
-    struct Contains<T, List<HEAD, TAIL...>> : IF<!Meta::Equals<T, HEAD>(), Contains<T, List<TAIL...>>, True> {
-    };
+    struct Contains<T, List<HEAD, TAIL...>>
+        : IF<!Meta::Equals<T, HEAD>(), Contains<T, List<TAIL...>>, True> { };
 } // namespace Implementation
 
 template <typename T, typename LIST>
@@ -151,7 +146,9 @@ namespace Implementation {
     inline std::string type(const char* name) noexcept
     {
         int status = -4;
-        std::unique_ptr<char, void (*)(void*)> res { abi::__cxa_demangle(name, NULL, NULL, &status), std::free };
+        std::unique_ptr<char, void (*)(void*)> res {
+            abi::__cxa_demangle(name, NULL, NULL, &status), std::free
+        };
         return (status == 0) ? res.get() : name;
     }
 
@@ -207,10 +204,7 @@ inline std::string type() noexcept
 
 template <typename T>
 struct Type {
-    Type()
-    {
-        Implementation::Type<T> type;
-    }
+    Type() { Implementation::Type<T> type; }
 };
 
 // MAKE CONST
@@ -299,16 +293,13 @@ using CopyConstness = IF<IsConst<FROM>(), MakeConst<TO>, TO>;
 
 namespace Implementation {
     template <typename T>
-    struct IsReference : False {
-    };
+    struct IsReference : False { };
 
     template <typename T>
-    struct IsReference<T&> : True {
-    };
+    struct IsReference<T&> : True { };
 
     template <typename T>
-    struct IsReference<T&&> : True {
-    };
+    struct IsReference<T&&> : True { };
 } // namespace Implementation
 
 template <typename T>
@@ -343,12 +334,10 @@ using RemoveReference = typename Implementation::RemoveReference<T>::Type;
 
 namespace Implementation {
     template <typename T>
-    struct IsPointer : False {
-    };
+    struct IsPointer : False { };
 
     template <typename T>
-    struct IsPointer<T*> : True {
-    };
+    struct IsPointer<T*> : True { };
 } // namespace Implementation
 
 template <typename T>
@@ -382,7 +371,8 @@ using RemovePointer = typename Implementation::RemovePointer<T>::Type;
 // PLAIN TYPE
 
 template <typename T>
-using PlainType = IF<IsReference<T>(), RemoveReference<RemoveConstness<T>>, RemovePointer<RemoveConstness<T>>>;
+using PlainType = IF<IsReference<T>(), RemoveReference<RemoveConstness<T>>,
+    RemovePointer<RemoveConstness<T>>>;
 
 // IS MOVEABLE
 

@@ -22,21 +22,12 @@ public:
         return ids[level];
     }
 
-    inline std::vector<int> getIds()
-    {
-        return ids;
-    }
+    inline std::vector<int> getIds() { return ids; }
 
     // sets the correct ids
-    inline void setIds(std::vector<int> newIds)
-    {
-        ids = newIds;
-    }
+    inline void setIds(std::vector<int> newIds) { ids = newIds; }
 
-    inline int getLevels() const
-    {
-        return (int)ids.size();
-    }
+    inline int getLevels() const { return (int)ids.size(); }
 
     friend std::ostream& operator<<(std::ostream& out, MultiLevelCell& s)
     {

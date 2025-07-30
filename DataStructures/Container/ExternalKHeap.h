@@ -7,18 +7,9 @@
 
 class ExternalKHeapElement {
 public:
-    inline int getHeapPosition() const noexcept
-    {
-        return heapPosition;
-    }
-    inline void setHeapPosition(const int p) noexcept
-    {
-        heapPosition = p;
-    }
-    inline bool isOnHeap() const noexcept
-    {
-        return heapPosition != -1;
-    }
+    inline int getHeapPosition() const noexcept { return heapPosition; }
+    inline void setHeapPosition(const int p) noexcept { heapPosition = p; }
+    inline bool isOnHeap() const noexcept { return heapPosition != -1; }
     inline bool hasSmallerKey(const ExternalKHeapElement* const) const noexcept
     {
         AssertMsg(false, "ExternalKHeapElement keys are compared using a default "
@@ -51,14 +42,8 @@ public:
         initialize();
     }
 
-    inline int size() const
-    {
-        return numberOfElements;
-    }
-    inline bool empty() const
-    {
-        return size() == 0;
-    }
+    inline int size() const { return numberOfElements; }
+    inline bool empty() const { return size() == 0; }
 
     inline ElementType* extractFront()
     {
@@ -74,15 +59,13 @@ public:
         heap.resize(numberOfElements);
         return front;
     }
-    inline ElementType* pop()
-    {
-        return extractFront();
-    }
+    inline ElementType* pop() { return extractFront(); }
 
     inline void update(ElementType* const element)
     {
         AssertMsg(heap.size() == static_cast<size_t>(numberOfElements),
-            "Heap with " << numberOfElements << " elements has a size is " << heap.size() << "!");
+            "Heap with " << numberOfElements << " elements has a size is "
+                         << heap.size() << "!");
         if (element->getHeapPosition() == -1) {
             heap.emplace_back(element);
             element->setHeapPosition(numberOfElements);
@@ -98,18 +81,9 @@ public:
             }
         }
     }
-    inline void update(ElementType& element)
-    {
-        update(&element);
-    }
-    inline void push(ElementType* const element)
-    {
-        update(element);
-    }
-    inline void push(ElementType& element)
-    {
-        update(&element);
-    }
+    inline void update(ElementType& element) { update(&element); }
+    inline void push(ElementType* const element) { update(element); }
+    inline void push(ElementType& element) { update(&element); }
 
     inline void remove(ElementType* const element)
     {
@@ -124,20 +98,11 @@ public:
         return heap[0];
     }
 
-    inline ElementType& min() const
-    {
-        return *front();
-    }
+    inline ElementType& min() const { return *front(); }
 
-    inline void reserve(int size)
-    {
-        heap.reserve(size);
-    }
+    inline void reserve(int size) { heap.reserve(size); }
 
-    inline void reset()
-    {
-        initialize();
-    }
+    inline void reset() { initialize(); }
 
     inline void clear()
     {
@@ -173,19 +138,10 @@ public:
     }
 
 protected:
-    inline void initialize()
-    {
-        numberOfElements = 0;
-    }
+    inline void initialize() { numberOfElements = 0; }
 
-    inline int parent(const int i) const
-    {
-        return (i - 1) >> logK;
-    }
-    inline int firstChild(const int i) const
-    {
-        return (i << logK) + 1;
-    }
+    inline int parent(const int i) const { return (i - 1) >> logK; }
+    inline int firstChild(const int i) const { return (i << logK) + 1; }
 
     inline void siftUp(const int i)
     {

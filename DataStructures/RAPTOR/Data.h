@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -53,7 +54,8 @@ public:
         return data;
     }
 
-    inline static Data FromIntermediate(const Intermediate::Data& inter, const int routeType = 1) noexcept
+    inline static Data FromIntermediate(const Intermediate::Data& inter,
+        const int routeType = 1) noexcept
     {
         if (routeType == 0)
             return FromIntermediate(inter, inter.geographicRoutes());
@@ -66,7 +68,8 @@ public:
         return FromIntermediate(inter, inter.fifoRoutes());
     }
 
-    inline static Data FromIntermediate(const Intermediate::Data& inter,
+    inline static Data FromIntermediate(
+        const Intermediate::Data& inter,
         const std::vector<std::vector<Intermediate::Trip>>& routes) noexcept
     {
         Data data;
@@ -74,7 +77,8 @@ public:
         for (const Intermediate::Stop& stop : inter.stops) {
             data.stopData.emplace_back(stop);
         }
-        std::vector<std::vector<RouteSegment>> routeSegmentsOfStop(inter.stops.size());
+        std::vector<std::vector<RouteSegment>> routeSegmentsOfStop(
+            inter.stops.size());
         for (RouteId i = RouteId(0); i < routes.size(); i++) {
             const std::vector<Intermediate::Trip>& route = routes[i];
             AssertMsg(!route.empty(), "A route should not be empty!");
@@ -92,7 +96,8 @@ public:
                 }
             }
         }
-        for (const std::vector<RouteSegment>& routeSegmentList : routeSegmentsOfStop) {
+        for (const std::vector<RouteSegment>& routeSegmentList :
+            routeSegmentsOfStop) {
             data.firstRouteSegmentOfStop.emplace_back(data.routeSegments.size());
             for (const RouteSegment& routeSegment : routeSegmentList) {
                 data.routeSegments.emplace_back(routeSegment);
@@ -107,10 +112,7 @@ public:
     }
 
 public:
-    inline size_t numberOfStops() const noexcept
-    {
-        return stopData.size();
-    }
+    inline size_t numberOfStops() const noexcept { return stopData.size(); }
     inline bool isStop(const Vertex stop) const noexcept
     {
         return stop < numberOfStops();
@@ -120,10 +122,7 @@ public:
         return Range<StopId>(StopId(0), StopId(numberOfStops()));
     }
 
-    inline size_t numberOfRoutes() const noexcept
-    {
-        return routeData.size();
-    }
+    inline size_t numberOfRoutes() const noexcept { return routeData.size(); }
     inline bool isRoute(const RouteId route) const noexcept
     {
         return route < numberOfRoutes();
@@ -174,19 +173,22 @@ public:
 
     inline size_t numberOfStopsInRoute(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         return firstStopIdOfRoute[route + 1] - firstStopIdOfRoute[route];
     }
 
     inline size_t numberOfStopEventsInRoute(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         return firstStopEventOfRoute[route + 1] - firstStopEventOfRoute[route];
     }
 
     inline size_t numberOfTripsInRoute(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         return numberOfStopEventsInRoute(route) / numberOfStopsInRoute(route);
     }
 
@@ -199,121 +201,160 @@ public:
         return count;
     }
 
-    inline size_t getRouteSegmentNum(const RouteId route, const StopIndex stopIndex) const noexcept
+    inline size_t getRouteSegmentNum(const RouteId route,
+        const StopIndex stopIndex) const noexcept
     {
         return firstStopIdOfRoute[route] + stopIndex;
     }
 
-    inline SubRange<std::vector<RouteSegment>> routesContainingStop(const StopId stop) const noexcept
+    inline SubRange<std::vector<RouteSegment>>
+    routesContainingStop(const StopId stop) const noexcept
     {
         AssertMsg(isStop(stop), "The id " << stop << " does not represent a stop!");
-        return SubRange<std::vector<RouteSegment>>(routeSegments, firstRouteSegmentOfStop, stop);
+        return SubRange<std::vector<RouteSegment>>(routeSegments,
+            firstRouteSegmentOfStop, stop);
     }
 
-    inline SubRange<std::vector<StopEvent>> stopEventsOfRoute(const RouteId route) const noexcept
+    inline SubRange<std::vector<StopEvent>>
+    stopEventsOfRoute(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
-        return SubRange<std::vector<StopEvent>>(stopEvents, firstStopEventOfRoute, route);
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
+        return SubRange<std::vector<StopEvent>>(stopEvents, firstStopEventOfRoute,
+            route);
     }
 
-    inline SubRange<std::vector<StopEvent>> stopEventsOfTrip(const RouteId route, const size_t tripNum) const noexcept
+    inline SubRange<std::vector<StopEvent>>
+    stopEventsOfTrip(const RouteId route, const size_t tripNum) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
-        AssertMsg(tripNum < numberOfTripsInRoute(route), tripNum << " is not a valid trip of route " << route << "!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
+        AssertMsg(tripNum < numberOfTripsInRoute(route),
+            tripNum << " is not a valid trip of route " << route << "!");
         const size_t tripSize = numberOfStopsInRoute(route);
         const size_t firstStopEvent = firstStopEventOfRoute[route] + tripNum * tripSize;
         const size_t lastStopEvent = firstStopEvent + tripSize;
-        return SubRange<std::vector<StopEvent>>(stopEvents, firstStopEvent, lastStopEvent);
+        return SubRange<std::vector<StopEvent>>(stopEvents, firstStopEvent,
+            lastStopEvent);
     }
 
-    inline SubRange<std::vector<StopId>> stopsOfRoute(const RouteId route) const noexcept
+    inline SubRange<std::vector<StopId>>
+    stopsOfRoute(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         return SubRange<std::vector<StopId>>(stopIds, firstStopIdOfRoute, route);
     }
 
     inline const StopId* stopArrayOfRoute(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         return &(stopIds[firstStopIdOfRoute[route]]);
     }
 
     inline StopId stopOfRouteSegment(const RouteSegment& route) const noexcept
     {
-        AssertMsg(isRoute(route.routeId), "The id " << route.routeId << " does not represent a route!");
+        AssertMsg(isRoute(route.routeId),
+            "The id " << route.routeId << " does not represent a route!");
         return stopIds[firstStopIdOfRoute[route.routeId] + route.stopIndex];
     }
 
     inline const StopEvent* firstTripOfRoute(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         return &(stopEvents[firstStopEventOfRoute[route]]);
     }
 
     inline const StopEvent* lastTripOfRoute(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         return &(stopEvents[firstStopEventOfRoute[route + 1] - numberOfStopsInRoute(route)]);
     }
 
-    inline const StopEvent* tripOfRoute(const RouteId route, const size_t tripNum) const noexcept
+    inline const StopEvent* tripOfRoute(const RouteId route,
+        const size_t tripNum) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         AssertMsg(tripNum < numberOfTripsInRoute(route),
-            "Trip number " << tripNum << " exceeds number of trips in route!");
+            "Trip number " << tripNum
+                           << " exceeds number of trips in route!");
         return firstTripOfRoute(route) + tripNum * numberOfStopsInRoute(route);
     }
 
-    inline TripIterator getTripIterator(const RouteId route, const StopIndex stopIndex,
+    inline TripIterator
+    getTripIterator(const RouteId route, const StopIndex stopIndex,
         const StopEvent* const currentTrip) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         AssertMsg(stopIndex < numberOfStopsInRoute(route),
-            "The route " << route << " has only " << numberOfStopsInRoute(route) << " stops, but stop index "
-                         << stopIndex << " was requested!");
-        AssertMsg(currentTrip >= firstTripOfRoute(route), "The specified trip is not part of the route!");
-        AssertMsg(currentTrip <= lastTripOfRoute(route), "The specified trip is not part of the route!");
+            "The route " << route << " has only "
+                         << numberOfStopsInRoute(route)
+                         << " stops, but stop index " << stopIndex
+                         << " was requested!");
+        AssertMsg(currentTrip >= firstTripOfRoute(route),
+            "The specified trip is not part of the route!");
+        AssertMsg(currentTrip <= lastTripOfRoute(route),
+            "The specified trip is not part of the route!");
         AssertMsg((currentTrip - firstTripOfRoute(route)) % numberOfStopsInRoute(route) == 0,
             "The specified trip is not valid!");
-        return TripIterator(numberOfStopsInRoute(route), stopArrayOfRoute(route), firstTripOfRoute(route), stopIndex,
-            currentTrip);
+        return TripIterator(numberOfStopsInRoute(route), stopArrayOfRoute(route),
+            firstTripOfRoute(route), stopIndex, currentTrip);
     }
 
-    inline TripIterator getTripIterator(const RouteId route, const StopIndex stopIndex,
+    inline TripIterator getTripIterator(const RouteId route,
+        const StopIndex stopIndex,
         size_t currentTripNumber) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         AssertMsg(stopIndex < numberOfStopsInRoute(route),
-            "The route " << route << " has only " << numberOfStopsInRoute(route) << " stops, but stop index "
-                         << stopIndex << " was requested!");
+            "The route " << route << " has only "
+                         << numberOfStopsInRoute(route)
+                         << " stops, but stop index " << stopIndex
+                         << " was requested!");
         currentTripNumber = std::min(currentTripNumber, numberOfTripsInRoute(route) - 1);
         const StopEvent* const currentTrip = tripOfRoute(route, currentTripNumber);
-        AssertMsg(currentTrip <= lastTripOfRoute(route), "currentTrip is not a trip of the given route!");
-        return TripIterator(numberOfStopsInRoute(route), stopArrayOfRoute(route), firstTripOfRoute(route), stopIndex,
-            currentTrip);
+        AssertMsg(currentTrip <= lastTripOfRoute(route),
+            "currentTrip is not a trip of the given route!");
+        return TripIterator(numberOfStopsInRoute(route), stopArrayOfRoute(route),
+            firstTripOfRoute(route), stopIndex, currentTrip);
     }
 
-    inline TripIterator getTripIterator(const RouteId route, const StopIndex stopIndex = StopIndex(0)) const noexcept
+    inline TripIterator
+    getTripIterator(const RouteId route,
+        const StopIndex stopIndex = StopIndex(0)) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         AssertMsg(stopIndex < numberOfStopsInRoute(route),
-            "The route " << route << " has only " << numberOfStopsInRoute(route) << " stops, but stop index "
-                         << stopIndex << " was requested!");
-        return TripIterator(numberOfStopsInRoute(route), stopArrayOfRoute(route), firstTripOfRoute(route), stopIndex,
+            "The route " << route << " has only "
+                         << numberOfStopsInRoute(route)
+                         << " stops, but stop index " << stopIndex
+                         << " was requested!");
+        return TripIterator(numberOfStopsInRoute(route), stopArrayOfRoute(route),
+            firstTripOfRoute(route), stopIndex,
             lastTripOfRoute(route));
     }
 
-    inline TripIterator getTripIterator(const RouteSegment& route) const noexcept
+    inline TripIterator
+    getTripIterator(const RouteSegment& route) const noexcept
     {
         return getTripIterator(route.routeId, route.stopIndex);
     }
 
-    inline std::vector<const StopEvent*> getLastTripByStopIndex() const noexcept
+    inline std::vector<const StopEvent*>
+    getLastTripByStopIndex() const noexcept
     {
         std::vector<const StopEvent*> result;
         result.reserve(stopIds.size());
         for (const RouteId route : routes()) {
-            AssertMsg(numberOfStopsInRoute(route) > 0, "Route " << route << " has 0 stops!");
+            AssertMsg(numberOfStopsInRoute(route) > 0,
+                "Route " << route << " has 0 stops!");
             result.emplace_back(lastTripOfRoute(route));
             result.resize(firstStopIdOfRoute[route + 1], result.back());
         }
@@ -323,13 +364,15 @@ public:
 
     inline StopEvent* firstTripOfRoute(const RouteId route) noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         return &(stopEvents[firstStopEventOfRoute[route]]);
     }
 
     inline StopEvent* lastTripOfRoute(const RouteId route) noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         return &(stopEvents[firstStopEventOfRoute[route + 1] - numberOfStopsInRoute(route)]);
     }
 
@@ -341,7 +384,8 @@ private:
             const StopId* stops = stopArrayOfRoute(route);
             const size_t tripSize = numberOfStopsInRoute(route);
             for (size_t stopIndex = 0; stopIndex < tripSize; stopIndex++) {
-                for (StopEvent* trip = firstTripOfRoute(route); trip <= lastTripOfRoute(route); trip += tripSize) {
+                for (StopEvent* trip = firstTripOfRoute(route);
+                     trip <= lastTripOfRoute(route); trip += tripSize) {
                     adjust(trip[stopIndex], stops[stopIndex]);
                 }
             }
@@ -353,7 +397,9 @@ public:
     {
         if (implicitDepartureBufferTimes | implicitArrivalBufferTimes)
             return;
-        adjustTimes([&](StopEvent& stopEvent, const StopId stop) { stopEvent.departureTime -= minTransferTime(stop); });
+        adjustTimes([&](StopEvent& stopEvent, const StopId stop) {
+            stopEvent.departureTime -= minTransferTime(stop);
+        });
         implicitDepartureBufferTimes = true;
     }
 
@@ -361,7 +407,9 @@ public:
     {
         if (!implicitDepartureBufferTimes)
             return;
-        adjustTimes([&](StopEvent& stopEvent, const StopId stop) { stopEvent.departureTime += minTransferTime(stop); });
+        adjustTimes([&](StopEvent& stopEvent, const StopId stop) {
+            stopEvent.departureTime += minTransferTime(stop);
+        });
         implicitDepartureBufferTimes = false;
     }
 
@@ -369,7 +417,9 @@ public:
     {
         if (implicitDepartureBufferTimes | implicitArrivalBufferTimes)
             return;
-        adjustTimes([&](StopEvent& stopEvent, const StopId stop) { stopEvent.arrivalTime += minTransferTime(stop); });
+        adjustTimes([&](StopEvent& stopEvent, const StopId stop) {
+            stopEvent.arrivalTime += minTransferTime(stop);
+        });
         implicitArrivalBufferTimes = true;
     }
 
@@ -377,7 +427,9 @@ public:
     {
         if (!implicitArrivalBufferTimes)
             return;
-        adjustTimes([&](StopEvent& stopEvent, const StopId stop) { stopEvent.arrivalTime -= minTransferTime(stop); });
+        adjustTimes([&](StopEvent& stopEvent, const StopId stop) {
+            stopEvent.arrivalTime -= minTransferTime(stop);
+        });
         implicitArrivalBufferTimes = false;
     }
 
@@ -411,12 +463,16 @@ public:
 
     inline double maxRouteDistance(const RouteSegment& route) const noexcept
     {
-        AssertMsg(isRoute(route.routeId), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route.routeId),
+            "The id " << route << " does not represent a route!");
         double maxDist = 0;
         const StopId* stops = stopArrayOfRoute(route.routeId);
         const size_t tripSize = numberOfStopsInRoute(route.routeId);
-        for (size_t stopIndex = route.stopIndex + 1; stopIndex < tripSize; stopIndex++) {
-            const double dist = geoDistanceInCM(stopData[stops[route.stopIndex]].coordinates, stopData[stops[stopIndex]].coordinates) / 100000.0;
+        for (size_t stopIndex = route.stopIndex + 1; stopIndex < tripSize;
+             stopIndex++) {
+            const double dist = geoDistanceInCM(stopData[stops[route.stopIndex]].coordinates,
+                                    stopData[stops[stopIndex]].coordinates)
+                / 100000.0;
             if (maxDist >= dist)
                 continue;
             maxDist = dist;
@@ -426,13 +482,15 @@ public:
 
     inline double maxRouteSpeed(const RouteSegment& route) const noexcept
     {
-        AssertMsg(isRoute(route.routeId), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route.routeId),
+            "The id " << route << " does not represent a route!");
         double maxSpeed = 0;
         const StopId* stops = stopArrayOfRoute(route.routeId);
         const size_t tripSize = numberOfStopsInRoute(route.routeId);
-        for (const StopEvent* trip = firstTripOfRoute(route.routeId); trip <= lastTripOfRoute(route.routeId);
-             trip += tripSize) {
-            for (size_t stopIndex = route.stopIndex + 1; stopIndex < tripSize; stopIndex++) {
+        for (const StopEvent* trip = firstTripOfRoute(route.routeId);
+             trip <= lastTripOfRoute(route.routeId); trip += tripSize) {
+            for (size_t stopIndex = route.stopIndex + 1; stopIndex < tripSize;
+                 stopIndex++) {
                 const double speed = geoDistanceInCM(stopData[stops[route.stopIndex]].coordinates,
                                          stopData[stops[stopIndex]].coordinates)
                     / (100000.0 * (trip[stopIndex].arrivalTime - trip[route.stopIndex].departureTime));
@@ -444,15 +502,18 @@ public:
         return maxSpeed;
     }
 
-    inline double maxRouteSpeedTimesDistance(const RouteSegment& route) const noexcept
+    inline double
+    maxRouteSpeedTimesDistance(const RouteSegment& route) const noexcept
     {
-        AssertMsg(isRoute(route.routeId), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route.routeId),
+            "The id " << route << " does not represent a route!");
         double maxSpeedTimesDistance = 0;
         const StopId* stops = stopArrayOfRoute(route.routeId);
         const size_t tripSize = numberOfStopsInRoute(route.routeId);
-        for (const StopEvent* trip = firstTripOfRoute(route.routeId); trip <= lastTripOfRoute(route.routeId);
-             trip += tripSize) {
-            for (size_t stopIndex = route.stopIndex + 1; stopIndex < tripSize; stopIndex++) {
+        for (const StopEvent* trip = firstTripOfRoute(route.routeId);
+             trip <= lastTripOfRoute(route.routeId); trip += tripSize) {
+            for (size_t stopIndex = route.stopIndex + 1; stopIndex < tripSize;
+                 stopIndex++) {
                 const double dist = geoDistanceInCM(stopData[stops[route.stopIndex]].coordinates,
                                         stopData[stops[stopIndex]].coordinates)
                     / 100000.0;
@@ -506,7 +567,8 @@ public:
 
     inline int getTripOffset(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "The id " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "The id " << route << " does not represent a route!");
         const size_t tripCount = numberOfTripsInRoute(route);
         const size_t stopCount = numberOfStopsInRoute(route);
         if (tripCount <= 1)
@@ -533,28 +595,39 @@ public:
         return result;
     }
 
-    inline std::vector<std::string> journeyToText(const Journey& journey) const noexcept
+    inline std::vector<std::string>
+    journeyToText(const Journey& journey) const noexcept
     {
         std::vector<std::string> text;
         for (const JourneyLeg& leg : journey) {
             std::stringstream line;
             if (leg.usesRoute) {
                 line << "Take " << GTFS::TypeNames[routeData[leg.routeId].type];
-                line << ": " << routeData[leg.routeId].name << " [" << leg.routeId << "] ";
-                line << "from " << stopData[leg.from].name << " [" << leg.from << "] ";
-                line << "departing at " << String::secToTime(leg.departureTime) << " [" << leg.departureTime << "], ";
-                line << "to " << stopData[leg.to].name << " [" << leg.to << "] ";
-                line << "arrive at " << String::secToTime(leg.arrivalTime) << " [" << leg.arrivalTime << "] ";
-            } else if (leg.from == leg.to) {
-                line << "Wait at " << stopData[leg.from].name << " [" << leg.from << "], ";
-                line << "minimal waiting time: " << String::secToString(leg.arrivalTime - leg.departureTime) << ".";
-            } else {
-                line << "Walk from " << (isStop(leg.from) ? stopData[leg.from].name : "Vertex") << " [" << leg.from
+                line << ": " << routeData[leg.routeId].name << " [" << leg.routeId
                      << "] ";
-                line << "to " << (isStop(leg.to) ? stopData[leg.to].name : "Vertex") << " [" << leg.to << "], ";
-                line << "start at " << String::secToTime(leg.departureTime) << " [" << leg.departureTime << "] ";
-                line << "and arrive at " << String::secToTime(leg.arrivalTime) << " [" << leg.arrivalTime << "] ";
-                line << "(" << String::secToString(leg.arrivalTime - leg.departureTime) << ").";
+                line << "from " << stopData[leg.from].name << " [" << leg.from << "] ";
+                line << "departing at " << String::secToTime(leg.departureTime) << " ["
+                     << leg.departureTime << "], ";
+                line << "to " << stopData[leg.to].name << " [" << leg.to << "] ";
+                line << "arrive at " << String::secToTime(leg.arrivalTime) << " ["
+                     << leg.arrivalTime << "] ";
+            } else if (leg.from == leg.to) {
+                line << "Wait at " << stopData[leg.from].name << " [" << leg.from
+                     << "], ";
+                line << "minimal waiting time: "
+                     << String::secToString(leg.arrivalTime - leg.departureTime) << ".";
+            } else {
+                line << "Walk from "
+                     << (isStop(leg.from) ? stopData[leg.from].name : "Vertex") << " ["
+                     << leg.from << "] ";
+                line << "to " << (isStop(leg.to) ? stopData[leg.to].name : "Vertex")
+                     << " [" << leg.to << "], ";
+                line << "start at " << String::secToTime(leg.departureTime) << " ["
+                     << leg.departureTime << "] ";
+                line << "and arrive at " << String::secToTime(leg.arrivalTime) << " ["
+                     << leg.arrivalTime << "] ";
+                line << "(" << String::secToString(leg.arrivalTime - leg.departureTime)
+                     << ").";
             }
             text.emplace_back(line.str());
         }
@@ -581,10 +654,13 @@ public:
         }
         for (const RouteId route : routes()) {
             for (size_t i = 0; i < numberOfStopsInRoute(route); i++) {
-                result.stopIds.emplace_back(stopIds[firstStopIdOfRoute[route + 1] - i - 1]);
+                result.stopIds.emplace_back(
+                    stopIds[firstStopIdOfRoute[route + 1] - i - 1]);
             }
             for (size_t i = 0; i < numberOfStopEventsInRoute(route); i++) {
-                result.stopEvents.emplace_back(stopEvents[firstStopEventOfRoute[route + 1] - i - 1].reverseStopEvent());
+                result.stopEvents.emplace_back(
+                    stopEvents[firstStopEventOfRoute[route + 1] - i - 1]
+                        .reverseStopEvent());
                 stopEventPermutation[result.stopEvents.size() - 1] = firstStopEventOfRoute[route + 1] - i - 1;
             }
         }
@@ -597,7 +673,8 @@ public:
         return result;
     }
 
-    inline TransferGraph averageTravelTimeGraph(const int minTime, const int maxTime) const noexcept
+    inline TransferGraph
+    averageTravelTimeGraph(const int minTime, const int maxTime) const noexcept
     {
         struct Connection {
             Connection(const int departureTime, const int travelTime)
@@ -619,9 +696,10 @@ public:
         Intermediate::TransferGraph topology;
         topology.addVertices(transferGraph.numVertices());
         for (const RouteId route : routes()) {
-            for (size_t stopIndex = firstStopIdOfRoute[route] + 1; stopIndex < firstStopIdOfRoute[route + 1];
-                 stopIndex++) {
-                topology.findOrAddEdge(stopIds[stopIndex - 1], stopIds[stopIndex]).set(TravelTime, intMax);
+            for (size_t stopIndex = firstStopIdOfRoute[route] + 1;
+                 stopIndex < firstStopIdOfRoute[route + 1]; stopIndex++) {
+                topology.findOrAddEdge(stopIds[stopIndex - 1], stopIds[stopIndex])
+                    .set(TravelTime, intMax);
             }
         }
         for (Vertex vertex : transferGraph.vertices()) {
@@ -632,13 +710,15 @@ public:
             }
         }
         topology.packEdges();
-        std::vector<std::vector<Connection>> connectionsByEdgeId(topology.numEdges());
+        std::vector<std::vector<Connection>> connectionsByEdgeId(
+            topology.numEdges());
         for (const RouteId route : routes()) {
             const StopId* stops = stopArrayOfRoute(route);
             const size_t tripSize = numberOfStopsInRoute(route);
             for (size_t stopIndex = 1; stopIndex < tripSize; stopIndex++) {
                 const Edge edge = topology.findEdge(stops[stopIndex - 1], stops[stopIndex]);
-                for (const StopEvent* trip = firstTripOfRoute(route); trip <= lastTripOfRoute(route); trip += tripSize) {
+                for (const StopEvent* trip = firstTripOfRoute(route);
+                     trip <= lastTripOfRoute(route); trip += tripSize) {
                     if (trip[stopIndex - 1].departureTime < minTime)
                         continue;
                     const int travelTime = trip[stopIndex].arrivalTime - trip[stopIndex - 1].departureTime;
@@ -646,7 +726,8 @@ public:
                         continue;
                     if (edge >= connectionsByEdgeId.size())
                         connectionsByEdgeId.resize(edge + 1);
-                    connectionsByEdgeId[edge].emplace_back(trip[stopIndex - 1].departureTime, travelTime);
+                    connectionsByEdgeId[edge].emplace_back(
+                        trip[stopIndex - 1].departureTime, travelTime);
                 }
             }
         }
@@ -676,9 +757,11 @@ public:
             if (lastDeparture >= maxTime) {
                 topology.set(TravelTime, edge, travelTimeSum / (maxTime - minTime));
             }
-            AssertMsg(topology.get(TravelTime, edge) >= 0, "Edge " << edge << " has negative travel time!");
+            AssertMsg(topology.get(TravelTime, edge) >= 0,
+                "Edge " << edge << " has negative travel time!");
         }
-        topology.deleteEdges([&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
+        topology.deleteEdges(
+            [&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
         TransferGraph result;
         Graph::move(std::move(topology), result);
         return result;
@@ -689,11 +772,12 @@ public:
         Intermediate::TransferGraph topology;
         topology.addVertices(transferGraph.numVertices());
         for (const RouteId route : routes()) {
-            for (size_t stopIndex = firstStopIdOfRoute[route] + 1; stopIndex < firstStopIdOfRoute[route + 1];
-                 stopIndex++) {
+            for (size_t stopIndex = firstStopIdOfRoute[route] + 1;
+                 stopIndex < firstStopIdOfRoute[route + 1]; stopIndex++) {
                 if (stopIds[stopIndex - 1] == stopIds[stopIndex])
                     continue;
-                topology.findOrAddEdge(stopIds[stopIndex - 1], stopIds[stopIndex]).set(TravelTime, intMax);
+                topology.findOrAddEdge(stopIds[stopIndex - 1], stopIds[stopIndex])
+                    .set(TravelTime, intMax);
             }
         }
         for (Vertex vertex : transferGraph.vertices()) {
@@ -713,7 +797,8 @@ public:
                 if (stops[stopIndex - 1] == stops[stopIndex])
                     continue;
                 const Edge edge = topology.findEdge(stops[stopIndex - 1], stops[stopIndex]);
-                for (const StopEvent* trip = firstTripOfRoute(route); trip <= lastTripOfRoute(route); trip += tripSize) {
+                for (const StopEvent* trip = firstTripOfRoute(route);
+                     trip <= lastTripOfRoute(route); trip += tripSize) {
                     const int travelTime = trip[stopIndex].arrivalTime - trip[stopIndex - 1].departureTime;
                     if (travelTime >= topology.get(TravelTime, edge))
                         continue;
@@ -721,7 +806,8 @@ public:
                 }
             }
         }
-        topology.deleteEdges([&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
+        topology.deleteEdges(
+            [&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
         TransferGraph result;
         Graph::move(std::move(topology), result);
         return result;
@@ -732,10 +818,12 @@ public:
         Intermediate::TransferGraph topology;
         topology.addVertices(transferGraph.numVertices());
         for (const RouteId route : routes()) {
-            for (size_t toStopIndex = firstStopIdOfRoute[route] + 1; toStopIndex < firstStopIdOfRoute[route + 1];
-                 toStopIndex++) {
-                for (size_t fromStopIndex = firstStopIdOfRoute[route]; fromStopIndex < toStopIndex; fromStopIndex++) {
-                    topology.findOrAddEdge(stopIds[fromStopIndex], stopIds[toStopIndex]).set(TravelTime, intMax);
+            for (size_t toStopIndex = firstStopIdOfRoute[route] + 1;
+                 toStopIndex < firstStopIdOfRoute[route + 1]; toStopIndex++) {
+                for (size_t fromStopIndex = firstStopIdOfRoute[route];
+                     fromStopIndex < toStopIndex; fromStopIndex++) {
+                    topology.findOrAddEdge(stopIds[fromStopIndex], stopIds[toStopIndex])
+                        .set(TravelTime, intMax);
                 }
             }
         }
@@ -751,10 +839,11 @@ public:
             const StopId* stops = stopArrayOfRoute(route);
             const size_t tripSize = numberOfStopsInRoute(route);
             for (size_t toStopIndex = 1; toStopIndex < tripSize; toStopIndex++) {
-                for (size_t fromStopIndex = 0; fromStopIndex < toStopIndex; fromStopIndex++) {
+                for (size_t fromStopIndex = 0; fromStopIndex < toStopIndex;
+                     fromStopIndex++) {
                     const Edge edge = topology.findEdge(stops[fromStopIndex], stops[toStopIndex]);
-                    for (const StopEvent* trip = firstTripOfRoute(route); trip <= lastTripOfRoute(route);
-                         trip += tripSize) {
+                    for (const StopEvent* trip = firstTripOfRoute(route);
+                         trip <= lastTripOfRoute(route); trip += tripSize) {
                         const int travelTime = trip[toStopIndex].arrivalTime - trip[fromStopIndex].departureTime;
                         if (travelTime >= topology.get(TravelTime, edge))
                             continue;
@@ -763,7 +852,8 @@ public:
                 }
             }
         }
-        topology.deleteEdges([&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
+        topology.deleteEdges(
+            [&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
         TransferGraph result;
         Graph::move(std::move(topology), result);
         return result;
@@ -773,7 +863,8 @@ public:
     {
         Intermediate::TransferGraph graph;
         graph.addVertices(transferGraph.numVertices());
-        Dijkstra<TransferGraph, false> dijkstra(transferGraph, transferGraph[TravelTime]);
+        Dijkstra<TransferGraph, false> dijkstra(transferGraph,
+            transferGraph[TravelTime]);
         for (const StopId stop : stops()) {
             const int range = stopData[stop].minTransferTime / 2;
             dijkstra.run(
@@ -788,7 +879,9 @@ public:
                     }
                 },
                 [&]() { return false; },
-                [&](const Vertex from, const Edge) { return dijkstra.getDistance(from) > range; });
+                [&](const Vertex from, const Edge) {
+                    return dijkstra.getDistance(from) > range;
+                });
         }
         graph.reduceMultiEdgesBy(TravelTime);
         TransferGraph result;
@@ -807,7 +900,9 @@ public:
         }
     }
 
-    inline void applyVertexPermutation(const Permutation& permutation, const bool permutateStops = true) noexcept
+    inline void
+    applyVertexPermutation(const Permutation& permutation,
+        const bool permutateStops = true) noexcept
     {
         Permutation splitPermutation = permutation.splitAt(numberOfStops());
         if (!permutateStops) {
@@ -820,9 +915,11 @@ public:
         permutate(splitPermutation, stopPermutation);
     }
 
-    inline void applyVertexOrder(const Order& order, const bool permutateStops = true) noexcept
+    inline void applyVertexOrder(const Order& order,
+        const bool permutateStops = true) noexcept
     {
-        applyVertexPermutation(Permutation(Construct::Invert, order), permutateStops);
+        applyVertexPermutation(Permutation(Construct::Invert, order),
+            permutateStops);
     }
 
     inline void applyStopPermutation(const Permutation& permutation) noexcept
@@ -850,23 +947,26 @@ public:
         }
         std::vector<RouteId> illFormedRoutes = checkForIllFormedRoutes();
         std::cout << "RAPTOR public transit data:" << std::endl;
-        std::cout << "   Number of Stops:          " << std::setw(12) << String::prettyInt(numberOfStops())
-                  << std::endl;
-        std::cout << "   Number of Routes:         " << std::setw(12) << String::prettyInt(numberOfRoutes())
-                  << std::endl;
-        std::cout << "   Number of Trips:          " << std::setw(12) << String::prettyInt(tripCount) << std::endl;
-        std::cout << "   Number of Stop Events:    " << std::setw(12) << String::prettyInt(stopEventCount) << std::endl;
-        std::cout << "   Number of Connections:    " << std::setw(12) << String::prettyInt(stopEventCount - tripCount)
-                  << std::endl;
-        std::cout << "   Number of Vertices:       " << std::setw(12) << String::prettyInt(transferGraph.numVertices())
-                  << std::endl;
-        std::cout << "   Number of Edges:          " << std::setw(12) << String::prettyInt(transferGraph.numEdges())
-                  << std::endl;
-        std::cout << "   First Day:                " << std::setw(12) << String::prettyInt(firstDay / (60 * 60 * 24))
-                  << std::endl;
-        std::cout << "   Last Day:                 " << std::setw(12) << String::prettyInt(lastDay / (60 * 60 * 24))
-                  << std::endl;
-        std::cout << "   Bounding Box:             " << std::setw(12) << boundingBox() << std::endl;
+        std::cout << "   Number of Stops:          " << std::setw(12)
+                  << String::prettyInt(numberOfStops()) << std::endl;
+        std::cout << "   Number of Routes:         " << std::setw(12)
+                  << String::prettyInt(numberOfRoutes()) << std::endl;
+        std::cout << "   Number of Trips:          " << std::setw(12)
+                  << String::prettyInt(tripCount) << std::endl;
+        std::cout << "   Number of Stop Events:    " << std::setw(12)
+                  << String::prettyInt(stopEventCount) << std::endl;
+        std::cout << "   Number of Connections:    " << std::setw(12)
+                  << String::prettyInt(stopEventCount - tripCount) << std::endl;
+        std::cout << "   Number of Vertices:       " << std::setw(12)
+                  << String::prettyInt(transferGraph.numVertices()) << std::endl;
+        std::cout << "   Number of Edges:          " << std::setw(12)
+                  << String::prettyInt(transferGraph.numEdges()) << std::endl;
+        std::cout << "   First Day:                " << std::setw(12)
+                  << String::prettyInt(firstDay / (60 * 60 * 24)) << std::endl;
+        std::cout << "   Last Day:                 " << std::setw(12)
+                  << String::prettyInt(lastDay / (60 * 60 * 24)) << std::endl;
+        std::cout << "   Bounding Box:             " << std::setw(12)
+                  << boundingBox() << std::endl;
         if (!illFormedRoutes.empty()) {
             Enumeration text;
             for (size_t i = 0; i < illFormedRoutes.size(); i++) {
@@ -883,7 +983,8 @@ public:
 
     inline void printRoute(const RouteId route) const noexcept
     {
-        AssertMsg(isRoute(route), "Id = " << route << " does not represent a route!");
+        AssertMsg(isRoute(route),
+            "Id = " << route << " does not represent a route!");
         std::cout << "Route " << route << ":" << std::endl
                   << "    Index: ";
         for (size_t i = 0; i < numberOfStopsInRoute(route); i++) {
@@ -922,7 +1023,8 @@ public:
             while (tripB < end) {
                 bool isEqual = true;
                 bool isGreater = false;
-                for (size_t i = 0; i < numberOfStopsInRoute(route); i++, tripA++, tripB++) {
+                for (size_t i = 0; i < numberOfStopsInRoute(route);
+                     i++, tripA++, tripB++) {
                     if (tripA->arrivalTime != tripB->arrivalTime)
                         isEqual = false;
                     if (tripA->departureTime != tripB->departureTime)
@@ -943,8 +1045,9 @@ public:
 
     inline void serialize(const std::string& fileName) const noexcept
     {
-        IO::serialize(fileName, firstRouteSegmentOfStop, firstStopIdOfRoute, firstStopEventOfRoute, routeSegments,
-            stopIds, stopEvents, stopData, routeData, implicitDepartureBufferTimes,
+        IO::serialize(fileName, firstRouteSegmentOfStop, firstStopIdOfRoute,
+            firstStopEventOfRoute, routeSegments, stopIds, stopEvents,
+            stopData, routeData, implicitDepartureBufferTimes,
             implicitArrivalBufferTimes);
         transferGraph.writeBinary(fileName + ".graph");
     }
@@ -953,13 +1056,16 @@ public:
     {
         // Quick and dirty to read old files
         try {
-            IO::deserialize(fileName, firstRouteSegmentOfStop, firstStopIdOfRoute, firstStopEventOfRoute, routeSegments,
-                stopIds, stopEvents, stopData, routeData, implicitDepartureBufferTimes,
+            IO::deserialize(fileName, firstRouteSegmentOfStop, firstStopIdOfRoute,
+                firstStopEventOfRoute, routeSegments, stopIds, stopEvents,
+                stopData, routeData, implicitDepartureBufferTimes,
                 implicitArrivalBufferTimes);
         } catch (const std::exception& e) {
-            std::cout << "Tried reading additional information from the binary, now filling with default value!\n";
-            IO::deserialize(fileName, firstRouteSegmentOfStop, firstStopIdOfRoute, firstStopEventOfRoute, routeSegments,
-                stopIds, stopEvents, stopData, routeData, implicitDepartureBufferTimes,
+            std::cout << "Tried reading additional information from the binary, now "
+                         "filling with default value!\n";
+            IO::deserialize(fileName, firstRouteSegmentOfStop, firstStopIdOfRoute,
+                firstStopEventOfRoute, routeSegments, stopIds, stopEvents,
+                stopData, routeData, implicitDepartureBufferTimes,
                 implicitArrivalBufferTimes);
         }
         transferGraph.readBinary(fileName + ".graph");
@@ -973,6 +1079,14 @@ public:
         writeFootpathCSV(fileBaseName + "footpaths.csv");
     }
 
+    // Function to remove all quotation marks from a string
+    std::string removeQuotations(const std::string& input) const
+    {
+        std::string result = input;
+        result.erase(std::remove(result.begin(), result.end(), '"'), result.end());
+        return result;
+    }
+
     inline void writeStopCSV(const std::string& fileName) const noexcept
     {
         std::ofstream file(fileName);
@@ -981,13 +1095,16 @@ public:
         file << "StopId,StopName,Latitude,Longitude,MinChangeTime\n";
         if (hasImplicitBufferTimes()) {
             for (const StopId stop : stops()) {
-                file << stop.value() << ",\"" << stopData[stop].name << "\"," << stopData[stop].coordinates.latitude
-                     << "," << stopData[stop].coordinates.longitude << ",0\n";
+                file << stop.value() << ",\"" << removeQuotations(stopData[stop].name)
+                     << "\"," << stopData[stop].coordinates.latitude << ","
+                     << stopData[stop].coordinates.longitude << ",0\n";
             }
         } else {
             for (const StopId stop : stops()) {
-                file << stop.value() << ",\"" << stopData[stop].name << "\"," << stopData[stop].coordinates.latitude
-                     << "," << stopData[stop].coordinates.longitude << "," << stopData[stop].minTransferTime << "\n";
+                file << stop.value() << ",\"" << removeQuotations(stopData[stop].name)
+                     << "\"," << stopData[stop].coordinates.latitude << ","
+                     << stopData[stop].coordinates.longitude << ","
+                     << stopData[stop].minTransferTime << "\n";
             }
         }
         file.close();
@@ -1002,8 +1119,9 @@ public:
         for (const RouteId route : routes()) {
             const StopId* stops = stopArrayOfRoute(route);
             for (size_t i = 0; i < numberOfStopsInRoute(route); i++) {
-                file << route.value() << ",\"" << routeData[route].name << "\"," << i << "," << stops[i].value()
-                     << "\n";
+                file << route.value() << ",\""
+                     << removeQuotations(routeData[route].name) << "\"," << i << ","
+                     << stops[i].value() << "\n";
             }
         }
         file.close();
@@ -1025,8 +1143,10 @@ public:
             for (size_t i = 0; i < numberOfTripsInRoute(route); i++) {
                 for (size_t j = 0; j < tripLength; j++) {
                     const StopEvent& stopEvent = stopEvents[(i * tripLength) + j];
-                    file << stopEventCounter << "," << route.value() << "," << tripCounter << "," << j << ","
-                         << stops[j].value() << "," << stopEvent.arrivalTime << "," << stopEvent.departureTime << "\n";
+                    file << stopEventCounter << "," << route.value() << "," << tripCounter
+                         << "," << j << "," << stops[j].value() << ","
+                         << stopEvent.arrivalTime << "," << stopEvent.departureTime
+                         << "\n";
 
                     ++stopEventCounter;
                 }
@@ -1044,8 +1164,8 @@ public:
         file << "FromStopId,ToStopId,TravelTime\n";
         for (const StopId from : stops()) {
             for (const Edge edge : transferGraph.edgesFrom(from)) {
-                file << from.value() << "," << transferGraph.get(ToVertex, edge).value() << ","
-                     << transferGraph.get(TravelTime, edge) << "\n";
+                file << from.value() << "," << transferGraph.get(ToVertex, edge).value()
+                     << "," << transferGraph.get(TravelTime, edge) << "\n";
             }
         }
         file.close();
@@ -1111,7 +1231,8 @@ public:
                 const SubRange<std::vector<StopEvent>> trip = stopEventsOfTrip(route, i);
                 if (i == numTrips - 1 || !overtakes(stopEventsOfTrip(route, i + 1), trip)) {
                     const size_t firstStopEvent = firstStopEventOfRoute[route] + i * tripLength;
-                    for (size_t e = firstStopEvent; e < firstStopEvent + tripLength; e++) {
+                    for (size_t e = firstStopEvent; e < firstStopEvent + tripLength;
+                         e++) {
                         stopEventOrder.emplace_back(e);
                     }
                     continue;
@@ -1152,7 +1273,8 @@ public:
                 firstStopIdOfRoute.emplace_back(stopIds.size());
                 for (const size_t i : newRoute) {
                     const size_t firstStopEvent = firstStopEventOfRoute[route] + i * tripLength;
-                    for (size_t e = firstStopEvent; e < firstStopEvent + tripLength; e++) {
+                    for (size_t e = firstStopEvent; e < firstStopEvent + tripLength;
+                         e++) {
                         stopEventOrder.emplace_back(e);
                     }
                 }
@@ -1163,7 +1285,8 @@ public:
 
         firstRouteSegmentOfStop.clear();
         routeSegments.clear();
-        for (const std::vector<RouteSegment>& routeSegmentList : routeSegmentsOfStop) {
+        for (const std::vector<RouteSegment>& routeSegmentList :
+            routeSegmentsOfStop) {
             firstRouteSegmentOfStop.emplace_back(routeSegments.size());
             for (const RouteSegment& routeSegment : routeSegmentList) {
                 routeSegments.emplace_back(routeSegment);
@@ -1178,10 +1301,12 @@ public:
     }
 
 private:
-    inline bool overtakes(const SubRange<std::vector<StopEvent>>& tripA,
+    inline bool
+    overtakes(const SubRange<std::vector<StopEvent>>& tripA,
         const SubRange<std::vector<StopEvent>>& tripB) const noexcept
     {
-        AssertMsg(tripA.size() == tripB.size(), "Compared trips have different lengths!");
+        AssertMsg(tripA.size() == tripB.size(),
+            "Compared trips have different lengths!");
         for (size_t i = 0; i < tripA.size(); i++) {
             if (tripA[i].arrivalTime < tripB[i].arrivalTime)
                 return true;
@@ -1191,14 +1316,19 @@ private:
         return false;
     }
 
-    inline void permutate(const Permutation& fullPermutation, const Permutation& stopPermutation) noexcept
+    inline void permutate(const Permutation& fullPermutation,
+        const Permutation& stopPermutation) noexcept
     {
         AssertMsg(fullPermutation.size() == transferGraph.numVertices(),
-            "Full permutation size (" << fullPermutation.size() << ") must be the same as number of vertices ("
-                                      << transferGraph.numVertices() << ")!");
+            "Full permutation size ("
+                << fullPermutation.size()
+                << ") must be the same as number of vertices ("
+                << transferGraph.numVertices() << ")!");
         AssertMsg(stopPermutation.size() == numberOfStops(),
-            "Stop permutation size (" << stopPermutation.size() << ") must be the same as number of stops ("
-                                      << numberOfStops() << ")!");
+            "Stop permutation size ("
+                << stopPermutation.size()
+                << ") must be the same as number of stops ("
+                << numberOfStops() << ")!");
 
         Order order(Construct::Invert, stopPermutation);
         std::vector<RouteSegment> newRouteSegments;

@@ -15,18 +15,17 @@ public:
     }
 
 public:
-    inline void clear() noexcept
-    {
-        timestamp++;
-    }
+    inline void clear() noexcept { timestamp++; }
 
     inline int operator()(const StopEventId stopEvent) noexcept
     {
-        AssertMsg(stopEvent < labels.size(), "StopEvent " << stopEvent << " is out of bounds!");
+        AssertMsg(stopEvent < labels.size(),
+            "StopEvent " << stopEvent << " is out of bounds!");
         return getLabel(stopEvent);
     }
 
-    inline StopEventId getScanEnd(const StopEventId stopEvent, const StopEventId tripEnd,
+    inline StopEventId getScanEnd(const StopEventId stopEvent,
+        const StopEventId tripEnd,
         const int walkingDistance) noexcept
     {
         for (StopEventId event = stopEvent; event < tripEnd; event++) {
@@ -36,12 +35,14 @@ public:
         return tripEnd;
     }
 
-    inline void update(const StopEventId stopEvent, const StopEventId tripEnd, const StopEventId routeEnd,
-        const StopIndex tripLength, const int walkingDistance) noexcept
+    inline void update(const StopEventId stopEvent, const StopEventId tripEnd,
+        const StopEventId routeEnd, const StopIndex tripLength,
+        const int walkingDistance) noexcept
     {
         StopEventId currentStart = stopEvent;
         StopEventId currentEnd = tripEnd;
-        for (; currentStart < routeEnd; currentStart += tripLength, currentEnd += tripLength) {
+        for (; currentStart < routeEnd;
+             currentStart += tripLength, currentEnd += tripLength) {
             for (StopEventId event = currentStart; event < currentEnd; event++) {
                 int& label = getLabel(event);
                 if (label <= walkingDistance)

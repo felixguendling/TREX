@@ -16,7 +16,8 @@ public:
     static const std::string CSV_HEADER;
 
 public:
-    Connection(const StopId departureStopId = noStop, const StopId arrivalStopId = noStop, const int departureTime = -1,
+    Connection(const StopId departureStopId = noStop,
+        const StopId arrivalStopId = noStop, const int departureTime = -1,
         const int arrivalTime = 0, const TripId tripId = noTripId)
         : departureStopId(departureStopId)
         , arrivalStopId(arrivalStopId)
@@ -52,36 +53,33 @@ public:
         return (departureTime < c.departureTime) || ((departureTime == c.departureTime) && ((arrivalTime < c.arrivalTime)));
     }
 
-    inline int travelTime() const
-    {
-        return arrivalTime - departureTime;
-    }
+    inline int travelTime() const { return arrivalTime - departureTime; }
 
-    inline bool isValid() const
-    {
-        return travelTime() > 0;
-    }
+    inline bool isValid() const { return travelTime() > 0; }
 
     friend std::ostream& operator<<(std::ostream& out, const Connection& c)
     {
-        return out << "Connection{" << c.departureStopId << ", " << c.arrivalStopId << ", " << c.departureTime << ", "
-                   << c.arrivalTime << ", " << c.tripId << "}";
+        return out << "Connection{" << c.departureStopId << ", " << c.arrivalStopId
+                   << ", " << c.departureTime << ", " << c.arrivalTime << ", "
+                   << c.tripId << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept
     {
-        serialize(departureStopId, arrivalStopId, departureTime, arrivalTime, tripId);
+        serialize(departureStopId, arrivalStopId, departureTime, arrivalTime,
+            tripId);
     }
 
     inline void deserialize(IO::Deserialization& deserialize) noexcept
     {
-        deserialize(departureStopId, arrivalStopId, departureTime, arrivalTime, tripId);
+        deserialize(departureStopId, arrivalStopId, departureTime, arrivalTime,
+            tripId);
     }
 
     inline std::ostream& toCSV(std::ostream& out) const
     {
-        return out << size_t(departureStopId) << "," << size_t(arrivalStopId) << "," << departureTime << ","
-                   << arrivalTime << "," << size_t(tripId);
+        return out << size_t(departureStopId) << "," << size_t(arrivalStopId) << ","
+                   << departureTime << "," << arrivalTime << "," << size_t(tripId);
     }
 
     inline std::string toCSV() const

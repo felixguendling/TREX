@@ -12,12 +12,8 @@ namespace CH {
 
 class NoStopCriterion {
 public:
-    NoStopCriterion()
-    {
-    }
-    inline void initialize(const Data*) noexcept
-    {
-    }
+    NoStopCriterion() { }
+    inline void initialize(const Data*) noexcept { }
     template <typename QUEUE>
     inline bool operator()(QUEUE&) noexcept
     {
@@ -32,10 +28,7 @@ public:
         , maxCoreDegree(maxCoreDegree)
     {
     }
-    inline void initialize(const Data* data) noexcept
-    {
-        this->data = data;
-    }
+    inline void initialize(const Data* data) noexcept { this->data = data; }
     template <typename QUEUE>
     inline bool operator()(QUEUE&) noexcept
     {
@@ -54,10 +47,7 @@ public:
         , minCoreSize(minCoreSize)
     {
     }
-    inline void initialize(const Data* data) noexcept
-    {
-        this->data = data;
-    }
+    inline void initialize(const Data* data) noexcept { this->data = data; }
     template <typename QUEUE>
     inline bool operator()(QUEUE&) noexcept
     {
@@ -76,10 +66,7 @@ public:
         , maxCoreDegree(maxCoreDegree)
     {
     }
-    inline void initialize(const Data* data) noexcept
-    {
-        this->data = data;
-    }
+    inline void initialize(const Data* data) noexcept { this->data = data; }
     template <typename QUEUE>
     inline bool operator()(QUEUE&) noexcept
     {
@@ -94,12 +81,8 @@ private:
 
 class UncontractableVerticesCriterion {
 public:
-    UncontractableVerticesCriterion()
-    {
-    }
-    inline void initialize(const Data*) noexcept
-    {
-    }
+    UncontractableVerticesCriterion() { }
+    inline void initialize(const Data*) noexcept { }
     template <typename QUEUE>
     inline bool operator()(QUEUE& Q) noexcept
     {

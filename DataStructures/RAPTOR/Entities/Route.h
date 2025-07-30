@@ -15,10 +15,7 @@ public:
         , type(type)
     {
     }
-    Route(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Route(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     friend std::ostream& operator<<(std::ostream& out, const Route& r)
     {

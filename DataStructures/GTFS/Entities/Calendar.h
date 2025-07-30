@@ -13,7 +13,9 @@ namespace GTFS {
 class Calendar {
 public:
     Calendar(const std::string& serviceId = "",
-        const std::array<bool, 7>& operatesOnWeekday = { false, false, false, false, false, false, false },
+        const std::array<bool, 7>& operatesOnWeekday = { false, false, false,
+            false, false, false,
+            false },
         const int startDate = -1, const int endDate = -2)
         : serviceId(serviceId)
         , operatesOnWeekday(operatesOnWeekday)
@@ -21,18 +23,16 @@ public:
         , endDate(endDate)
     {
     }
-    Calendar(const std::string& serviceId, const std::array<bool, 7>& operatesOnWeekday, const std::string& startDate,
-        const std::string& endDate)
+    Calendar(const std::string& serviceId,
+        const std::array<bool, 7>& operatesOnWeekday,
+        const std::string& startDate, const std::string& endDate)
         : serviceId(serviceId)
         , operatesOnWeekday(operatesOnWeekday)
         , startDate(stringToDay(startDate))
         , endDate(stringToDay(endDate))
     {
     }
-    Calendar(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Calendar(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     inline bool validate() noexcept
     {
@@ -59,7 +59,9 @@ public:
 
 public:
     std::string serviceId { "" };
-    std::array<bool, 7> operatesOnWeekday { { false, false, false, false, false, false, false } };
+    std::array<bool, 7> operatesOnWeekday {
+        { false, false, false, false, false, false, false }
+    };
     int startDate { -1 };
     int endDate { -2 };
 };

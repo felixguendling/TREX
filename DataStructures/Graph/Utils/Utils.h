@@ -46,18 +46,22 @@ inline bool isAcyclic(const GRAPH& graph) noexcept
 }
 
 template <typename GRAPH>
-inline void computeTravelTimes(GRAPH& graph, const double speedInKMH, const bool maximize = false,
+inline void computeTravelTimes(GRAPH& graph, const double speedInKMH,
+    const bool maximize = false,
     const size_t timeFactor = 1) noexcept
 {
-    static_assert(GRAPH::HasVertexAttribute(Coordinates), "GRAPH has no coordinates!");
-    static_assert(GRAPH::HasEdgeAttribute(TravelTime), "GRAPH has no travel time!");
+    static_assert(GRAPH::HasVertexAttribute(Coordinates),
+        "GRAPH has no coordinates!");
+    static_assert(GRAPH::HasEdgeAttribute(TravelTime),
+        "GRAPH has no travel time!");
     for (const auto [edge, from] : graph.edgesWithFromVertex()) {
         const Geometry::Point& a = graph.get(Coordinates, from);
         const Geometry::Point& b = graph.get(Coordinates, graph.get(ToVertex, edge));
         const double distance = Geometry::geoDistanceInCM(a, b);
         const int travelTime = (distance / speedInKMH) * timeFactor * 0.036;
         if (maximize) {
-            graph.set(TravelTime, edge, std::max(graph.get(TravelTime, edge), travelTime));
+            graph.set(TravelTime, edge,
+                std::max(graph.get(TravelTime, edge), travelTime));
         } else {
             graph.set(TravelTime, edge, travelTime);
         }
@@ -72,8 +76,10 @@ inline void incorporateGraph(GRAPH_A& graphA, const GRAPH_B& graphB) noexcept
             graphA.addVertex(graphB.vertexRecord(vertex));
         }
         if constexpr (GRAPH_A::HasVertexAttribute(Coordinates) && GRAPH_B::HasVertexAttribute(Coordinates)) {
-            AssertMsg(graphA.get(Coordinates, vertex) == graphB.get(Coordinates, vertex),
-                "Vertex " << vertex << " cannot be merged, because the coordinates differ!");
+            AssertMsg(
+                graphA.get(Coordinates, vertex) == graphB.get(Coordinates, vertex),
+                "Vertex " << vertex
+                          << " cannot be merged, because the coordinates differ!");
         }
     }
     for (const auto [edge, from] : graphB.edgesWithFromVertex()) {
@@ -100,7 +106,9 @@ inline size_t numberOfMultiEdges(const GRAPH& graph) noexcept
 }
 
 template <typename GRAPH, AttributeNameType ATTRIBUTE_NAME>
-inline bool hasTriangleInequality(const GRAPH& graph, const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName) noexcept
+inline bool hasTriangleInequality(
+    const GRAPH& graph,
+    const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName) noexcept
 {
     static_assert(GRAPH::HasEdgeAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
         "GRAPH does not have the required edge attribute!");
@@ -121,7 +129,8 @@ inline bool hasTriangleInequality(const GRAPH& graph, const AttributeNameWrapper
 }
 
 template <typename GRAPH, AttributeNameType ATTRIBUTE_NAME = TravelTime>
-inline std::string characterize(const GRAPH& graph,
+inline std::string
+characterize(const GRAPH& graph,
     const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName = TravelTime) noexcept
 {
     if (isClusterGraph(graph)) {
@@ -142,16 +151,21 @@ inline std::string characterize(const GRAPH& graph,
 template <typename GRAPH>
 inline Geometry::Rectangle boundingBox(const GRAPH& graph) noexcept
 {
-    static_assert(GRAPH::HasVertexAttribute(Coordinates), "GRAPH has no coordinates!");
+    static_assert(GRAPH::HasVertexAttribute(Coordinates),
+        "GRAPH has no coordinates!");
     return Geometry::Rectangle::BoundingBox(graph[Coordinates]);
 }
 
 template <typename GRAPH>
-inline void applyBoundingBox(GRAPH& graph, Geometry::Rectangle boundingBox) noexcept
+inline void applyBoundingBox(GRAPH& graph,
+    Geometry::Rectangle boundingBox) noexcept
 {
-    static_assert(GRAPH::HasVertexAttribute(Coordinates), "GRAPH has no coordinates!");
+    static_assert(GRAPH::HasVertexAttribute(Coordinates),
+        "GRAPH has no coordinates!");
     const std::vector<Geometry::Point>& coordinates = graph[Coordinates];
-    graph.deleteVertices([&](const Vertex vertex) { return !boundingBox.contains(coordinates[vertex]); });
+    graph.deleteVertices([&](const Vertex vertex) {
+        return !boundingBox.contains(coordinates[vertex]);
+    });
 }
 
 template <typename GRAPH, bool DEBUG = true>
@@ -161,11 +175,13 @@ inline void reduceToBiggestStronglyConnectedComponent(GRAPH& graph) noexcept
     scc.run();
     const int maxComponent = scc.maxComponent();
     const std::vector<int>& component = scc.getComponent();
-    graph.deleteVertices([&](const Vertex vertex) { return component[vertex] != maxComponent; });
+    graph.deleteVertices(
+        [&](const Vertex vertex) { return component[vertex] != maxComponent; });
 }
 
 template <typename GRAPH, typename WEIGHT_TYPE>
-inline void makeTransitivelyClosed(GRAPH& graph, const WEIGHT_TYPE weight) noexcept
+inline void makeTransitivelyClosed(GRAPH& graph,
+    const WEIGHT_TYPE weight) noexcept
 {
     static_assert(GRAPH::HasEdgeAttribute(weight), "GRAPH has no weight!");
     Dijkstra<GRAPH> dijkstra(graph);
@@ -184,7 +200,8 @@ inline void makeTransitivelyClosed(GRAPH& graph, const WEIGHT_TYPE weight) noexc
 }
 
 template <typename GRAPH>
-inline std::string vertexToString(const GRAPH& graph, const Vertex vertex) noexcept
+inline std::string vertexToString(const GRAPH& graph,
+    const Vertex vertex) noexcept
 {
     AssertMsg(graph.isVertex(vertex), vertex << " is not a valid vertex!");
     std::stringstream result;
@@ -210,14 +227,19 @@ inline std::string edgeToString(const GRAPH& graph, const Edge edge) noexcept
 }
 
 template <typename GRAPH>
-inline void printInfo(const GRAPH& graph, std::ostream& out = std::cout) noexcept
+inline void printInfo(const GRAPH& graph,
+    std::ostream& out = std::cout) noexcept
 {
     const std::string typeString = graphType(graph);
-    const std::string vertexData = cleanGraphType(attributeListToString<typename GRAPH::ListOfRecordVertexAttributes>());
-    const std::string edgeData = cleanGraphType(attributeListToString<typename GRAPH::ListOfRecordEdgeAttributes>());
-    out << typeString.substr(0, typeString.find_first_of('<')) << " with " << String::prettyInt(graph.numVertices())
-        << " vertices and " << String::prettyInt(graph.numEdges()) << " edges"
-        << " (" << String::bytesToString(graph.byteSize()) << " on disk)." << std::endl;
+    const std::string vertexData = cleanGraphType(
+        attributeListToString<typename GRAPH::ListOfRecordVertexAttributes>());
+    const std::string edgeData = cleanGraphType(
+        attributeListToString<typename GRAPH::ListOfRecordEdgeAttributes>());
+    out << typeString.substr(0, typeString.find_first_of('<')) << " with "
+        << String::prettyInt(graph.numVertices()) << " vertices and "
+        << String::prettyInt(graph.numEdges()) << " edges"
+        << " (" << String::bytesToString(graph.byteSize()) << " on disk)."
+        << std::endl;
     if (!vertexData.empty())
         out << "    Vertices contain: " << vertexData << "." << std::endl;
     if (!edgeData.empty())
@@ -227,13 +249,15 @@ inline void printInfo(const GRAPH& graph, std::ostream& out = std::cout) noexcep
 }
 
 template <typename GRAPH>
-inline void writeStatisticsFile(const GRAPH& graph, const std::string& fileNameBase,
+inline void writeStatisticsFile(const GRAPH& graph,
+    const std::string& fileNameBase,
     const std::string& separator = ".") noexcept
 {
     const std::string fileName = fileNameBase + separator + "statistics.txt";
     std::ofstream statistics(fileName);
     AssertMsg(statistics, "Cannot create output stream for: " << fileName);
-    AssertMsg(statistics.is_open(), "Cannot open output stream for: " << fileName);
+    AssertMsg(statistics.is_open(),
+        "Cannot open output stream for: " << fileName);
     printInfo(graph, statistics);
     graph.printAnalysis(statistics);
     statistics.close();
@@ -241,7 +265,9 @@ inline void writeStatisticsFile(const GRAPH& graph, const std::string& fileNameB
 
 // Pagerank Algorithm - Patrick Steil 29/04/2023
 template <typename GRAPH>
-inline std::vector<double> pagerank(const GRAPH& originalGraph, const GRAPH& graph, double damping = 0.85, double epsilon = 1e-8)
+inline std::vector<double> pagerank(const GRAPH& originalGraph,
+    const GRAPH& graph, double damping = 0.85,
+    double epsilon = 1e-8)
 {
     // original graph is the original graph, graph the reverted for faster lookup
     std::vector<double> pr(graph.numVertices(), 1.0 / graph.numVertices());

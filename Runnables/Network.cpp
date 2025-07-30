@@ -3,6 +3,7 @@
 #include "../Shell/Shell.h"
 #include "Commands/NetworkIO.h"
 #include "Commands/NetworkTools.h"
+
 using namespace Shell;
 
 int main(int argc, char** argv)
@@ -15,6 +16,8 @@ int main(int argc, char** argv)
     new GTFSToIntermediate(shell);
     new IntermediateToCSA(shell);
     new IntermediateToRAPTOR(shell);
+    new IntermediateToTD(shell);
+    new IntermediateToTE(shell);
     new BuildMultimodalRAPTORData(shell);
     new AddModeToMultimodalRAPTORData(shell);
     new BuildMultimodalTripBasedData(shell);
@@ -29,6 +32,7 @@ int main(int argc, char** argv)
     new ApplyBoundingBox(shell);
     new ApplyCustomBoundingBox(shell);
     new MakeOneHopTransfers(shell);
+    new MakeOneHopTransfersByGeoDistance(shell);
     new ApplyMaxTransferSpeed(shell);
     new ApplyConstantTransferSpeed(shell);
     new WriteIntermediateToCSV(shell);

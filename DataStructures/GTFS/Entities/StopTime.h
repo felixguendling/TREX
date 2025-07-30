@@ -10,8 +10,9 @@ namespace GTFS {
 
 class StopTime {
 public:
-    StopTime(const std::string& tripId = "", const int arrivalTime = -1, const int departureTime = -2,
-        const std::string& stopId = "", const int stopSequence = -1)
+    StopTime(const std::string& tripId = "", const int arrivalTime = -1,
+        const int departureTime = -2, const std::string& stopId = "",
+        const int stopSequence = -1)
         : tripId(tripId)
         , arrivalTime(arrivalTime)
         , departureTime(departureTime)
@@ -19,10 +20,7 @@ public:
         , stopSequence(stopSequence)
     {
     }
-    StopTime(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    StopTime(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     inline bool validate() noexcept
     {
@@ -36,8 +34,9 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const StopTime& s)
     {
-        return out << "StopTime{" << s.tripId << ", " << s.arrivalTime << ", " << s.departureTime << ", " << s.stopId
-                   << ", " << s.stopSequence << "}";
+        return out << "StopTime{" << s.tripId << ", " << s.arrivalTime << ", "
+                   << s.departureTime << ", " << s.stopId << ", " << s.stopSequence
+                   << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept

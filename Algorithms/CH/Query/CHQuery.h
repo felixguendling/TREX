@@ -13,7 +13,8 @@
 
 namespace CH {
 
-template <typename GRAPH = CHGraph, bool STALL_ON_DEMAND = true, bool DEBUG = false, size_t COLLECT_POIS = false>
+template <typename GRAPH = CHGraph, bool STALL_ON_DEMAND = true,
+    bool DEBUG = false, size_t COLLECT_POIS = false>
 class Query {
 public:
     using Graph = GRAPH;
@@ -37,14 +38,19 @@ private:
     };
 
 public:
-    Query(const Graph& forward, const Graph& backward, const std::vector<int>& forwardWeight,
-        const std::vector<int>& backwardWeight, const Vertex::ValueType endOfPOIs = 0)
+    Query(const Graph& forward, const Graph& backward,
+        const std::vector<int>& forwardWeight,
+        const std::vector<int>& backwardWeight,
+        const Vertex::ValueType endOfPOIs = 0)
         : graph { &forward, &backward }
         , weight { &forwardWeight, &backwardWeight }
         , root { noVertex, noVertex }
-        , Q { ExternalKHeap<2, Distance>(forward.numVertices()), ExternalKHeap<2, Distance>(backward.numVertices()) }
-        , distance { std::vector<Distance>(forward.numVertices()), std::vector<Distance>(backward.numVertices()) }
-        , parent { std::vector<Vertex>(forward.numVertices()), std::vector<Vertex>(backward.numVertices()) }
+        , Q { ExternalKHeap<2, Distance>(forward.numVertices()),
+            ExternalKHeap<2, Distance>(backward.numVertices()) }
+        , distance { std::vector<Distance>(forward.numVertices()),
+            std::vector<Distance>(backward.numVertices()) }
+        , parent { std::vector<Vertex>(forward.numVertices()),
+            std::vector<Vertex>(backward.numVertices()) }
         , timeStamp(forward.numVertices())
         , time(0)
         , tentativeDistance(INFTY)
@@ -58,24 +64,30 @@ public:
     }
 
     template <typename ATTRIBUTE>
-    Query(const Graph& forward, const Graph& backward, const Vertex::ValueType endOfPOIs = 0,
+    Query(const Graph& forward, const Graph& backward,
+        const Vertex::ValueType endOfPOIs = 0,
         const ATTRIBUTE attribute = Weight)
-        : Query(forward, backward, forward[attribute], backward[attribute], endOfPOIs)
+        : Query(forward, backward, forward[attribute], backward[attribute],
+            endOfPOIs)
     {
     }
 
-    Query(const CH& ch, const int direction = FORWARD, const Vertex::ValueType endOfPOIs = 0)
-        : Query(ch.getGraph(direction), ch.getGraph(!direction), endOfPOIs, Weight)
+    Query(const CH& ch, const int direction = FORWARD,
+        const Vertex::ValueType endOfPOIs = 0)
+        : Query(ch.getGraph(direction), ch.getGraph(!direction), endOfPOIs,
+            Weight)
     {
     }
 
     template <bool TARGET_PRUNING = true>
-    inline void run(const Vertex from, const Vertex to, const double targetPruningFactor = 1) noexcept
+    inline void run(const Vertex from, const Vertex to,
+        const double targetPruningFactor = 1) noexcept
     {
         if (root[FORWARD] == from && root[BACKWARD] == to)
             return;
         if constexpr (Debug) {
-            std::cout << "Starting " << ((CollectPOIs) ? ("CH-POI") : ("CH")) << " query" << std::endl;
+            std::cout << "Starting " << ((CollectPOIs) ? ("CH-POI") : ("CH"))
+                      << " query" << std::endl;
             std::cout << "   Source vertex: " << from << std::endl;
             std::cout << "   Target vertex: " << to << std::endl;
         }
@@ -91,7 +103,9 @@ public:
         if (root[I] == origin && root[J] == noVertex)
             return;
         if constexpr (Debug) {
-            std::cout << "Starting unidirectional " << ((CollectPOIs) ? ("CH-POI") : ("CH")) << " query" << std::endl;
+            std::cout << "Starting unidirectional "
+                      << ((CollectPOIs) ? ("CH-POI") : ("CH")) << " query"
+                      << std::endl;
             std::cout << "   Origin vertex: " << origin << std::endl;
         }
         clear<I>();
@@ -115,7 +129,8 @@ public:
     }
 
     template <int I>
-    inline void addOrigin(const Vertex vertex, const int initialDistance = 0) noexcept
+    inline void addOrigin(const Vertex vertex,
+        const int initialDistance = 0) noexcept
     {
         root[I] = vertex;
         cleanLabel(vertex);
@@ -123,12 +138,14 @@ public:
         Q[I].update(&distance[I][vertex]);
     }
 
-    inline void addSource(const Vertex vertex, const int initialDistance = 0) noexcept
+    inline void addSource(const Vertex vertex,
+        const int initialDistance = 0) noexcept
     {
         addOrigin<FORWARD>(vertex, initialDistance);
     }
 
-    inline void addTarget(const Vertex vertex, const int initialDistance = 0) noexcept
+    inline void addTarget(const Vertex vertex,
+        const int initialDistance = 0) noexcept
     {
         addOrigin<BACKWARD>(vertex, initialDistance);
     }
@@ -137,7 +154,8 @@ public:
     inline void run(const double targetPruningFactor = 1) noexcept
     {
         if constexpr (Debug)
-            std::cout << "Running " << ((CollectPOIs) ? ("CH-POI") : ("CH")) << " query" << std::endl;
+            std::cout << "Running " << ((CollectPOIs) ? ("CH-POI") : ("CH"))
+                      << " query" << std::endl;
 
         if (root[FORWARD] == root[BACKWARD]) {
             tentativeDistance = 0;
@@ -165,7 +183,9 @@ public:
     inline void run() noexcept
     {
         if constexpr (Debug)
-            std::cout << "Running unidirectional " << ((CollectPOIs) ? ("CH-POI") : ("CH")) << " query" << std::endl;
+            std::cout << "Running unidirectional "
+                      << ((CollectPOIs) ? ("CH-POI") : ("CH")) << " query"
+                      << std::endl;
 
         if (root[FORWARD] == root[BACKWARD]) {
             tentativeDistance = 0;
@@ -240,7 +260,8 @@ public:
         return reachedPOIs[DIRECTION];
     }
 
-    inline std::vector<Vertex> getReversePath(const Vertex = noVertex) const noexcept
+    inline std::vector<Vertex>
+    getReversePath(const Vertex = noVertex) const noexcept
     {
         return Vector::reverse(backwardLeg<true>()) + forwardLeg<true>();
     }
@@ -260,15 +281,9 @@ public:
         return backwardLeg<false>();
     }
 
-    inline int getSettleCount() const noexcept
-    {
-        return settleCount;
-    }
+    inline int getSettleCount() const noexcept { return settleCount; }
 
-    inline int getStallCount() const noexcept
-    {
-        return stallCount;
-    }
+    inline int getStallCount() const noexcept { return stallCount; }
 
 private:
     inline void clearGeneral() noexcept
@@ -306,9 +321,12 @@ private:
     inline void printStatistics() const noexcept
     {
         if constexpr (StallOnDemand)
-            std::cout << "   Stalled Vertices = " << String::prettyInt(stallCount) << std::endl;
-        std::cout << "   Settled Vertices = " << String::prettyInt(settleCount) << std::endl;
-        std::cout << "   Time = " << String::msToString(timer.elapsedMilliseconds()) << std::endl;
+            std::cout << "   Stalled Vertices = " << String::prettyInt(stallCount)
+                      << std::endl;
+        std::cout << "   Settled Vertices = " << String::prettyInt(settleCount)
+                  << std::endl;
+        std::cout << "   Time = " << String::msToString(timer.elapsedMilliseconds())
+                  << std::endl;
     }
 
     template <bool UNPACK>

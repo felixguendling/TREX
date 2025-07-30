@@ -27,10 +27,14 @@ public:
         stopEventGraph.addVertices(data.numberOfStopEvents());
     }
 
-    void computeShortcuts(const ThreadPinning& threadPinning, const int minDepartureTime = -never, const int maxDepartureTime = never, const bool verbose = true) noexcept
+    void computeShortcuts(const ThreadPinning& threadPinning,
+        const int minDepartureTime = -never,
+        const int maxDepartureTime = never,
+        const bool verbose = true) noexcept
     {
         if (verbose)
-            std::cout << "Computing shortcuts with " << threadPinning.numberOfThreads << " threads." << std::endl;
+            std::cout << "Computing shortcuts with " << threadPinning.numberOfThreads
+                      << " threads." << std::endl;
 
         std::vector<Shortcut> shortcuts;
 
@@ -58,14 +62,21 @@ public:
         }
 
         if (!shortcuts.empty()) {
-            std::sort(shortcuts.begin(), shortcuts.end(), [](const Shortcut& a, const Shortcut& b) {
-                return (a.origin < b.origin) || ((a.origin == b.origin) && (a.destination < b.destination));
-            });
-            stopEventGraph.addEdge(Vertex(shortcuts[0].origin), Vertex(shortcuts[0].destination)).set(TravelTime, shortcuts[0].walkingDistance);
+            std::sort(shortcuts.begin(), shortcuts.end(),
+                [](const Shortcut& a, const Shortcut& b) {
+                    return (a.origin < b.origin) || ((a.origin == b.origin) && (a.destination < b.destination));
+                });
+            stopEventGraph
+                .addEdge(Vertex(shortcuts[0].origin),
+                    Vertex(shortcuts[0].destination))
+                .set(TravelTime, shortcuts[0].walkingDistance);
             for (size_t i = 1; i < shortcuts.size(); i++) {
                 if ((shortcuts[i].origin == shortcuts[i - 1].origin) && (shortcuts[i].destination == shortcuts[i - 1].destination))
                     continue;
-                stopEventGraph.addEdge(Vertex(shortcuts[i].origin), Vertex(shortcuts[i].destination)).set(TravelTime, shortcuts[i].walkingDistance);
+                stopEventGraph
+                    .addEdge(Vertex(shortcuts[i].origin),
+                        Vertex(shortcuts[i].destination))
+                    .set(TravelTime, shortcuts[i].walkingDistance);
             }
             stopEventGraph.sortEdges(ToVertex);
         }
@@ -88,4 +99,4 @@ private:
     DynamicTransferGraph stopEventGraph;
 };
 
-}
+} // namespace TripBased

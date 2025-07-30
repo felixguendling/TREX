@@ -4,12 +4,10 @@
 #include "../../Helpers/Assert.h"
 #include "../../Helpers/Ranges/SubRange.h"
 #include "../../Helpers/String/String.h"
-/* #include "../Partition/MultiLevelCell.h" */
-/* #include "../Partition/MultiLevelPartitionOLD.h" */
-#include "../Partition/MultiLevelPartitionBits.h"
 #include "../RAPTOR/Data.h"
 #include "../RAPTOR/Entities/RouteSegment.h"
 #include "../TripBased/Data.h"
+#include <cmath>
 #include <numeric>
 #include <string>
 
@@ -17,20 +15,17 @@ namespace TripBased {
 
 class MLData : public Data {
 public:
-    MLData(const RAPTOR::Data& raptor, const int numLevels, const int numCellsPerLevel)
+    MLData(const RAPTOR::Data& raptor, const int numLevels)
         : Data(raptor)
-        , multiPartition(numberOfStops(), numLevels, numCellsPerLevel)
+        , numberOfLevels(numLevels)
         , unionFind(numberOfStops())
         , layoutGraph()
         , localLevelOfEvent(raptor.numberOfStopEvents(), 0)
-    /* , localLevelOfTrip(raptor.numberOfTrips(), 0) */
+        , cellIds(raptor.numberOfStops(), 0)
     {
     }
 
-    MLData(const std::string& fileName)
-    {
-        deserialize(fileName);
-    }
+    MLData(const std::string& fileName) { deserialize(fileName); }
 
 public:
     inline void addInformationToStopEventGraph() noexcept
@@ -38,60 +33,17 @@ public:
         std::vector<uint8_t> zeroLevels(stopEventGraph.numEdges(), 0);
         stopEventGraph.get(LocalLevel).swap(zeroLevels);
 
-        std::vector<uint8_t> initHops(stopEventGraph.numEdges(), 1);
-        stopEventGraph.get(Hop).swap(initHops);
-        /* for (const auto [edge, from] : stopEventGraph.edgesWithFromVertex()) { */
-        /*     StopEventId toVertex = StopEventId(stopEventGraph.get(ToVertex, edge)); */
-        /*     AssertMsg(from < numberOfStopEvents(), "Transfers comes from a non-valid stopevent!"); */
-        /*     AssertMsg(toVertex < numberOfStopEvents(), "Transfers leads to a non-valid stopevent!"); */
-
-        /*     StopId fromStop = getStopOfStopEvent(StopEventId(from)); */
-        /*     StopId toStop = getStopOfStopEvent(toVertex); */
-
-        /*     AssertMsg(multiPartition.inSameCell(fromStop, toStop), "Stops are not in the same cell!"); */
-
-        /*     stopEventGraph.set(LocalLevel, edge, 0); */
-        /* } */
-    }
-
-    inline void showCuts() noexcept
-    {
-        std::vector<size_t> cutsPerLevel(multiPartition.getNumberOfLevels(), 0);
-
-        for (const RouteId route : routes()) {
-            SubRange<std::vector<StopId>> stopsInCurrentRoute = raptorData.stopsOfRoute(route);
-            size_t numberOfTrips = raptorData.numberOfTripsInRoute(route);
-
-            for (size_t i(1); i < stopsInCurrentRoute.size(); ++i) {
-                if (stopsInCurrentRoute[i] == stopsInCurrentRoute[i - 1])
-                    continue;
-
-                size_t lowestCross = multiPartition.findCrossingLevel(stopsInCurrentRoute[i - 1], stopsInCurrentRoute[i]);
-
-                if (lowestCross == (size_t)multiPartition.getNumberOfLevels())
-                    continue;
-
-                cutsPerLevel[lowestCross] += numberOfTrips;
-                i = stopsInCurrentRoute.size();
-            }
-        }
-
-        std::cout << "**** Information about the number of cuts depending on the level ****" << std::endl;
-        std::cout << "**** Note: A trip can only be a cut trip once ****" << std::endl;
-        std::cout << "Levels\tCut\tPercentage[%]" << std::endl;
-
-        for (size_t level(0); level < cutsPerLevel.size(); ++level) {
-            std::cout << level << "\t" << String::prettyInt(cutsPerLevel[level]) << "\t" << String::prettyDouble((float)(cutsPerLevel[level] / (float)raptorData.numberOfTrips()) * 100) << std::endl;
-        }
+        /* std::vector<uint8_t> initHops(stopEventGraph.numEdges(), 1); */
+        /* stopEventGraph.get(Hop).swap(initHops); */
     }
 
     inline void readPartitionFile(const std::string& fileName)
     {
-        std::vector<int> globalIds(numberOfStops(), 0);
+        std::vector<uint64_t> globalIds(numberOfStops(), 0);
         std::fstream file(fileName);
 
         if (file.is_open()) {
-            int globalId(0);
+            uint64_t globalId(0);
             size_t index(0);
 
             while (file >> globalId) {
@@ -101,15 +53,39 @@ public:
 
             file.close();
 
-            std::cout << "Read " << String::prettyInt(index) << " many IDs!" << std::endl;
+            std::cout << "Read " << String::prettyInt(index) << " many IDs!"
+                      << std::endl;
         } else {
             std::cerr << "Unable to open the file: " << fileName << std::endl;
         }
 
-        for (size_t i(0); i < numberOfStops(); ++i) {
-            AssertMsg((size_t)unionFind(i) < globalIds.size(), "unionFind[i] is out of bounds!");
+        applyGlobalIDs(globalIds);
+    }
 
-            multiPartition.set(i, (size_t)globalIds[unionFind(i)]);
+    inline void applyGlobalIDs(std::vector<uint64_t>& globalIds) noexcept
+    {
+        /*
+        std::vector<Vertex> stopToVertexMapping(numberOfStops(), noVertex);
+
+        for (Vertex v : layoutGraph.vertices()) {
+            stopToVertexMapping[layoutGraph.get(Size, v)] = v;
+        }
+        */
+
+        // now set the correct cellIds
+        for (size_t i(0); i < numberOfStops(); ++i) {
+            /*
+            AssertMsg((size_t)unionFind(i) < stopToVertexMapping.size(),
+                "unionFind[i] is out of bounds!");
+            AssertMsg((size_t)stopToVertexMapping[unionFind(i)] < globalIds.size(),
+                "stopToVertexMapping[unionFind[i]] is out of bounds!");
+            cellIds[i] = globalIds[stopToVertexMapping[unionFind(i)]];
+            */
+            AssertMsg(static_cast<size_t>(unionFind(i)) < globalIds.size(),
+                "unionFind is out of bounds!");
+            AssertMsg(layoutGraph.get(Weight, Vertex(unionFind(i))) > 0,
+                "The corresponding vertex weight is zero?");
+            cellIds[i] = globalIds[unionFind(i)];
         }
 
         AssertMsg(assertNoCutTransfers(), "Footpath has been cut!");
@@ -122,24 +98,30 @@ public:
         unionFind.clear();
         std::vector<int> weightOfNodes(numberOfStops(), 1);
 
-        for (const auto [edge, from] : raptorData.transferGraph.edgesWithFromVertex()) {
+        for (const auto [edge, from] :
+            raptorData.transferGraph.edgesWithFromVertex()) {
             Vertex toStop = raptorData.transferGraph.get(ToVertex, edge);
             if (unionFind(from) != unionFind(toStop)) {
-                weightOfNodes[unionFind(from)] += weightOfNodes[unionFind(toStop)];
+                auto newWeight = weightOfNodes[unionFind(from)] + weightOfNodes[unionFind(toStop)];
                 unionFind(from, toStop);
+                weightOfNodes[unionFind(from)] = newWeight;
             }
         }
 
+        // size contains the original vertex
+        // TODO remove size attribute
         DynamicGraphWithWeightsAndCoordinates dynamicLayoutGraph;
         dynamicLayoutGraph.clear();
         dynamicLayoutGraph.addVertices(numberOfStops());
 
         for (Vertex vertex : dynamicLayoutGraph.vertices()) {
             dynamicLayoutGraph.set(Weight, vertex, 0);
+            /* dynamicLayoutGraph.set(Size, vertex, vertex); */
             if (unionFind(vertex) == (int)vertex) {
                 dynamicLayoutGraph.set(Weight, vertex, weightOfNodes[vertex]);
             }
-            dynamicLayoutGraph.set(Coordinates, vertex, raptorData.stopData[vertex].coordinates);
+            dynamicLayoutGraph.set(Coordinates, vertex,
+                raptorData.stopData[vertex].coordinates);
         }
 
         Progress progress(raptorData.numberOfRoutes() + raptorData.transferGraph.numEdges());
@@ -149,7 +131,8 @@ public:
             size_t numberOfTrips = raptorData.numberOfTripsInRoute(route);
 
             for (size_t i(1); i < stopsInCurrentRoute.size(); ++i) {
-                AssertMsg(dynamicLayoutGraph.isVertex(stopsInCurrentRoute[i]), "Current Stop is not a valid vertex!\n");
+                AssertMsg(dynamicLayoutGraph.isVertex(stopsInCurrentRoute[i]),
+                    "Current Stop is not a valid vertex!\n");
                 Vertex fromVertexUnion = Vertex(unionFind(stopsInCurrentRoute[i - 1]));
                 Vertex toVertexUnion = Vertex(unionFind(stopsInCurrentRoute[i]));
 
@@ -158,10 +141,15 @@ public:
 
                 Edge edgeHeadTail = dynamicLayoutGraph.findEdge(fromVertexUnion, toVertexUnion);
                 if (edgeHeadTail != noEdge) {
-                    dynamicLayoutGraph.set(Weight, edgeHeadTail, dynamicLayoutGraph.get(Weight, edgeHeadTail) + numberOfTrips);
+                    dynamicLayoutGraph.set(Weight, edgeHeadTail,
+                        dynamicLayoutGraph.get(Weight, edgeHeadTail) + numberOfTrips);
                     Edge edgeTailHead = dynamicLayoutGraph.findEdge(toVertexUnion, fromVertexUnion);
-                    AssertMsg(edgeTailHead != noEdge, "A reverse edge is missing between " << stopsInCurrentRoute[i - 1] << " and " << stopsInCurrentRoute[i] << "\n");
-                    dynamicLayoutGraph.set(Weight, edgeTailHead, dynamicLayoutGraph.get(Weight, edgeTailHead) + numberOfTrips);
+                    AssertMsg(edgeTailHead != noEdge,
+                        "A reverse edge is missing between "
+                            << stopsInCurrentRoute[i - 1] << " and "
+                            << stopsInCurrentRoute[i] << "\n");
+                    dynamicLayoutGraph.set(Weight, edgeTailHead,
+                        dynamicLayoutGraph.get(Weight, edgeTailHead) + numberOfTrips);
 
                 } else {
                     dynamicLayoutGraph.addEdge(fromVertexUnion, toVertexUnion)
@@ -175,26 +163,35 @@ public:
 
         progress.finished();
 
-        AssertMsg(!(dynamicLayoutGraph.edges().size() & 1), "The number of edges is uneven, thus we check that every edge "
-                                                            "has a reverse edge in the graph!\n");
+        AssertMsg(!(dynamicLayoutGraph.edges().size() & 1),
+            "The number of edges is uneven, thus we check that every edge "
+            "has a reverse edge in the graph!\n");
 
         uint64_t totalEdgeWeight(0);
         for (Edge edge : dynamicLayoutGraph.edges()) {
+            /* dynamicLayoutGraph.set(Weight, edge,
+             * std::log(dynamicLayoutGraph.get(Weight, edge))); */
             totalEdgeWeight += dynamicLayoutGraph.get(Weight, edge);
         }
 
         if (totalEdgeWeight > UINT32_MAX)
-            std::cout << "** The total sum of all edge weights exceeds 32 bits **" << std::endl;
+            std::cout << "** The total sum of all edge weights exceeds 32 bits **"
+                      << std::endl;
 
-        dynamicLayoutGraph.packEdges();
+        /* dynamicLayoutGraph.deleteIsolatedVertices(); */
+        /* dynamicLayoutGraph.packEdges(); */
         layoutGraph.clear();
         Graph::move(std::move(dynamicLayoutGraph), layoutGraph);
         std::cout << "The Layout Graph looks like this:" << std::endl;
         layoutGraph.printAnalysis();
     }
 
-    inline void writeLayoutGraphToMETIS(const std::string fileName, const bool writeGRAPHML = true)
+    inline void writeLayoutGraphToMETIS(const std::string fileName,
+        const bool writeGRAPHML = true)
     {
+        std::cout << "Write Layout Graph to file " << fileName << std::endl;
+        std::cout << "[Num Vertices: " << layoutGraph.numVertices()
+                  << ", Num Edges: " << layoutGraph.numEdges() << "]" << std::endl;
         Progress progressWriting(layoutGraph.numVertices());
 
         unsigned long n = layoutGraph.numVertices();
@@ -217,7 +214,8 @@ public:
             file << "\n"
                  << layoutGraph.get(Weight, vertex) << " ";
             for (Edge edge : layoutGraph.edgesFrom(vertex)) {
-                file << layoutGraph.get(ToVertex, edge).value() + 1 << " " << layoutGraph.get(Weight, edge) << " ";
+                file << layoutGraph.get(ToVertex, edge).value() + 1 << " "
+                     << layoutGraph.get(Weight, edge) << " ";
             }
             progressWriting++;
         }
@@ -232,49 +230,71 @@ public:
         layoutGraph.writeBinary(fileName);
     }
 
+    inline void writeLayoutGraphToHypMETIS(const std::string fileName)
+    {
+        std::cout << "Write Layout Graph to file " << fileName << std::endl;
+        Progress progressWriting(layoutGraph.numVertices() + layoutGraph.numEdges());
+
+        unsigned long n = layoutGraph.numVertices();
+        unsigned long m = layoutGraph.numEdges(); // halbieren weil METIS das braucht
+
+        std::ofstream file(fileName + ".hypmetis");
+
+        // see here https://course.ece.cmu.edu/~ee760/760docs/hMetisManual.pdf
+        // n [NUMBER of nodes]  m [NUMBER of edges]     f [int]
+        // f values:
+        /*
+                f values:
+        1 :     edge-weighted graph
+        10:     node-weighted graph
+        11:     edge & node - weighted graph
+         */
+
+        file << m << " " << n << " 11";
+
+        for (const auto [edge, from] : layoutGraph.edgesWithFromVertex()) {
+            file << "\n"
+                 << layoutGraph.get(Weight, edge) << " " << (int)(from + 1) << " "
+                 << (layoutGraph.get(ToVertex, edge).value() + 1);
+            progressWriting++;
+        }
+
+        for (Vertex vertex : layoutGraph.vertices()) {
+            file << "\n"
+                 << layoutGraph.get(Weight, vertex) << " ";
+            progressWriting++;
+        }
+
+        file.close();
+        progressWriting.finished();
+    }
+
     // Getter
-    inline int numberOfLevels() const noexcept
+    inline int getNumberOfLevels() const noexcept { return numberOfLevels; }
+
+    inline int getNumberOfCellsPerLevel() const noexcept { return 2; }
+
+    inline uint64_t getCellIdOfStop(const StopId& stop) const noexcept
     {
-        return multiPartition.getNumberOfLevels();
+        AssertMsg(isStop(stop), "Stop is not a stop!");
+
+        return cellIds[stop];
     }
 
-    inline int numberOfCellsPerLevel() const noexcept
-    {
-        return multiPartition.getNumberOfCellsPerLevel();
-    }
-
-    inline SubRange<std::vector<RAPTOR::RouteSegment>> routesContainingStop(const StopId stop) const noexcept
+    inline SubRange<std::vector<RAPTOR::RouteSegment>>
+    routesContainingStop(const StopId stop) const noexcept
     {
         return raptorData.routesContainingStop(stop);
     }
 
-    inline bool stopInCell(StopId stop, std::vector<int> levels, std::vector<int> cellIds)
-    {
-        AssertMsg(isStop(stop), "Stop is not a stop!");
-        return multiPartition.inSameCell(stop, levels, cellIds);
-    }
-
-    /* inline std::vector<int> getIdsOfStop(StopId stop) */
-    /* { */
-    /*     AssertMsg(isStop(stop), "Stop is not a stop!"); */
-    /*     return multiPartition.getCellIds(stop); */
-    /* } */
-
     inline uint8_t& getLocalLevelOfEvent(StopEventId event) noexcept
     {
         AssertMsg(event < localLevelOfEvent.size(), "Event is out of bounds!");
-
         return localLevelOfEvent[event];
     }
 
-    /*     inline uint8_t& getLocalLevelOfTrip(TripId trip) noexcept */
-    /*     { */
-    /*         AssertMsg(trip < localLevelOfTrip.size(), "trip is out of bounds!"); */
-
-    /*         return localLevelOfTrip[trip]; */
-    /*     } */
-
-    inline std::vector<StopEventId> getStopEventOfStopInRoute(const StopId stop, const RouteId route) noexcept
+    inline std::vector<StopEventId>
+    getStopEventOfStopInRoute(const StopId stop, const RouteId route) noexcept
     {
         std::vector<StopEventId> result;
         result.reserve(raptorData.numberOfTripsInRoute(route));
@@ -294,121 +314,133 @@ public:
         return result;
     }
 
-    template <int DIRECTION = -1>
-    inline std::vector<std::pair<TripId, StopIndex>> getBorderStopEvents(std::vector<int> levels, std::vector<int> ids)
-    {
-        AssertMsg(levels.size() == ids.size(), "Levels and IDs need to be the same size!");
-        std::vector<std::pair<TripId, StopIndex>> result;
-        result.reserve(2000); // TODO pay attention to reserve
-
-        std::vector<int> stopsInCell = multiPartition.verticesInCell(levels, ids);
-
-        for (size_t i(0); i < stopsInCell.size(); ++i) {
-            StopId stop(stopsInCell[i]);
-
-            for (const RAPTOR::RouteSegment& route : routesContainingStop(stop)) {
-                // EDGE CASE: a stop is not a border stop (of a route) if it's at either end (start or end)
-                // boundary check for first / last stop on route
-                if ((route.stopIndex == 0 && DIRECTION == -1) || (route.stopIndex == raptorData.numberOfStopsInRoute(route.routeId) - 1 && DIRECTION == 1))
-                    continue;
-
-                // check if the next / previous stop in stop array of route is in another cell
-                RAPTOR::RouteSegment neighbourSeg(route.routeId, StopIndex(route.stopIndex + DIRECTION));
-
-                // check if neighbour in same cell
-                if (!multiPartition.inSameCell(raptorData.stopOfRouteSegment(neighbourSeg), levels, ids)) {
-                    // add all stop events of this route (plus the DIRECTION we are facing)
-                    for (TripId trip : tripsOfRoute(route.routeId)) {
-                        result.push_back(std::make_pair(trip, StopIndex(route.stopIndex + DIRECTION)));
-                    }
-                }
-            }
-        }
-
-        return result;
-    }
-
-    inline int getLowestCommonLevel(StopId a, StopId b)
-    {
-        return multiPartition.getLowestCommonLevel(a, b);
-    }
-
     inline void printInfo() const noexcept
     {
         Data::printInfo();
-        std::cout << "   Number of Levels:         " << std::setw(12) << (int)multiPartition.getNumberOfLevels() << std::endl;
-        std::cout << "   Cells per Level:          " << std::setw(12) << (int)multiPartition.getNumberOfCellsPerLevel() << std::endl;
+        std::cout << "   Number of Levels:         " << std::setw(12)
+                  << (int)numberOfLevels << std::endl;
+        std::cout << "   Cells per Level:          " << std::setw(12) << "2"
+                  << std::endl;
     }
 
     // Serialization
     inline void serialize(const std::string& fileName) const noexcept
     {
         Data::serialize(fileName + ".trip");
-        IO::serialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent);
-        /* IO::serialize(fileName, multiPartition, unionFind, layoutGraph); */
+        IO::serialize(fileName, numberOfLevels, unionFind, layoutGraph,
+            localLevelOfEvent, cellIds);
         stopEventGraph.writeBinary(fileName + ".trip.graph");
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
         Data::deserialize(fileName + ".trip");
-        IO::deserialize(fileName, multiPartition, unionFind, layoutGraph, localLevelOfEvent);
-        /* IO::deserialize(fileName, multiPartition, unionFind, layoutGraph); */
+        IO::deserialize(fileName, numberOfLevels, unionFind, layoutGraph,
+            localLevelOfEvent, cellIds);
         stopEventGraph.readBinary(fileName + ".trip.graph");
+    }
+
+    inline void writePartitionToCSV(const std::string& fileName) noexcept
+    {
+        std::ofstream file(fileName);
+
+        file << "StopID,CellId\n";
+
+        for (StopId stop(0); stop < cellIds.size(); ++stop) {
+            file << (int)stop << "," << (int)cellIds[stop] << "\n";
+        }
+        file.close();
+    }
+
+    inline void writeUnionFindToFile(const std::string& fileName) noexcept
+    {
+        std::ofstream file(fileName);
+
+        file << "StopID,CorrespondingStopID\n";
+
+        for (StopId stop(0); stop < numberOfStops(); ++stop) {
+            assert(static_cast<size_t>(unionFind(stop)) < numberOfStops());
+            file << (int)stop << "," << (int)unionFind(stop) << "\n";
+        }
+        file.close();
     }
 
     // Assert that no transfer is cut
     inline bool assertNoCutTransfers() noexcept
     {
-        for (const auto [edge, from] : raptorData.transferGraph.edgesWithFromVertex()) {
+        for (const auto [edge, from] :
+            raptorData.transferGraph.edgesWithFromVertex()) {
             Vertex toVertex = raptorData.transferGraph.get(ToVertex, edge);
-            if (!multiPartition.inSameCell(from, toVertex)) {
-                std::cout << "**** A cut between footpath from " << from << " and " << toVertex << "! The respective union find: " << unionFind(from) << " and " << unionFind(toVertex) << std::endl;
+            if (getCellIdOfStop(StopId(from)) != getCellIdOfStop(StopId(toVertex))) {
+                std::cout << "**** A cut between footpath from " << from << " and "
+                          << toVertex
+                          << "! The respective union find: " << unionFind(from)
+                          << " and " << unionFind(toVertex) << std::endl;
                 return false;
             }
         }
         return true;
     }
 
-    inline bool isLevel(size_t level) const
+    inline bool isLevel(int level) const { return level < numberOfLevels; }
+
+    inline void setNumberOfLevels(int level) noexcept { numberOfLevels = level; }
+
+    inline void
+    writeLocalLevelOfTripsToCSV(const std::string& fileName) const noexcept
     {
-        return multiPartition.isLevelValid(level);
-    }
+        std::vector<size_t> outgoingLocalLevelOfTrip(numberOfTrips(), 0);
+        std::vector<size_t> incomingLocalLevelOfTrip(numberOfTrips(), 0);
+        std::vector<std::vector<size_t>> numOfTransferPerLevel(numberOfTrips());
 
-    inline bool isCell(size_t level, size_t cell) const
-    {
-        return cell < multiPartition.getNumberOfCellsInLevel(level);
-    }
+        for (TripId trip(0); trip < numberOfTrips(); ++trip) {
+            numOfTransferPerLevel[trip].assign(numberOfLevels + 1, 0);
 
-    inline void writePartitionToCSV(const std::string& fileName) noexcept
-    {
-        std::cout << "TODO!\nNeed to write a method to write the csv to " << fileName << std::endl;
-        /* std::ofstream file(fileName); */
+            Edge start = stopEventGraph.beginEdgeFrom(Vertex(firstStopEventOfTrip[trip]));
+            Edge end = stopEventGraph.beginEdgeFrom(Vertex(firstStopEventOfTrip[trip + 1]));
 
-        /* file << "StopID"; */
+            for (Edge e(start); e < end; ++e) {
+                outgoingLocalLevelOfTrip[trip] = std::max(outgoingLocalLevelOfTrip[trip],
+                    (size_t)stopEventGraph.get(LocalLevel, e));
 
-        /* for (size_t level(0); level < multiPartition.getNumberOfLevels(); ++level) */
-        /*     file << ",Level " << level; */
-        /* file << "\n"; */
+                TripId toTrip = tripOfStopEvent[StopEventId(stopEventGraph.get(ToVertex, e))];
+                incomingLocalLevelOfTrip[toTrip] = std::max(incomingLocalLevelOfTrip[toTrip],
+                    (size_t)stopEventGraph.get(LocalLevel, e));
 
-        /* auto& cells = multiPartition.getIds(); */
-        /* for (size_t i(0); i < cells.size(); ++i) { */
-        /*     file << i; */
-        /*     for (size_t l(0); l < multiPartition.getNumberOfLevels(); ++l) */
-        /*         file << "," << cells[i][l]; */
-        /*     file << "\n"; */
-        /* } */
-        /* file.close(); */
+                ++numOfTransferPerLevel[trip][stopEventGraph.get(LocalLevel, e)];
+            }
+        }
+
+        std::ofstream file(fileName);
+
+        file << "TripID,Outgoing LocalLevel,Incoming LocalLevel";
+
+        for (int l(0); l <= numberOfLevels; ++l) {
+            file << ",Level " << l;
+        }
+        file << "\n";
+
+        for (TripId trip(0); trip < numberOfTrips(); ++trip) {
+            file << (int)trip << "," << outgoingLocalLevelOfTrip[trip] << ","
+                 << incomingLocalLevelOfTrip[trip];
+            for (int l(0); l <= numberOfLevels; ++l) {
+                file << "," << numOfTransferPerLevel[trip][l];
+            }
+            file << "\n";
+        }
+        file.close();
     }
 
 public:
-    MultiLevelPartition multiPartition;
+    int numberOfLevels;
     UnionFind unionFind;
     StaticGraphWithWeightsAndCoordinates layoutGraph;
 
     // we also keep track of the highest locallevel of an event
     std::vector<uint8_t> localLevelOfEvent;
-    /* std::vector<uint8_t> localLevelOfTrip; */
+
+    // for the 2' cell ids
+    std::vector<uint16_t> cellIds;
 };
 
 } // namespace TripBased

@@ -12,7 +12,8 @@
 
 namespace CH {
 
-template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1, bool ONE_HOP_HEURISTIC = true>
+template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1,
+    bool ONE_HOP_HEURISTIC = true>
 class BidirectionalWitnessSearch {
 public:
     using Graph = GRAPH;
@@ -41,13 +42,13 @@ public:
         , weight(0)
         , Q { ExternalKHeap<2, Distance>(), ExternalKHeap<2, Distance>() }
         , distance { std::vector<Distance>(), std::vector<Distance>() }
-        , settled { std::vector<Vertex>(),
-            std::vector<Vertex>() }
+        , settled { std::vector<Vertex>(), std::vector<Vertex>() }
         , profiler(0)
     {
     }
 
-    inline void initialize(const Graph* graph, const std::vector<int>* weight, Profiler* profiler)
+    inline void initialize(const Graph* graph, const std::vector<int>* weight,
+        Profiler* profiler)
     {
         this->graph = graph;
         this->weight = weight;
@@ -58,7 +59,8 @@ public:
         std::vector<Distance>(graph->numVertices()).swap(distance[1]);
     }
 
-    inline bool shortcutIsNecessary(const Vertex from, const Vertex to, const Vertex via,
+    inline bool shortcutIsNecessary(const Vertex from, const Vertex to,
+        const Vertex via,
         const int shortcutDistance) noexcept
     {
         if (graph->outDegree(from) == 1)
@@ -136,21 +138,24 @@ private:
                 const Vertex v = graph->get(ToVertex, edge);
                 if (v == via)
                     continue;
-                relax<DIRECTION>(v, label->distance + (*weight)[edge], shortcutDistance);
+                relax<DIRECTION>(v, label->distance + (*weight)[edge],
+                    shortcutDistance);
             }
         } else {
             for (Edge edge : graph->edgesTo(u)) {
                 const Vertex v = graph->get(FromVertex, edge);
                 if (v == via)
                     continue;
-                relax<DIRECTION>(v, label->distance + (*weight)[edge], shortcutDistance);
+                relax<DIRECTION>(v, label->distance + (*weight)[edge],
+                    shortcutDistance);
             }
         }
         profiler->settledVertex();
     }
 
     template <int DIRECTION>
-    inline void relax(const Vertex v, const int newDistance, const int shortcutDistance) noexcept
+    inline void relax(const Vertex v, const int newDistance,
+        const int shortcutDistance) noexcept
     {
         if (distance[DIRECTION][v].distance > newDistance) {
             distance[DIRECTION][v].distance = newDistance;

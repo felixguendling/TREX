@@ -14,12 +14,14 @@
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/Vector/Vector.h"
 
-#include <google/dense_hash_map>
+/* #include <google/dense_hash_map> */
+#include <unordered_map>
 
 namespace TransferPattern {
 
 struct eqVecStopid {
-    bool operator()(const std::vector<StopId>& a, const std::vector<StopId>& b) const
+    bool operator()(const std::vector<StopId>& a,
+        const std::vector<StopId>& b) const
     {
         return a == b;
     }
@@ -35,7 +37,7 @@ public:
         , minDep(0)
         , maxDep(24 * 60 * 60 - 1)
     {
-        seenPrefix.set_empty_key({ noStop });
+        /* seenPrefix.set_empty_key({ noStop }); */
         clear();
     }
 
@@ -44,12 +46,10 @@ public:
         return dynamicDAG;
     }
 
-    inline DynamicDAGTransferPattern& getDAG() noexcept
-    {
-        return dynamicDAG;
-    }
+    inline DynamicDAGTransferPattern& getDAG() noexcept { return dynamicDAG; }
 
-    inline void addPrefixToDAG(std::vector<StopId>& prefix, const int travelTime = -1)
+    inline void addPrefixToDAG(std::vector<StopId>& prefix,
+        const int travelTime = -1)
     {
         AssertMsg(prefix.size() > 0, "Prefix is empty?");
         if (seenPrefix.find(prefix) != seenPrefix.end())
@@ -104,17 +104,23 @@ public:
                     continue;
 
                 if (!leg.usesRoute) {
-                    /* travelTime = getTravelTimeByFootpath(StopId(leg.from), StopId(leg.to)); */
+                    /* travelTime = getTravelTimeByFootpath(StopId(leg.from),
+                     * StopId(leg.to)); */
                     travelTime = leg.transferTime();
-                    AssertMsg(travelTime >= 0, "Footpath Traveltime does not match!\n\tleg.departureTime: " << leg.departureTime << "\n\tleg.arrivalTime: " << leg.arrivalTime);
+                    AssertMsg(travelTime >= 0,
+                        "Footpath Traveltime does not match!\n\tleg.departureTime: "
+                            << leg.departureTime
+                            << "\n\tleg.arrivalTime: " << leg.arrivalTime);
                 } else {
                     travelTime = -1;
                 }
                 if (leg.to == j.back().to) {
                     // add last leg (this is the special stop-vertex)
-                    AssertMsg(seenPrefix.find(currentPrefix) != seenPrefix.end(), "Current Prefix is not in the map?");
+                    AssertMsg(seenPrefix.find(currentPrefix) != seenPrefix.end(),
+                        "Current Prefix is not in the map?");
                     if (!dynamicDAG.hasEdge(Vertex(target), seenPrefix[currentPrefix]))
-                        dynamicDAG.addEdge(Vertex(target), seenPrefix[currentPrefix]).set(TravelTime, travelTime);
+                        dynamicDAG.addEdge(Vertex(target), seenPrefix[currentPrefix])
+                            .set(TravelTime, travelTime);
                     break;
                 } else {
                     if (travelTime != -1)
@@ -126,7 +132,9 @@ public:
         }
 
         // keep first # of stops vertices, the rest can vanish
-        dynamicDAG.deleteVertices([&](Vertex vertex) { return vertex >= data.raptorData.numberOfStops() && dynamicDAG.isIsolated(vertex); });
+        dynamicDAG.deleteVertices([&](Vertex vertex) {
+            return vertex >= data.raptorData.numberOfStops() && dynamicDAG.isIsolated(vertex);
+        });
         dynamicDAG.packEdges();
     }
 
@@ -138,17 +146,17 @@ public:
         for (const Vertex vertex : dynamicDAG.vertices()) {
             dynamicDAG.set(ViaVertex, vertex, vertex);
         }
-
-        seenPrefix.resize(1 << 6);
-        seenPrefix.clear_no_resize();
+        seenPrefix.clear();
+        /* seenPrefix.resize(1 << 6); */
+        /* seenPrefix.clear_no_resize(); */
     }
 
-    inline std::vector<int> getMinTravelTimes() noexcept
+    inline std::vector<int>& getMinTravelTimes() noexcept
     {
         return query.getMinTravelTimes();
     }
 
-    inline std::vector<uint8_t> getMinNumberOfTransfers() noexcept
+    inline std::vector<uint8_t>& getMinNumberOfTransfers() noexcept
     {
         return query.getMinNumberOfTransfers();
     }
@@ -162,42 +170,55 @@ public:
             return 0;
 
         Edge usedEdge = data.raptorData.transferGraph.findEdge(Vertex(from), Vertex(to));
-        AssertMsg(data.raptorData.transferGraph.isEdge(usedEdge), "Transfer not valid? From " << from << " to " << to << "\n");
+        AssertMsg(data.raptorData.transferGraph.isEdge(usedEdge),
+            "Transfer not valid? From " << from << " to " << to << "\n");
         return data.raptorData.transferGraph.get(TravelTime, usedEdge);
     }
 
 private:
     TripBased::Data data;
     TripBased::ProfileTB<TripBased::NoProfiler> query;
-    /* RAPTOR::RangeRAPTOR::RangeRAPTOR<RAPTOR::RangeRAPTOR::TransitiveRAPTORModule<RAPTOR::NoProfiler>> query; */
+    /* RAPTOR::RangeRAPTOR::RangeRAPTOR<RAPTOR::RangeRAPTOR::TransitiveRAPTORModule<RAPTOR::NoProfiler>>
+     * query; */
 
     DynamicDAGTransferPattern dynamicDAG;
 
-    google::dense_hash_map<std::vector<StopId>, Vertex, std::VectorHasher<StopId>, eqVecStopid> seenPrefix;
+    /* google::dense_hash_map<std::vector<StopId>, Vertex, std::VectorHasher<StopId>, eqVecStopid> */
+    std::unordered_map<std::vector<StopId>, Vertex, std::VectorHasher<StopId>, eqVecStopid>
+        seenPrefix;
     const int minDep;
     const int maxDep;
 };
 
-inline void ComputeTransferPatternUsingTripBased(TripBased::Data& data, TransferPattern::Data& tpData)
+inline void
+ComputeTransferPatternUsingTripBased(TripBased::Data& data,
+    TransferPattern::Data& tpData)
 {
     Progress progress(data.numberOfStops());
     TransferPatternBuilder bobTheBuilder(data);
 
     for (const StopId stop : data.stops()) {
         bobTheBuilder.computeTransferPatternForStop(stop);
-        AssertMsg(Graph::isAcyclic<DynamicDAGTransferPattern>(bobTheBuilder.getDAG()), "Graph is not acyclic!");
+        AssertMsg(
+            Graph::isAcyclic<DynamicDAGTransferPattern>(bobTheBuilder.getDAG()),
+            "Graph is not acyclic!");
 
-        Graph::move(std::move(bobTheBuilder.getDAG()), tpData.transferPatternOfStop[stop]);
+        Graph::move(std::move(bobTheBuilder.getDAG()),
+            tpData.transferPatternOfStop[stop]);
         tpData.transferPatternOfStop[stop].sortEdges(ToVertex);
 
-        tpData.assignLowerBounds(stop, bobTheBuilder.getMinTravelTimes(), bobTheBuilder.getMinNumberOfTransfers());
+        tpData.assignLowerBounds(stop, bobTheBuilder.getMinTravelTimes(),
+            bobTheBuilder.getMinNumberOfTransfers());
 
         ++progress;
     }
     progress.finished();
 }
 
-inline void ComputeTransferPatternUsingTripBased(TripBased::Data& data, TransferPattern::Data& tpData, const int numberOfThreads, const int pinMultiplier = 1)
+inline void ComputeTransferPatternUsingTripBased(TripBased::Data& data,
+    TransferPattern::Data& tpData,
+    const int numberOfThreads,
+    const int pinMultiplier = 1)
 {
     Progress progress(data.numberOfStops());
 
@@ -209,7 +230,9 @@ inline void ComputeTransferPatternUsingTripBased(TripBased::Data& data, Transfer
         int threadId = omp_get_thread_num();
         pinThreadToCoreId((threadId * pinMultiplier) % numCores);
         AssertMsg(omp_get_num_threads() == numberOfThreads,
-            "Number of threads is " << omp_get_num_threads() << ", but should be " << numberOfThreads << "!");
+            "Number of threads is " << omp_get_num_threads()
+                                    << ", but should be " << numberOfThreads
+                                    << "!");
 
         TransferPatternBuilder bobTheBuilder(data);
         const size_t numberOfStops = data.numberOfStops();
@@ -217,15 +240,19 @@ inline void ComputeTransferPatternUsingTripBased(TripBased::Data& data, Transfer
 #pragma omp for schedule(dynamic, 1)
         for (size_t i = 0; i < numberOfStops; ++i) {
             bobTheBuilder.computeTransferPatternForStop(StopId(i));
-            AssertMsg(Graph::isAcyclic<DynamicDAGTransferPattern>(bobTheBuilder.getDAG()), "Graph is not acyclic!");
+            AssertMsg(
+                Graph::isAcyclic<DynamicDAGTransferPattern>(bobTheBuilder.getDAG()),
+                "Graph is not acyclic!");
 
-            Graph::move(std::move(bobTheBuilder.getDAG()), tpData.transferPatternOfStop[i]);
+            Graph::move(std::move(bobTheBuilder.getDAG()),
+                tpData.transferPatternOfStop[i]);
             tpData.transferPatternOfStop[i].sortEdges(ToVertex);
 
-            tpData.assignLowerBounds(StopId(i), bobTheBuilder.getMinTravelTimes(), bobTheBuilder.getMinNumberOfTransfers());
+            tpData.assignLowerBounds(StopId(i), bobTheBuilder.getMinTravelTimes(),
+                bobTheBuilder.getMinNumberOfTransfers());
             ++progress;
         }
     }
     progress.finished();
 }
-}
+} // namespace TransferPattern

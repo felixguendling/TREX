@@ -15,10 +15,7 @@ public:
     {
     }
 
-    inline void clear() noexcept
-    {
-        parent.assign(n, n);
-    }
+    inline void clear() noexcept { parent.assign(n, n); }
 
     inline int find(const int i) noexcept
     {
@@ -29,10 +26,7 @@ public:
             return parent[i];
         }
     }
-    inline int operator()(const int i) noexcept
-    {
-        return find(i);
-    }
+    inline int operator()(const int i) noexcept { return find(i); }
 
     inline void unite(const int i, const int j) noexcept
     {
@@ -40,15 +34,9 @@ public:
             link(find(i), find(j));
         }
     }
-    inline void operator()(const int i, const int j) noexcept
-    {
-        unite(i, j);
-    }
+    inline void operator()(const int i, const int j) noexcept { unite(i, j); }
 
-    inline std::vector<int> getParent() const
-    {
-        return parent;
-    }
+    inline std::vector<int> getParent() const { return parent; }
 
     inline void serialize(IO::Serialization& serialize) const noexcept
     {

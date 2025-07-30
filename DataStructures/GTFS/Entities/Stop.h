@@ -18,10 +18,7 @@ public:
         , coordinates(coordinates)
     {
     }
-    Stop(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Stop(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     inline bool validate() noexcept
     {
@@ -32,7 +29,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const Stop& s)
     {
-        return out << "Stop{" << s.stopId << ", " << s.name << ", " << s.coordinates << "}";
+        return out << "Stop{" << s.stopId << ", " << s.name << ", " << s.coordinates
+                   << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept

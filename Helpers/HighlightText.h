@@ -65,14 +65,13 @@ private:
     mutable bool flushed;
 };
 
-inline std::ostream& operator<<(std::ostream& out, const StreamWrapper& stream)
+inline std::ostream& operator<<(std::ostream& out,
+    const StreamWrapper& stream)
 {
     return out << (std::string)stream;
 }
 
-inline void concatenate(StreamWrapper&)
-{
-}
+inline void concatenate(StreamWrapper&) { }
 
 template <typename T, typename... U>
 inline void concatenate(StreamWrapper& stream, const T& t, const U&... u)

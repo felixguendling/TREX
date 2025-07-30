@@ -15,8 +15,10 @@ public:
     using Type = EdgeIntersectionRange<GraphA, GraphB>;
 
 private:
-    using RangeA = decltype(std::declval<const GraphA*>()->edgesFrom(std::declval<Vertex>()));
-    using RangeB = decltype(std::declval<const GraphB*>()->edgesFrom(std::declval<Vertex>()));
+    using RangeA = decltype(std::declval<const GraphA*>()->edgesFrom(
+        std::declval<Vertex>()));
+    using RangeB = decltype(std::declval<const GraphB*>()->edgesFrom(
+        std::declval<Vertex>()));
 
     using IteratorA = decltype(std::declval<RangeA>().begin());
     using IteratorB = decltype(std::declval<RangeB>().begin());
@@ -24,7 +26,8 @@ private:
 public:
     class Iterator {
     public:
-        Iterator(const EdgeIntersectionRange* const outer, const IteratorA& edgeA, const IteratorB& edgeB)
+        Iterator(const EdgeIntersectionRange* const outer, const IteratorA& edgeA,
+            const IteratorB& edgeB)
             : outer(outer)
             , edgeA(edgeA)
             , edgeB(edgeB)
@@ -34,10 +37,7 @@ public:
         {
             return edgeA != other.edgeA;
         }
-        inline Edge operator*() const noexcept
-        {
-            return *edgeA;
-        }
+        inline Edge operator*() const noexcept { return *edgeA; }
         inline Iterator& operator++() noexcept
         {
             ++edgeA;
@@ -91,7 +91,8 @@ public:
     {
     }
 
-    EdgeIntersectionRange(const GraphA* const graphA, const GraphB* const graphB, const Vertex vertex)
+    EdgeIntersectionRange(const GraphA* const graphA, const GraphB* const graphB,
+        const Vertex vertex)
         : graphA(graphA)
         , graphB(graphB)
         , rangeA(graphA->edgesFrom(vertex))
@@ -109,10 +110,7 @@ public:
         return Iterator(this, rangeA.end(), rangeB.end());
     }
 
-    inline bool empty() const noexcept
-    {
-        return !(begin() != end());
-    }
+    inline bool empty() const noexcept { return !(begin() != end()); }
 
     inline size_t size() const noexcept
     {

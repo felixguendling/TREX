@@ -11,7 +11,8 @@ namespace RAPTOR {
 
 class RouteSegment {
 public:
-    RouteSegment(const RouteId routeId = noRouteId, const StopIndex stopIndex = noStopIndex)
+    RouteSegment(const RouteId routeId = noRouteId,
+        const StopIndex stopIndex = noStopIndex)
         : routeId(routeId)
         , stopIndex(stopIndex)
     {

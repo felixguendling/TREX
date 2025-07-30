@@ -1,12 +1,12 @@
 CC=g++ -fopenmp
-FLAGS=-std=c++17 -pipe
+FLAGS=-std=c++2b -pipe
 OPTIMIZATION=-march=native -O3
 DEBUG=-rdynamic -Werror -Wpedantic -pedantic-errors -Wall -Wextra -Wparentheses -Wfatal-errors -D_GLIBCXX_DEBUG -g -fno-omit-frame-pointer
-RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG
-SPARSEHASH=-I ../ExternalLibs/sparsehash/include
+RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG -fomit-frame-pointer -mtune=native -fno-stack-protector -mavx2 -mno-avx256-split-unaligned-load -mno-avx256-split-unaligned-store -funroll-loops
+PREFETCH=-DENABLE_PREFETCH -DUSE_SIMD
+# SPARSEHASH=-I ../ExternalLibs/sparsehash/include
 
-
-all: MLTBRelease
+all: MLTBRelease ULTRARelease NetworkRelease
 # all: TPDebug ArcTBDebug NetworkDebug ULTRADebug
 
 NetworkDebug:
@@ -16,25 +16,25 @@ NetworkRelease:
 	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o Network Network.cpp
 
 ULTRADebug:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o ULTRA ULTRA.cpp
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o ULTRA ULTRA.cpp $(PREFETCH)
 
 ULTRARelease:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o ULTRA ULTRA.cpp
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o ULTRA ULTRA.cpp $(PREFETCH)
 
 ArcTBDebug:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o ARCTB ArcTB.cpp
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o ARCTB ArcTB.cpp $(PREFETCH)
 
 ArcTBRelease:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o ARCTB ArcTB.cpp
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o ARCTB ArcTB.cpp $(PREFETCH)
 
 TPDebug:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) $(SPARSEHASH) -o TP TP.cpp
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) $(SPARSEHASH) -o TP TP.cpp $(PREFETCH)
 
 TPRelease:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) $(SPARSEHASH) -o TP TP.cpp
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) $(SPARSEHASH) -o TP TP.cpp $(PREFETCH)
 
 MLTBDebug:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o MLTB MLTB.cpp
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o MLTB MLTB.cpp -ltbb -latomic $(PREFETCH)
 
 MLTBRelease:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o MLTB MLTB.cpp
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o MLTB MLTB.cpp -ltbb -latomic $(PREFETCH)

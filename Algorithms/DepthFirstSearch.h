@@ -8,8 +8,10 @@
 #include "../Helpers/Assert.h"
 #include "../Helpers/Vector/Permutation.h"
 
-template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION, typename TRAVERSE_NON_TREE_EDGE = NO_OPERATION,
-    typename BACKTRACK = NO_OPERATION, typename ROOT = NO_OPERATION, typename FINALIZE = NO_OPERATION>
+template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION,
+    typename TRAVERSE_NON_TREE_EDGE = NO_OPERATION,
+    typename BACKTRACK = NO_OPERATION, typename ROOT = NO_OPERATION,
+    typename FINALIZE = NO_OPERATION>
 class DepthFirstSearch {
 private:
     struct Item {
@@ -19,7 +21,9 @@ private:
     };
 
 public:
-    DepthFirstSearch(const GRAPH& graph, const TRAVERSE_TREE_EDGE& traverseTreeEdge = TRAVERSE_TREE_EDGE(),
+    DepthFirstSearch(
+        const GRAPH& graph,
+        const TRAVERSE_TREE_EDGE& traverseTreeEdge = TRAVERSE_TREE_EDGE(),
         const TRAVERSE_NON_TREE_EDGE& traverseNonTreeEdge = TRAVERSE_NON_TREE_EDGE(),
         const BACKTRACK& backtrack = BACKTRACK(), const ROOT& root = ROOT(),
         const FINALIZE& finalize = FINALIZE())
@@ -72,10 +76,7 @@ public:
         finalize(u);
     }
 
-    inline bool hasSettled(Vertex vertex) const
-    {
-        return settled[vertex];
-    }
+    inline bool hasSettled(Vertex vertex) const { return settled[vertex]; }
 
 private:
     inline void settle(Vertex v)
@@ -92,15 +93,9 @@ private:
         stack.push_back(Item({ edge, from, false }));
     }
 
-    inline Edge topEdge() const
-    {
-        return stack.back().edge;
-    }
+    inline Edge topEdge() const { return stack.back().edge; }
 
-    inline Vertex topVertex() const
-    {
-        return stack.back().from;
-    }
+    inline Vertex topVertex() const { return stack.back().from; }
 
     inline bool topBacktrack()
     {
@@ -109,10 +104,7 @@ private:
         return backtrack;
     }
 
-    inline void pop()
-    {
-        stack.pop_back();
-    }
+    inline void pop() { stack.pop_back(); }
 
 private:
     TRAVERSE_TREE_EDGE traverseTreeEdge;
@@ -141,45 +133,63 @@ struct SimpleOperation {
     const GRAPH& graph;
 };
 
-template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION, typename TRAVERSE_NON_TREE_EDGE = NO_OPERATION,
+template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION,
+    typename TRAVERSE_NON_TREE_EDGE = NO_OPERATION,
     typename BACKTRACK = NO_OPERATION>
-class DFS : public DepthFirstSearch<GRAPH, SimpleOperation<GRAPH, TRAVERSE_TREE_EDGE>,
-                SimpleOperation<GRAPH, TRAVERSE_NON_TREE_EDGE>, SimpleOperation<GRAPH, BACKTRACK>,
-                TRAVERSE_TREE_EDGE, BACKTRACK> {
+class DFS
+    : public DepthFirstSearch<GRAPH, SimpleOperation<GRAPH, TRAVERSE_TREE_EDGE>,
+          SimpleOperation<GRAPH, TRAVERSE_NON_TREE_EDGE>,
+          SimpleOperation<GRAPH, BACKTRACK>,
+          TRAVERSE_TREE_EDGE, BACKTRACK> {
 public:
     using DFSType = DepthFirstSearch<GRAPH, SimpleOperation<GRAPH, TRAVERSE_TREE_EDGE>,
-        SimpleOperation<GRAPH, TRAVERSE_NON_TREE_EDGE>, SimpleOperation<GRAPH, BACKTRACK>,
-        TRAVERSE_TREE_EDGE, BACKTRACK>;
-    DFS(const GRAPH& graph, const TRAVERSE_TREE_EDGE& traverseTreeEdge = TRAVERSE_TREE_EDGE(),
+        SimpleOperation<GRAPH, TRAVERSE_NON_TREE_EDGE>,
+        SimpleOperation<GRAPH, BACKTRACK>, TRAVERSE_TREE_EDGE,
+        BACKTRACK>;
+    DFS(const GRAPH& graph,
+        const TRAVERSE_TREE_EDGE& traverseTreeEdge = TRAVERSE_TREE_EDGE(),
         const TRAVERSE_NON_TREE_EDGE& traverseNonTreeEdge = TRAVERSE_NON_TREE_EDGE(),
         const BACKTRACK& backtrack = BACKTRACK())
-        : DFSType(graph, SimpleOperation<GRAPH, TRAVERSE_TREE_EDGE>(graph, traverseTreeEdge),
-            SimpleOperation<GRAPH, TRAVERSE_NON_TREE_EDGE>(graph, traverseNonTreeEdge),
-            SimpleOperation<GRAPH, BACKTRACK>(graph, backtrack), traverseTreeEdge, backtrack)
+        : DFSType(
+            graph,
+            SimpleOperation<GRAPH, TRAVERSE_TREE_EDGE>(graph, traverseTreeEdge),
+            SimpleOperation<GRAPH, TRAVERSE_NON_TREE_EDGE>(graph,
+                traverseNonTreeEdge),
+            SimpleOperation<GRAPH, BACKTRACK>(graph, backtrack),
+            traverseTreeEdge, backtrack)
     {
     }
 };
 
-template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION, typename TRAVERSE_NON_TREE_EDGE = NO_OPERATION,
-    typename BACKTRACK = NO_OPERATION, typename ROOT = NO_OPERATION, typename FINALIZE = NO_OPERATION>
-inline void depthFirstSearch(const GRAPH& graph, const TRAVERSE_TREE_EDGE& traverseTreeEdge = TRAVERSE_TREE_EDGE(),
+template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION,
+    typename TRAVERSE_NON_TREE_EDGE = NO_OPERATION,
+    typename BACKTRACK = NO_OPERATION, typename ROOT = NO_OPERATION,
+    typename FINALIZE = NO_OPERATION>
+inline void depthFirstSearch(
+    const GRAPH& graph,
+    const TRAVERSE_TREE_EDGE& traverseTreeEdge = TRAVERSE_TREE_EDGE(),
     const TRAVERSE_NON_TREE_EDGE& traverseNonTreeEdge = TRAVERSE_NON_TREE_EDGE(),
     const BACKTRACK& backtrack = BACKTRACK(), const ROOT& root = ROOT(),
     const FINALIZE& finalize = FINALIZE())
 {
-    DepthFirstSearch<GRAPH, TRAVERSE_TREE_EDGE, TRAVERSE_NON_TREE_EDGE, BACKTRACK, ROOT, FINALIZE> dfs(
-        graph, traverseTreeEdge, traverseNonTreeEdge, backtrack, root, finalize);
+    DepthFirstSearch<GRAPH, TRAVERSE_TREE_EDGE, TRAVERSE_NON_TREE_EDGE, BACKTRACK,
+        ROOT, FINALIZE>
+        dfs(graph, traverseTreeEdge, traverseNonTreeEdge, backtrack, root,
+            finalize);
     dfs.run();
 }
 
-template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION, typename TRAVERSE_NON_TREE_EDGE = NO_OPERATION,
+template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION,
+    typename TRAVERSE_NON_TREE_EDGE = NO_OPERATION,
     typename BACKTRACK = NO_OPERATION>
-inline void dfs(const GRAPH& graph, const TRAVERSE_TREE_EDGE& traverseTreeEdge = TRAVERSE_TREE_EDGE(),
+inline void
+dfs(const GRAPH& graph,
+    const TRAVERSE_TREE_EDGE& traverseTreeEdge = TRAVERSE_TREE_EDGE(),
     const TRAVERSE_NON_TREE_EDGE& traverseNonTreeEdge = TRAVERSE_NON_TREE_EDGE(),
     const BACKTRACK& backtrack = BACKTRACK())
 {
-    DFS<GRAPH, TRAVERSE_TREE_EDGE, TRAVERSE_NON_TREE_EDGE, BACKTRACK> dfs(graph, traverseTreeEdge, traverseNonTreeEdge,
-        backtrack);
+    DFS<GRAPH, TRAVERSE_TREE_EDGE, TRAVERSE_NON_TREE_EDGE, BACKTRACK> dfs(
+        graph, traverseTreeEdge, traverseNonTreeEdge, backtrack);
     dfs.run();
 }
 
@@ -193,6 +203,7 @@ inline Order getDFSVertexOrder(const GRAPH& graph) noexcept
             const Vertex v = graph.get(ToVertex, e);
             order.emplace_back(v);
         },
-        NoOperation, NoOperation, [&](const Vertex v) { order.emplace_back(v); }, NoOperation);
+        NoOperation, NoOperation, [&](const Vertex v) { order.emplace_back(v); },
+        NoOperation);
     return order;
 }

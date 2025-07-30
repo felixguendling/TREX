@@ -12,7 +12,9 @@
 namespace Graph {
 
 template <typename GRAPH>
-static inline DynamicFlowGraph generateFlowGraph(const GRAPH& graph, const std::vector<int>& capacities, const bool undirectedEdges = false) noexcept
+static inline DynamicFlowGraph
+generateFlowGraph(const GRAPH& graph, const std::vector<int>& capacities,
+    const bool undirectedEdges = false) noexcept
 {
     DynamicFlowGraph flowGraph;
     flowGraph.addVertices(graph.numVertices());
@@ -21,10 +23,12 @@ static inline DynamicFlowGraph generateFlowGraph(const GRAPH& graph, const std::
         if (from == to)
             continue;
         const Edge forwardEdge = flowGraph.findOrAddEdge(from, to);
-        flowGraph.set(Capacity, forwardEdge, flowGraph.get(Capacity, forwardEdge) + capacities[edge]);
+        flowGraph.set(Capacity, forwardEdge,
+            flowGraph.get(Capacity, forwardEdge) + capacities[edge]);
         if (undirectedEdges) {
             const Edge backwardEdge = flowGraph.findOrAddEdge(to, from);
-            flowGraph.set(Capacity, backwardEdge, flowGraph.get(Capacity, backwardEdge) + capacities[edge]);
+            flowGraph.set(Capacity, backwardEdge,
+                flowGraph.get(Capacity, backwardEdge) + capacities[edge]);
         } else {
             flowGraph.findOrAddEdge(to, from);
         }
@@ -33,7 +37,9 @@ static inline DynamicFlowGraph generateFlowGraph(const GRAPH& graph, const std::
 }
 
 template <typename GRAPH>
-static inline DynamicFlowGraph generateFlowGraph(const GRAPH& graph, const bool undirectedEdges = false) noexcept
+static inline DynamicFlowGraph
+generateFlowGraph(const GRAPH& graph,
+    const bool undirectedEdges = false) noexcept
 {
     DynamicFlowGraph flowGraph;
     flowGraph.addVertices(graph.numVertices());
@@ -73,4 +79,4 @@ inline DynamicFlowGraph generateVertexFlowGraph(const GRAPH& graph) noexcept
     return flowGraph;
 }
 
-}
+} // namespace Graph

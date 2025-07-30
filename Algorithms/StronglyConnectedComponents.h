@@ -25,13 +25,8 @@ public:
             , onStack(false)
         {
         }
-        inline void setParent(const Vertex) const noexcept
-        {
-        }
-        inline bool hasParent(const Vertex) const noexcept
-        {
-            return false;
-        }
+        inline void setParent(const Vertex) const noexcept { }
+        inline bool hasParent(const Vertex) const noexcept { return false; }
         int index;
         int lowlink;
         bool onStack;
@@ -45,10 +40,7 @@ public:
             , parent(noVertex)
         {
         }
-        inline void setParent(const Vertex vertex) noexcept
-        {
-            parent = vertex;
-        }
+        inline void setParent(const Vertex vertex) noexcept { parent = vertex; }
         inline bool hasParent(const Vertex vertex) const noexcept
         {
             return parent == vertex;
@@ -59,7 +51,8 @@ public:
         Vertex parent;
     };
 
-    using VertexLabel = Meta::IF<IgnoreReverseEdges, VertexLabelWithParent, VertexLabelWithoutParent>;
+    using VertexLabel = Meta::IF<IgnoreReverseEdges, VertexLabelWithParent,
+        VertexLabelWithoutParent>;
 
 public:
     StronglyConnectedComponents(const Graph& graph)
@@ -71,34 +64,29 @@ public:
 
     inline int getComponent(const Vertex vertex) const noexcept
     {
-        AssertMsg(vertex < component.size(),
-            "vertex " << vertex << " is out of range (0, " << component.size() << ")!");
+        AssertMsg(vertex < component.size(), "vertex " << vertex << " is out of range (0, " << component.size() << ")!");
         return component[vertex];
     }
 
-    inline size_t numComponents() const noexcept
-    {
-        return componentCount;
-    }
+    inline size_t numComponents() const noexcept { return componentCount; }
 
     inline const std::vector<int>& getComponent() const noexcept
     {
         return component;
     }
 
-    inline std::vector<int>& getComponent() noexcept
-    {
-        return component;
-    }
+    inline std::vector<int>& getComponent() noexcept { return component; }
 
     inline std::vector<size_t> getComponentSizes() const noexcept
     {
         std::vector<size_t> sizes(componentCount, 0);
         for (const Vertex vertex : graph.vertices()) {
             AssertMsg(vertex < component.size(),
-                "vertex " << vertex << " is out of range (0, " << component.size() << ")!");
+                "vertex " << vertex << " is out of range (0, "
+                          << component.size() << ")!");
             AssertMsg(component[vertex] >= 0 && size_t(component[vertex]) < sizes.size(),
-                "Component of vertex " << vertex << " is " << component[vertex] << ", but should be less than "
+                "Component of vertex " << vertex << " is " << component[vertex]
+                                       << ", but should be less than "
                                        << sizes.size() << "!");
             sizes[component[vertex]]++;
         }
@@ -261,7 +249,8 @@ private:
 
     inline void push(const Vertex v) noexcept
     {
-        AssertMsg(!contains(v), "Vertex " << v << " is already contained in the stack!");
+        AssertMsg(!contains(v),
+            "Vertex " << v << " is already contained in the stack!");
         stack.push_back(v);
         label[v].onStack = true;
     }

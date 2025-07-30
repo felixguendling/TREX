@@ -25,7 +25,8 @@ public:
         };
 
     public:
-        Iterator(const IndirectEdgeRange* const indirectEdgeRange, const VertexIterator& currentVertex)
+        Iterator(const IndirectEdgeRange* const indirectEdgeRange,
+            const VertexIterator& currentVertex)
             : indirectEdgeRange(indirectEdgeRange)
             , currentVertex(currentVertex)
             , undefined(true)
@@ -115,20 +116,11 @@ public:
         return Iterator(this, vertices.begin());
     }
 
-    inline Iterator end() const noexcept
-    {
-        return Iterator(this, endVertex);
-    }
+    inline Iterator end() const noexcept { return Iterator(this, endVertex); }
 
-    inline bool empty() const noexcept
-    {
-        return graph->numEdges() == 0;
-    }
+    inline bool empty() const noexcept { return graph->numEdges() == 0; }
 
-    inline size_t size() const noexcept
-    {
-        return graph->numEdges();
-    }
+    inline size_t size() const noexcept { return graph->numEdges(); }
 
     inline EdgeWithFromVertex operator[](const size_t i) const noexcept
     {

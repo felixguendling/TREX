@@ -1,6 +1,7 @@
 #pragma once
 
-// Code taken and adapted from here (https://github.com/michaelwegner/CRP/blob/master/datastructures/MultiLevelPartition.h)
+// Code taken and adapted from here
+// (https://github.com/michaelwegner/CRP/blob/master/datastructures/MultiLevelPartition.h)
 
 #include <cmath>
 #include <stddef.h>
@@ -11,7 +12,8 @@
 
 class MultiLevelPartition {
 public:
-    MultiLevelPartition(size_t numVertices = 0, size_t numLevels = 0, size_t numCellsInLevel = 0)
+    MultiLevelPartition(size_t numVertices = 0, size_t numLevels = 0,
+        size_t numCellsInLevel = 0)
     {
         setNumberOfLevels(numLevels);
         setNumberOfCellsPerLevel(numCellsInLevel);
@@ -19,10 +21,7 @@ public:
         computeBitmap();
     }
 
-    void setNumberOfLevels(size_t numLevels)
-    {
-        numCells.assign(numLevels, 0);
-    }
+    void setNumberOfLevels(size_t numLevels) { numCells.assign(numLevels, 0); }
 
     void setNumberOfVertices(size_t numVertices)
     {
@@ -73,7 +72,8 @@ public:
 
     // next methods allow to compare vertices
 
-    // returns the highest crossing level, i.e., the highest level l where a and b are no longer in the same cellid on level l
+    // returns the highest crossing level, i.e., the highest level l where a and b
+    // are no longer in the same cellid on level l
     size_t findCrossingLevel(size_t a, size_t b) const
     {
         AssertMsg(isVertexValid(a) && isVertexValid(b), "Invalid vertex IDs!");
@@ -97,7 +97,8 @@ public:
         return (cellNumbers[a] == cellNumbers[b]);
     }
 
-    bool inSameCell(size_t a, std::vector<int> levels, std::vector<int> cellIds) const
+    bool inSameCell(size_t a, std::vector<int> levels,
+        std::vector<int> cellIds) const
     {
         AssertMsg(isVertexValid(a), "Vertex is not valid!");
 
@@ -119,9 +120,11 @@ public:
         return (cellNumbers[vertexId] >> pvOffset[level]) & ~(~0U << pvOffset[level + 1]);
     }
 
-    std::vector<size_t> verticesInCell(std::vector<int> levels, std::vector<int> cellIds)
+    std::vector<size_t> verticesInCell(std::vector<int> levels,
+        std::vector<int> cellIds)
     {
-        AssertMsg(levels.size() == cellIds.size(), "Levels and CellIDs need to have the same length!");
+        AssertMsg(levels.size() == cellIds.size(),
+            "Levels and CellIDs need to have the same length!");
 
         std::vector<size_t> result;
         result.reserve(getNumberOfVertices());
@@ -140,15 +143,9 @@ public:
         return result;
     }
 
-    size_t getNumberOfVertices() const
-    {
-        return cellNumbers.size();
-    }
+    size_t getNumberOfVertices() const { return cellNumbers.size(); }
 
-    size_t getNumberOfLevels() const
-    {
-        return numCells.size();
-    }
+    size_t getNumberOfLevels() const { return numCells.size(); }
 
     size_t getNumberOfCellsPerLevel() const
     {
@@ -173,10 +170,7 @@ public:
         return total;
     }
 
-    std::vector<uint8_t> getPVOffsets()
-    {
-        return pvOffset;
-    }
+    std::vector<uint8_t> getPVOffsets() { return pvOffset; }
 
     // returns the cell numbers of
     size_t getCellNumber(size_t vertexId) const
@@ -186,15 +180,9 @@ public:
     }
 
     // Helper for Assertions
-    bool isLevelValid(uint8_t level) const
-    {
-        return level < numCells.size();
-    }
+    bool isLevelValid(uint8_t level) const { return level < numCells.size(); }
 
-    bool isVertexValid(size_t u) const
-    {
-        return u < cellNumbers.size();
-    }
+    bool isVertexValid(size_t u) const { return u < cellNumbers.size(); }
 
     bool isCellIdValid(size_t cellId, uint8_t level) const
     {

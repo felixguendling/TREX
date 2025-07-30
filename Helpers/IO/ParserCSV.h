@@ -37,14 +37,11 @@ namespace Error {
     };
 
     struct WithFileName {
-        WithFileName()
-        {
-            std::memset(fileName, 0, MAX_FILE_NAME_LENGTH + 1);
-        }
+        WithFileName() { std::memset(fileName, 0, MAX_FILE_NAME_LENGTH + 1); }
 
         void setFileName(const char* fileName)
         {
-// Patrick Steil - https://stackoverflow.com/a/50198710
+// https://stackoverflow.com/a/50198710
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
             std::strncpy(this->fileName, fileName, MAX_FILE_NAME_LENGTH);
@@ -56,29 +53,17 @@ namespace Error {
     };
 
     struct WithFileLine {
-        WithFileLine()
-        {
-            fileLine = -1;
-        }
+        WithFileLine() { fileLine = -1; }
 
-        void setFileLine(int fileLine)
-        {
-            this->fileLine = fileLine;
-        }
+        void setFileLine(int fileLine) { this->fileLine = fileLine; }
 
         int fileLine;
     };
 
     struct WithErrno {
-        WithErrno()
-        {
-            errnoValue = 0;
-        }
+        WithErrno() { errnoValue = 0; }
 
-        void setErrno(int errnoValue)
-        {
-            this->errnoValue = errnoValue;
-        }
+        void setErrno(int errnoValue) { this->errnoValue = errnoValue; }
 
         int errnoValue;
     };
@@ -87,10 +72,12 @@ namespace Error {
         void formatErrorMessage() const
         {
             if (errnoValue != 0) {
-                std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer), "Can not open file \"%s\" because \"%s\".",
-                    fileName, std::strerror(errnoValue));
+                std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
+                    "Can not open file \"%s\" because \"%s\".", fileName,
+                    std::strerror(errnoValue));
             } else {
-                std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer), "Can not open file \"%s\".", fileName);
+                std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
+                    "Can not open file \"%s\".", fileName);
             }
         }
     };
@@ -98,8 +85,10 @@ namespace Error {
     struct LineLengthLimitExceeded : Base, WithFileName, WithFileLine {
         void formatErrorMessage() const
         {
-            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
-                "Line number %d in file \"%s\" exceeds the maximum length of 2^24-1.", fileLine, fileName);
+            std::snprintf(
+                errorMessageBuffer, sizeof(errorMessageBuffer),
+                "Line number %d in file \"%s\" exceeds the maximum length of 2^24-1.",
+                fileLine, fileName);
         }
     };
 
@@ -139,7 +128,7 @@ private:
             dataBegin = 3;
 
         if (dataEnd == 2 * BLOCK_LENGTH) {
-            bytesRead = std::async(std::launch::async, [=]() -> int {
+            bytesRead = std::async(std::launch::async, [=, this]() -> int {
                 return std::fread(buffer + 2 * BLOCK_LENGTH, 1, BLOCK_LENGTH, file);
             });
         }
@@ -189,20 +178,11 @@ public:
         this->fileName[Error::MAX_FILE_NAME_LENGTH] = '\0';
     }
 
-    const char* getTruncatedFileName() const
-    {
-        return fileName;
-    }
+    const char* getTruncatedFileName() const { return fileName; }
 
-    void setFileLine(unsigned fileLine)
-    {
-        this->fileLine = fileLine;
-    }
+    void setFileLine(unsigned fileLine) { this->fileLine = fileLine; }
 
-    unsigned getFileLine() const
-    {
-        return fileLine;
-    }
+    unsigned getFileLine() const { return fileLine; }
 
     char* nextLine()
     {
@@ -220,8 +200,9 @@ public:
             dataEnd -= BLOCK_LENGTH;
             if (bytesRead.valid()) {
                 dataEnd += bytesRead.get();
-                std::memcpy(buffer + BLOCK_LENGTH, buffer + 2 * BLOCK_LENGTH, BLOCK_LENGTH);
-                bytesRead = std::async(std::launch::async, [=]() -> int {
+                std::memcpy(buffer + BLOCK_LENGTH, buffer + 2 * BLOCK_LENGTH,
+                    BLOCK_LENGTH);
+                bytesRead = std::async(std::launch::async, [=, this]() -> int {
                     return std::fread(buffer + 2 * BLOCK_LENGTH, 1, BLOCK_LENGTH, file);
                 });
             }
@@ -272,10 +253,7 @@ namespace Error {
     constexpr int MAX_COLUMN_CONTENT_LENGTH = 63;
 
     struct WithColumnName {
-        WithColumnName()
-        {
-            std::memset(columnName, 0, MAX_COLUMN_NAME_LENGTH + 1);
-        }
+        WithColumnName() { std::memset(columnName, 0, MAX_COLUMN_NAME_LENGTH + 1); }
 
         void setColumnName(const char* columnName)
         {
@@ -304,16 +282,18 @@ namespace Error {
     struct ExtraColumnInHeader : Base, WithFileName, WithColumnName {
         void formatErrorMessage() const
         {
-            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer), "Extra column \"%s\" in header of file \"%s\".",
-                columnName, fileName);
+            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
+                "Extra column \"%s\" in header of file \"%s\".", columnName,
+                fileName);
         }
     };
 
     struct MissingColumnInHeader : Base, WithFileName, WithColumnName {
         void formatErrorMessage() const
         {
-            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer), "Missing column \"%s\" in header of file \"%s\".",
-                columnName, fileName);
+            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
+                "Missing column \"%s\" in header of file \"%s\".", columnName,
+                fileName);
         }
     };
 
@@ -321,30 +301,34 @@ namespace Error {
         void formatErrorMessage() const
         {
             std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
-                "Duplicated column \"%s\" in header of file \"%s\".", columnName, fileName);
+                "Duplicated column \"%s\" in header of file \"%s\".",
+                columnName, fileName);
         }
     };
 
     struct HeaderMissing : Base, WithFileName {
         void formatErrorMessage() const
         {
-            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer), "Header missing in file \"%s\".", fileName);
+            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
+                "Header missing in file \"%s\".", fileName);
         }
     };
 
     struct TooFewColumns : Base, WithFileName, WithFileLine {
         void formatErrorMessage() const
         {
-            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer), "Too few columns in line %d in file \"%s\".",
-                fileLine, fileName);
+            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
+                "Too few columns in line %d in file \"%s\".", fileLine,
+                fileName);
         }
     };
 
     struct TooManyColumns : Base, WithFileName, WithFileLine {
         void formatErrorMessage() const
         {
-            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer), "Too many columns in line %d in file \"%s\".",
-                fileLine, fileName);
+            std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
+                "Too many columns in line %d in file \"%s\".", fileLine,
+                fileName);
         }
     };
 
@@ -352,11 +336,16 @@ namespace Error {
         void formatErrorMessage() const
         {
             std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
-                "Escaped string was not closed in line %d in file \"%s\".", fileLine, fileName);
+                "Escaped string was not closed in line %d in file \"%s\".",
+                fileLine, fileName);
         }
     };
 
-    struct IntegerMustBePositive : Base, WithFileName, WithFileLine, WithColumnName, WithColumnContent {
+    struct IntegerMustBePositive : Base,
+                                   WithFileName,
+                                   WithFileLine,
+                                   WithColumnName,
+                                   WithColumnContent {
         void formatErrorMessage() const
         {
             std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
@@ -366,7 +355,11 @@ namespace Error {
         }
     };
 
-    struct NoDigit : Base, WithFileName, WithFileLine, WithColumnName, WithColumnContent {
+    struct NoDigit : Base,
+                     WithFileName,
+                     WithFileLine,
+                     WithColumnName,
+                     WithColumnContent {
         void formatErrorMessage() const
         {
             std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
@@ -376,7 +369,11 @@ namespace Error {
         }
     };
 
-    struct IntegerOverflow : Base, WithFileName, WithFileLine, WithColumnName, WithColumnContent {
+    struct IntegerOverflow : Base,
+                             WithFileName,
+                             WithFileLine,
+                             WithColumnName,
+                             WithColumnContent {
         void formatErrorMessage() const
         {
             std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
@@ -386,7 +383,11 @@ namespace Error {
         }
     };
 
-    struct IntegerUnderflow : Base, WithFileName, WithFileLine, WithColumnName, WithColumnContent {
+    struct IntegerUnderflow : Base,
+                              WithFileName,
+                              WithFileLine,
+                              WithColumnName,
+                              WithColumnContent {
         void formatErrorMessage() const
         {
             std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
@@ -396,7 +397,11 @@ namespace Error {
         }
     };
 
-    struct InvalidSingleCharacter : Base, WithFileName, WithFileLine, WithColumnName, WithColumnContent {
+    struct InvalidSingleCharacter : Base,
+                                    WithFileName,
+                                    WithFileLine,
+                                    WithColumnName,
+                                    WithColumnContent {
         void formatErrorMessage() const
         {
             std::snprintf(errorMessageBuffer, sizeof(errorMessageBuffer),
@@ -416,13 +421,11 @@ static constexpr IgnoreColumn IGNORE_MISSING_COLUMN = 2;
 template <char... TRIM_CHAR_LIST>
 struct TrimChars {
 private:
-    constexpr static bool isTrimChar(const char)
-    {
-        return false;
-    }
+    constexpr static bool isTrimChar(const char) { return false; }
 
     template <class... OtherTrimChars>
-    constexpr static bool isTrimChar(const char c, const char trimChar, OtherTrimChars... otherTrimChars)
+    constexpr static bool isTrimChar(const char c, const char trimChar,
+        OtherTrimChars... otherTrimChars)
     {
         return (c == trimChar) || isTrimChar(c, otherTrimChars...);
     }
@@ -441,22 +444,17 @@ public:
 };
 
 struct NoComment {
-    static bool isComment(const char*)
-    {
-        return false;
-    }
+    static bool isComment(const char*) { return false; }
 };
 
 template <char... COMMENT_START_CHAR_LIST>
 struct SingleLineComment {
 private:
-    constexpr static bool isCommentStartChar(const char)
-    {
-        return false;
-    }
+    constexpr static bool isCommentStartChar(const char) { return false; }
 
     template <class... OtherCommentStartChars>
-    constexpr static bool isCommentStartChar(const char c, const char commentStartChar,
+    constexpr static bool
+    isCommentStartChar(const char c, const char commentStartChar,
         OtherCommentStartChars... otherCommentStartChars)
     {
         return c == commentStartChar || isCommentStartChar(c, otherCommentStartChars...);
@@ -503,9 +501,7 @@ struct NoQuoteEscape {
         return colBegin;
     }
 
-    static void unescape(char*&, char*&) noexcept
-    {
-    }
+    static void unescape(char*&, char*&) noexcept { }
 };
 
 template <char SEP, char QUOTE>
@@ -569,14 +565,10 @@ struct ThrowOnOverflow {
 
 struct IgnoreOverflow {
     template <class T>
-    static void onOverflow(T&)
-    {
-    }
+    static void onOverflow(T&) { }
 
     template <class T>
-    static void onUnderflow(T&)
-    {
-    }
+    static void onUnderflow(T&) { }
 };
 
 struct SetToMaxOnOverflow {
@@ -650,7 +642,8 @@ namespace Detail {
     }
 
     template <unsigned COLUMN_COUNT, class TRIM_POLICY, class QUOTE_POLICY>
-    void parseHeaderLine(char* line, std::vector<int>& colOrder,
+    void parseHeaderLine(
+        char* line, std::vector<int>& colOrder,
         const std::array<std::vector<std::string>, COLUMN_COUNT>& columnNameAliases,
         IgnoreColumn ignorePolicy)
     {
@@ -832,9 +825,11 @@ namespace Detail {
         parseUnsignedInteger<OVERFLOW_POLICY>(col, x);
     }
 
-    template <class OVERFLOW_POLICY, int TAG, typename VALUE_TYPE, VALUE_TYPE INVALID, VALUE_TYPE DEFAULT,
-        typename... ADDITIONAL_CASTS>
-    void parse(const char* col, TaggedInteger<TAG, VALUE_TYPE, INVALID, DEFAULT, ADDITIONAL_CASTS...>& x)
+    template <class OVERFLOW_POLICY, int TAG, typename VALUE_TYPE,
+        VALUE_TYPE INVALID, VALUE_TYPE DEFAULT, typename... ADDITIONAL_CASTS>
+    void parse(
+        const char* col,
+        TaggedInteger<TAG, VALUE_TYPE, INVALID, DEFAULT, ADDITIONAL_CASTS...>& x)
     {
         VALUE_TYPE y;
         parseSignedInteger<OVERFLOW_POLICY>(col, y);
@@ -933,15 +928,18 @@ namespace Detail {
     template <class OVERFLOW_POLICY, class T>
     void parse(const char*, T&)
     {
-        static_assert(sizeof(T) != sizeof(T), "Can not parse this type. Only builtin integrals, "
-                                              "TaggedInteger, floats, "
-                                              "char, char*, const char* and std::string are supported");
+        static_assert(sizeof(T) != sizeof(T),
+            "Can not parse this type. Only builtin integrals, "
+            "TaggedInteger, floats, "
+            "char, char*, const char* and std::string are supported");
     }
 
 } // namespace Detail
 
-template <unsigned COLUMN_COUNT, class TRIM_POLICY = TrimChars<>, class QUOTE_POLICY = NoQuoteEscape<','>,
-    class OVERFLOW_POLICY = ThrowOnOverflow, class COMMENT_POLICY = EmptyLineComment>
+template <unsigned COLUMN_COUNT, class TRIM_POLICY = TrimChars<>,
+    class QUOTE_POLICY = NoQuoteEscape<','>,
+    class OVERFLOW_POLICY = ThrowOnOverflow,
+    class COMMENT_POLICY = EmptyLineComment>
 class CSVReader {
 private:
     LineReader in;
@@ -969,25 +967,33 @@ public:
         init();
     }
 
-    template <typename... T, typename = std::enable_if_t<sizeof...(T) == COLUMN_COUNT>>
+    template <typename... T,
+        typename = std::enable_if_t<sizeof...(T) == COLUMN_COUNT>>
     void readHeader(const T&... columnNames)
     {
-        columnNameAliases = std::array<std::vector<std::string>, COLUMN_COUNT> { std::vector<std::string> { columnNames }... };
+        columnNameAliases = std::array<std::vector<std::string>, COLUMN_COUNT> {
+            std::vector<std::string> { columnNames }...
+        };
         readHeader(IGNORE_EXTRA_COLUMN);
     }
 
-    template <typename... T, typename = std::enable_if_t<sizeof...(T) == COLUMN_COUNT>>
+    template <typename... T,
+        typename = std::enable_if_t<sizeof...(T) == COLUMN_COUNT>>
     void readHeader(const IgnoreColumn ignorePolicy, const T&... columnNames)
     {
-        columnNameAliases = std::array<std::vector<std::string>, COLUMN_COUNT> { std::vector<std::string> { columnNames }... };
+        columnNameAliases = std::array<std::vector<std::string>, COLUMN_COUNT> {
+            std::vector<std::string> { columnNames }...
+        };
         readHeader(ignorePolicy);
     }
 
     template <class... COLUMN_TYPE>
     bool readRow(COLUMN_TYPE&... cols)
     {
-        static_assert(sizeof...(COLUMN_TYPE) >= COLUMN_COUNT, "not enough columns specified");
-        static_assert(sizeof...(COLUMN_TYPE) <= COLUMN_COUNT, "too many columns specified");
+        static_assert(sizeof...(COLUMN_TYPE) >= COLUMN_COUNT,
+            "not enough columns specified");
+        static_assert(sizeof...(COLUMN_TYPE) <= COLUMN_COUNT,
+            "too many columns specified");
         try {
             try {
                 char* line;
@@ -1021,20 +1027,11 @@ public:
         return Vector::contains(colOrder, nameIndex);
     }
 
-    const char* getTruncatedFileName() const
-    {
-        return in.getTruncatedFileName();
-    }
+    const char* getTruncatedFileName() const { return in.getTruncatedFileName(); }
 
-    void setFileLine(unsigned fileLine)
-    {
-        in.setFileLine(fileLine);
-    }
+    void setFileLine(unsigned fileLine) { in.setFileLine(fileLine); }
 
-    unsigned getFileLine() const
-    {
-        return in.getFileLine();
-    }
+    unsigned getFileLine() const { return in.getFileLine(); }
 
 private:
     void init() noexcept
@@ -1049,9 +1046,7 @@ private:
         }
     }
 
-    void parseHelper(std::size_t)
-    {
-    }
+    void parseHelper(std::size_t) { }
 
     template <class T, class... COLUMN_TYPE>
     void parseHelper(std::size_t r, T& t, COLUMN_TYPE&... cols)
@@ -1081,8 +1076,8 @@ private:
                 if (!line)
                     throw Error::HeaderMissing();
             } while (COMMENT_POLICY::isComment(line));
-            Detail::parseHeaderLine<COLUMN_COUNT, TRIM_POLICY, QUOTE_POLICY>(line, colOrder, columnNameAliases,
-                ignorePolicy);
+            Detail::parseHeaderLine<COLUMN_COUNT, TRIM_POLICY, QUOTE_POLICY>(
+                line, colOrder, columnNameAliases, ignorePolicy);
         } catch (Error::WithFileName& error) {
             error.setFileName(in.getTruncatedFileName());
             throw;
@@ -1091,17 +1086,21 @@ private:
 };
 
 template <typename PARSE_CONTENT>
-inline void readFile(const std::string& fileName, const std::string& contentName, const PARSE_CONTENT& parseContent,
-    const bool verbose = true)
+inline void
+readFile(const std::string& fileName, const std::string& contentName,
+    const PARSE_CONTENT& parseContent, const bool verbose = true)
 {
     if (verbose)
-        std::cout << "Reading " << contentName << " from CSV file (" << fileName << ")..." << std::flush;
+        std::cout << "Reading " << contentName << " from CSV file (" << fileName
+                  << ")..." << std::flush;
     if (FileSystem::isFile(fileName)) {
         Timer timer;
         int count = parseContent();
         if (verbose)
-            std::cout << " done (Found " << String::prettyInt(count) << " " << contentName << " in "
-                      << String::msToString(timer.elapsedMilliseconds()) << ")." << std::endl;
+            std::cout << " done (Found " << String::prettyInt(count) << " "
+                      << contentName << " in "
+                      << String::msToString(timer.elapsedMilliseconds()) << ")."
+                      << std::endl;
     } else {
         if (verbose)
             std::cout << " file not found." << std::endl;
@@ -1109,16 +1108,21 @@ inline void readFile(const std::string& fileName, const std::string& contentName
 }
 
 template <typename PARSE_CONTENT>
-inline void readFile(const std::vector<std::string>& fileNameAliases, const std::string& contentName,
-    const PARSE_CONTENT& parseContent, const bool verbose = true)
+inline void readFile(const std::vector<std::string>& fileNameAliases,
+    const std::string& contentName,
+    const PARSE_CONTENT& parseContent,
+    const bool verbose = true)
 {
     if (verbose)
-        std::cout << "Reading " << contentName << " from CSV file (" << fileNameAliases.front() << ")..." << std::flush;
+        std::cout << "Reading " << contentName << " from CSV file ("
+                  << fileNameAliases.front() << ")..." << std::flush;
     Timer timer;
     int count = parseContent();
     if (verbose)
-        std::cout << " done (Found " << String::prettyInt(count) << " " << contentName << " in "
-                  << String::msToString(timer.elapsedMilliseconds()) << ")." << std::endl;
+        std::cout << " done (Found " << String::prettyInt(count) << " "
+                  << contentName << " in "
+                  << String::msToString(timer.elapsedMilliseconds()) << ")."
+                  << std::endl;
 }
 
 } // namespace IO

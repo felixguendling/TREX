@@ -9,10 +9,7 @@ using TransferGraph = ::TransferGraph;
 
 class MultimodalData {
 public:
-    MultimodalData(const std::string& fileName)
-    {
-        deserialize(fileName);
-    }
+    MultimodalData(const std::string& fileName) { deserialize(fileName); }
 
     MultimodalData(const Data& data)
         : raptorData(data)
@@ -68,7 +65,8 @@ public:
         }
     }
 
-    inline void addTransferGraph(const size_t mode, const TransferGraph& graph) noexcept
+    inline void addTransferGraph(const size_t mode,
+        const TransferGraph& graph) noexcept
     {
         AssertMsg(mode < NUM_TRANSFER_MODES, "Mode is not supported!");
         if (!Vector::contains(modes, mode)) {
@@ -77,7 +75,8 @@ public:
         transferGraphs[mode] = graph;
     }
 
-    inline const TransferGraph& getTransferGraph(const size_t mode) const noexcept
+    inline const TransferGraph&
+    getTransferGraph(const size_t mode) const noexcept
     {
         AssertMsg(Vector::contains(modes, mode), "Mode is not supported!");
         return transferGraphs[mode];
@@ -90,14 +89,13 @@ public:
         return resultData;
     }
 
-    inline Data getPruningData() const noexcept
-    {
-        return getPruningData(modes);
-    }
+    inline Data getPruningData() const noexcept { return getPruningData(modes); }
 
-    inline Data getPruningData(const std::vector<size_t>& pruningModes) const noexcept
+    inline Data
+    getPruningData(const std::vector<size_t>& pruningModes) const noexcept
     {
-        AssertMsg(!pruningModes.empty(), "Cannot build pruning data without transfer modes!");
+        AssertMsg(!pruningModes.empty(),
+            "Cannot build pruning data without transfer modes!");
         Data resultData(raptorData);
         DynamicTransferGraph temp;
         Graph::copy(raptorData.transferGraph, temp);
@@ -112,7 +110,8 @@ public:
                     } else {
                         const int travelTime = graph.get(TravelTime, edge);
                         const int originalTravelTime = temp.get(TravelTime, originalEdge);
-                        temp.set(TravelTime, originalEdge, std::min(travelTime, originalTravelTime));
+                        temp.set(TravelTime, originalEdge,
+                            std::min(travelTime, originalTravelTime));
                     }
                 }
             }

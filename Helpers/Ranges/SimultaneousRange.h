@@ -15,7 +15,8 @@ public:
 
     using IteratorA = decltype(std::declval<const RangeA*>()->begin());
     using IteratorB = decltype(std::declval<const RangeB*>()->begin());
-    using Element = decltype(std::make_tuple(*(std::declval<IteratorA>()), *(std::declval<IteratorB>())));
+    using Element = decltype(std::make_tuple(*(std::declval<IteratorA>()),
+        *(std::declval<IteratorB>())));
 
 public:
     class Iterator {
@@ -70,7 +71,8 @@ public:
         , rangeB(&rangeB)
     {
         AssertMsg(rangeA.size() == rangeB.size(),
-            "Both ranges must have the same size (" << rangeA.size() << ", " << rangeB.size() << ")!");
+            "Both ranges must have the same size (" << rangeA.size() << ", "
+                                                    << rangeB.size() << ")!");
     }
 
     SimultaneousRange(const RangeA&&, const RangeB&) = delete;
@@ -84,7 +86,8 @@ public:
 
     inline Iterator end() const noexcept
     {
-        return (rangeA) ? Iterator(rangeA->end(), rangeB->end()) : Iterator(fallbackRange.end(), RangeB().end());
+        return (rangeA) ? Iterator(rangeA->end(), rangeB->end())
+                        : Iterator(fallbackRange.end(), RangeB().end());
     }
 
     inline bool empty() const noexcept
@@ -92,10 +95,7 @@ public:
         return (rangeA) ? rangeA->empty() : true;
     }
 
-    inline size_t size() const noexcept
-    {
-        return (rangeA) ? rangeA->size() : 0;
-    }
+    inline size_t size() const noexcept { return (rangeA) ? rangeA->size() : 0; }
 
     inline Element operator[](const size_t i) const noexcept
     {

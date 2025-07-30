@@ -20,6 +20,17 @@ public:
     {
     }
 
+    // Copy Assignment Operator
+    DijkstraBag& operator=(const DijkstraBag& other)
+    {
+        if (this != &other) {
+            labels = other.labels;
+            nonHeapLabels = other.nonHeapLabels;
+            // If ExternalKHeapElement has any members to copy, ensure they are copied here.
+        }
+        return *this;
+    }
+
     template <typename OTHER_LABEL>
     inline bool dominates(const OTHER_LABEL& newLabel) const noexcept
     {
@@ -34,25 +45,13 @@ public:
         return false;
     }
 
-    inline size_t size() const noexcept
-    {
-        return labels.size();
-    }
+    inline size_t size() const noexcept { return labels.size(); }
 
-    inline size_t nonHeapSize() const noexcept
-    {
-        return nonHeapLabels.size();
-    }
+    inline size_t nonHeapSize() const noexcept { return nonHeapLabels.size(); }
 
-    inline bool empty() const noexcept
-    {
-        return labels.empty();
-    }
+    inline bool empty() const noexcept { return labels.empty(); }
 
-    inline bool heapEmpty() const noexcept
-    {
-        return labels.size() == 0;
-    }
+    inline bool heapEmpty() const noexcept { return labels.size() == 0; }
 
     inline const DijkstraLabel& front() const noexcept
     {
@@ -60,10 +59,7 @@ public:
         return labels[0];
     }
 
-    inline int getKey() const noexcept
-    {
-        return front().getKey();
-    }
+    inline int getKey() const noexcept { return front().getKey(); }
 
     inline bool hasSmallerKey(const DijkstraBag* const other) const noexcept
     {
@@ -75,7 +71,10 @@ public:
         AssertMsg(!empty(), "An empty heap has no front!");
 
         nonHeapLabels.push_back(labels[0]);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
         labels[0] = labels.back();
+#pragma GCC diagnostic pop
         labels.pop_back();
         // fix heap prop
         if (labels.size() > 1)
@@ -93,14 +92,20 @@ public:
                 ++removedLabels;
                 continue;
             }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
             labels[i - removedLabels] = labels[i];
+#pragma GCC diagnostic pop
         }
         for (size_t i = 0; i < nonHeapLabels.size(); ++i) {
             if (nonHeapLabels[i].dominates(newLabel))
                 return false;
         }
         labels.resize(labels.size() - removedLabels + 1);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
         labels.back() = newLabel;
+#pragma GCC diagnostic pop
         heapify();
         return true;
     }
@@ -176,4 +181,4 @@ private:
     std::vector<DijkstraLabel> nonHeapLabels;
 };
 
-}
+} // namespace TransferPattern

@@ -76,7 +76,8 @@ inline bool isFile(const std::string& path) noexcept
     }
 }
 
-inline bool renameFile(const std::string& oldName, const std::string& newName) noexcept
+inline bool renameFile(const std::string& oldName,
+    const std::string& newName) noexcept
 {
     if (!isFile(oldName))
         return false;
@@ -92,7 +93,8 @@ inline void deleteFile(const std::string& fileName) noexcept
     remove(fileName.c_str());
 }
 
-inline bool copyFile(const std::string& oldName, const std::string& newName) noexcept
+inline bool copyFile(const std::string& oldName,
+    const std::string& newName) noexcept
 {
     if (!isFile(oldName))
         return false;
@@ -123,7 +125,8 @@ inline std::string getParentDirectory(const std::string& fileName) noexcept
     return fileName.substr(0, directoryEnd);
 }
 
-inline std::string extendPath(const std::string& base, const std::string& file) noexcept
+inline std::string extendPath(const std::string& base,
+    const std::string& file) noexcept
 {
     if (file.size() < 1) {
         return base;
@@ -158,7 +161,8 @@ inline std::string getAbsolutePath(const std::string& path) noexcept
     }
 }
 
-inline std::string ensureExtension(const std::string& fileName, const std::string& extension) noexcept
+inline std::string ensureExtension(const std::string& fileName,
+    const std::string& extension) noexcept
 {
     if (String::endsWith(fileName, extension)) {
         return fileName;
@@ -167,7 +171,8 @@ inline std::string ensureExtension(const std::string& fileName, const std::strin
     }
 }
 
-inline std::string getFileNameWithoutExtension(const std::string& fileName) noexcept
+inline std::string
+getFileNameWithoutExtension(const std::string& fileName) noexcept
 {
     size_t directoryEnd = fileName.find_last_of('/') + 1;
     if (directoryEnd >= fileName.size())
@@ -178,7 +183,9 @@ inline std::string getFileNameWithoutExtension(const std::string& fileName) noex
     return fileName.substr(directoryEnd, extensionBegin - directoryEnd);
 }
 
-inline void unzip(const std::string& zipFileName, const std::string& ouputDirectory, const bool verbose = true,
+inline void
+unzip(const std::string& zipFileName, const std::string& ouputDirectory,
+    const bool verbose = true,
     const std::string& unzipExecutable = "/usr/bin/unzip") noexcept
 {
     if (!isFile(zipFileName))
@@ -192,10 +199,11 @@ inline void unzip(const std::string& zipFileName, const std::string& ouputDirect
         exit(1);
     case 0:
         if (verbose) {
-            execl(unzipExecutable.c_str(), "unzip", "-o", zipFileName.c_str(), "-d", ouputDirectory.c_str(), nullptr);
+            execl(unzipExecutable.c_str(), "unzip", "-o", zipFileName.c_str(), "-d",
+                ouputDirectory.c_str(), nullptr);
         } else {
-            execl(unzipExecutable.c_str(), "unzip", "-o", "-qq", zipFileName.c_str(), "-d", ouputDirectory.c_str(),
-                nullptr);
+            execl(unzipExecutable.c_str(), "unzip", "-o", "-qq", zipFileName.c_str(),
+                "-d", ouputDirectory.c_str(), nullptr);
         }
         error(unzipExecutable + " failed!");
         exit(1);
@@ -217,7 +225,8 @@ inline void makeDirectory(const std::string& path) noexcept
     mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
-inline const std::string& ensureDirectoryExists(const std::string& fileName) noexcept
+inline const std::string&
+ensureDirectoryExists(const std::string& fileName) noexcept
 {
     const std::string parentDirectory = getParentDirectory(fileName);
     if (parentDirectory == "")

@@ -11,9 +11,7 @@
 namespace Geometry {
 
 struct EuclideanMetric {
-    EuclideanMetric()
-    {
-    }
+    EuclideanMetric() { }
 
     inline double distanceSquare(const Point& a, const Point& b) const
     {
@@ -30,9 +28,7 @@ struct EuclideanMetric {
 };
 
 struct GeoMetric {
-    GeoMetric()
-    {
-    }
+    GeoMetric() { }
 
     inline double distanceSquare(const Point& a, const Point& b) const
     {

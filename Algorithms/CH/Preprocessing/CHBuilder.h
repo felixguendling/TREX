@@ -18,9 +18,12 @@
 
 namespace CH {
 
-template <typename PROFILER = NoProfiler, typename WITNESS_SEARCH = NoWitnessSearch<CHConstructionGraph, PROFILER>,
-    typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>, typename STOP_CRITERION = NoStopCriterion,
-    bool BUILD_Q_LINEAR = false, bool BREAK_KEY_TIES_BY_ID = false, bool SORT_SHORTCUTS = false>
+template <
+    typename PROFILER = NoProfiler,
+    typename WITNESS_SEARCH = NoWitnessSearch<CHConstructionGraph, PROFILER>,
+    typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>,
+    typename STOP_CRITERION = NoStopCriterion, bool BUILD_Q_LINEAR = false,
+    bool BREAK_KEY_TIES_BY_ID = false, bool SORT_SHORTCUTS = false>
 class Builder {
 public:
     using Profiler = PROFILER;
@@ -30,7 +33,8 @@ public:
     constexpr static bool BuildQLinear = BUILD_Q_LINEAR;
     constexpr static bool BreakKeyTiesById = BREAK_KEY_TIES_BY_ID;
     constexpr static bool SortShortcuts = SORT_SHORTCUTS;
-    using Type = Builder<Profiler, WitnessSearch, KeyFunction, StopCriterion, BuildQLinear, BreakKeyTiesById, SortShortcuts>;
+    using Type = Builder<Profiler, WitnessSearch, KeyFunction, StopCriterion,
+        BuildQLinear, BreakKeyTiesById, SortShortcuts>;
 
 private:
     using KeyType = typename KEY_FUNCTION::KeyType;
@@ -64,8 +68,10 @@ private:
 
 public:
     template <typename GRAPH, typename WEIGHT>
-    Builder(GRAPH&& graph, const WEIGHT& weight, const KeyFunction& keyFunction = KeyFunction(),
-        const StopCriterion& stopCriterion = StopCriterion(), const WitnessSearch& witnessSearch = WitnessSearch(),
+    Builder(GRAPH&& graph, const WEIGHT& weight,
+        const KeyFunction& keyFunction = KeyFunction(),
+        const StopCriterion& stopCriterion = StopCriterion(),
+        const WitnessSearch& witnessSearch = WitnessSearch(),
         const Profiler& profiler = Profiler())
         : data(std::move(graph), weight)
         , keyFunction(keyFunction)
@@ -78,7 +84,8 @@ public:
     }
 
     Builder(CHCoreGraph&& graph, const KeyFunction& keyFunction = KeyFunction(),
-        const StopCriterion& stopCriterion = StopCriterion(), const WitnessSearch& witnessSearch = WitnessSearch(),
+        const StopCriterion& stopCriterion = StopCriterion(),
+        const WitnessSearch& witnessSearch = WitnessSearch(),
         const Profiler& profiler = Profiler())
         : data(std::move(graph))
         , keyFunction(keyFunction)
@@ -91,7 +98,8 @@ public:
     }
 
     Builder(Data&& originalData, const KeyFunction& keyFunction = KeyFunction(),
-        const StopCriterion& stopCriterion = StopCriterion(), const WitnessSearch& witnessSearch = WitnessSearch(),
+        const StopCriterion& stopCriterion = StopCriterion(),
+        const WitnessSearch& witnessSearch = WitnessSearch(),
         const Profiler& profiler = Profiler())
         : data(std::move(originalData))
         , keyFunction(keyFunction)
@@ -172,35 +180,20 @@ public:
         return Q.size();
     }
 
-    inline const CHCoreGraph& getCore() const noexcept
-    {
-        return data.core;
-    }
+    inline const CHCoreGraph& getCore() const noexcept { return data.core; }
 
-    inline CHCoreGraph& getCore() noexcept
-    {
-        return data.core;
-    }
+    inline CHCoreGraph& getCore() noexcept { return data.core; }
 
     inline const std::vector<Vertex>& getOrder() const noexcept
     {
         return data.order;
     }
 
-    inline std::vector<Vertex>& getOrder() noexcept
-    {
-        return data.order;
-    }
+    inline std::vector<Vertex>& getOrder() noexcept { return data.order; }
 
-    inline const Data& getData() const noexcept
-    {
-        return data;
-    }
+    inline const Data& getData() const noexcept { return data; }
 
-    inline Data& getData() noexcept
-    {
-        return data;
-    }
+    inline Data& getData() noexcept { return data; }
 
 private:
     template <bool RESET_DATA>
@@ -280,7 +273,9 @@ private:
                 Vertex to = data.core.get(ToVertex, second);
                 if (from == to)
                     continue;
-                shortcuts.push_back(Shortcut({ from, to, data.core.get(Weight, first) + data.core.get(Weight, second) }));
+                shortcuts.push_back(Shortcut(
+                    { from, to,
+                        data.core.get(Weight, first) + data.core.get(Weight, second) }));
             }
         }
         if constexpr (SortShortcuts) {
@@ -288,7 +283,8 @@ private:
         }
         for (Shortcut shortcut : shortcuts) {
             profiler.testShortcut();
-            if (witnessSearch.shortcutIsNecessary(shortcut.from, shortcut.to, vertex, shortcut.weight)) {
+            if (witnessSearch.shortcutIsNecessary(shortcut.from, shortcut.to, vertex,
+                    shortcut.weight)) {
                 addShortcut(shortcut.from, shortcut.to, vertex, shortcut.weight);
             }
         }
@@ -323,7 +319,8 @@ private:
         }
     }
 
-    inline void addShortcut(const Vertex from, const Vertex to, const Vertex via, const int shortcutWeight) noexcept
+    inline void addShortcut(const Vertex from, const Vertex to, const Vertex via,
+        const int shortcutWeight) noexcept
     {
         profiler.addShortcut();
         Edge shortcut = data.core.findEdge(from, to);
@@ -333,7 +330,9 @@ private:
                 data.core.set(Weight, shortcut, shortcutWeight);
             }
         } else {
-            data.core.addEdge(from, to).set(ViaVertex, via).set(Weight, shortcutWeight);
+            data.core.addEdge(from, to)
+                .set(ViaVertex, via)
+                .set(Weight, shortcutWeight);
         }
     }
 

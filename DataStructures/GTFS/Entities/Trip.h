@@ -10,18 +10,15 @@ namespace GTFS {
 
 class Trip {
 public:
-    Trip(const std::string& routeId = "", const std::string& serviceId = "", const std::string& tripId = "",
-        const std::string& name = "")
+    Trip(const std::string& routeId = "", const std::string& serviceId = "",
+        const std::string& tripId = "", const std::string& name = "")
         : routeId(routeId)
         , serviceId(serviceId)
         , tripId(tripId)
         , name(name)
     {
     }
-    Trip(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Trip(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     inline bool validate() noexcept
     {
@@ -32,7 +29,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const Trip& t)
     {
-        return out << "Trip{" << t.routeId << ", " << t.serviceId << ", " << t.tripId << ", " << t.name << "}";
+        return out << "Trip{" << t.routeId << ", " << t.serviceId << ", "
+                   << t.tripId << ", " << t.name << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept

@@ -37,4 +37,4 @@ private:
 
     uint16_t currentTimestamp;
 };
-}
+} // namespace TransferPattern

@@ -11,7 +11,11 @@ namespace RAPTOR {
 class JourneyLegWithStopEvent {
 
 public:
-    JourneyLegWithStopEvent(const Vertex from = noVertex, const Vertex to = noVertex, const size_t fromStopEventId = 0, const size_t toStopEventId = 0, const int departureTime = never, const int arrivalTime = never, const bool usesRoute = false, const RouteId routeId = noRouteId)
+    JourneyLegWithStopEvent(
+        const Vertex from = noVertex, const Vertex to = noVertex,
+        const size_t fromStopEventId = 0, const size_t toStopEventId = 0,
+        const int departureTime = never, const int arrivalTime = never,
+        const bool usesRoute = false, const RouteId routeId = noRouteId)
         : from(from)
         , to(to)
         , fromStopEventId(fromStopEventId)
@@ -23,7 +27,10 @@ public:
     {
     }
 
-    JourneyLegWithStopEvent(const Vertex from, const Vertex to, const size_t fromStopEventId, const size_t toStopEventId, const int departureTime, const int arrivalTime, const Edge edge)
+    JourneyLegWithStopEvent(const Vertex from, const Vertex to,
+        const size_t fromStopEventId,
+        const size_t toStopEventId, const int departureTime,
+        const int arrivalTime, const Edge edge)
         : from(from)
         , to(to)
         , fromStopEventId(fromStopEventId)
@@ -35,7 +42,12 @@ public:
     {
     }
 
-    JourneyLegWithStopEvent(const Vertex from = noVertex, const Vertex to = noVertex, const int departureTime = never, const int arrivalTime = never, const bool usesRoute = false, const RouteId routeId = noRouteId)
+    JourneyLegWithStopEvent(const Vertex from = noVertex,
+        const Vertex to = noVertex,
+        const int departureTime = never,
+        const int arrivalTime = never,
+        const bool usesRoute = false,
+        const RouteId routeId = noRouteId)
         : from(from)
         , to(to)
         , fromStopEventId(0)
@@ -47,7 +59,9 @@ public:
     {
     }
 
-    JourneyLegWithStopEvent(const Vertex from, const Vertex to, const int departureTime, const int arrivalTime, const Edge edge)
+    JourneyLegWithStopEvent(const Vertex from, const Vertex to,
+        const int departureTime, const int arrivalTime,
+        const Edge edge)
         : from(from)
         , to(to)
         , fromStopEventId(0)
@@ -64,9 +78,15 @@ public:
         return usesRoute ? 0 : arrivalTime - departureTime;
     }
 
-    inline friend std::ostream& operator<<(std::ostream& out, const JourneyLegWithStopEvent& leg) noexcept
+    inline friend std::ostream&
+    operator<<(std::ostream& out, const JourneyLegWithStopEvent& leg) noexcept
     {
-        return out << "from: " << leg.from << ", to: " << leg.to << ", dep-Time: " << leg.departureTime << ", arr-Time: " << leg.arrivalTime << (leg.usesRoute ? ", route: " : ", transfer: ") << leg.routeId << ", fromStopEventId: " << leg.fromStopEventId << ", toStopEventId: " << leg.toStopEventId;
+        return out << "from: " << leg.from << ", to: " << leg.to
+                   << ", dep-Time: " << leg.departureTime
+                   << ", arr-Time: " << leg.arrivalTime
+                   << (leg.usesRoute ? ", route: " : ", transfer: ") << leg.routeId
+                   << ", fromStopEventId: " << leg.fromStopEventId
+                   << ", toStopEventId: " << leg.toStopEventId;
     }
 
 public:
@@ -85,7 +105,8 @@ public:
 
 using JourneyWithStopEvent = std::vector<JourneyLegWithStopEvent>;
 
-inline std::vector<Vertex> journeyToPath(const JourneyWithStopEvent& journey) noexcept
+inline std::vector<Vertex>
+journeyToPath(const JourneyWithStopEvent& journey) noexcept
 {
     std::vector<Vertex> path;
     for (const JourneyLegWithStopEvent& leg : journey) {
@@ -104,7 +125,8 @@ inline int totalTransferTime(const JourneyWithStopEvent& journey) noexcept
     return transferTime;
 }
 
-inline int intermediateTransferTime(const JourneyWithStopEvent& journey) noexcept
+inline int
+intermediateTransferTime(const JourneyWithStopEvent& journey) noexcept
 {
     int transferTime = 0;
     for (size_t i = 1; i < journey.size() - 1; i++) {
@@ -134,4 +156,4 @@ inline size_t countTrips(const JourneyWithStopEvent& journey) noexcept
     return numTrips;
 }
 
-}
+} // namespace RAPTOR

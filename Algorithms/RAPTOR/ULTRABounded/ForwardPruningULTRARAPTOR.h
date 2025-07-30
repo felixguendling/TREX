@@ -11,7 +11,8 @@
 
 namespace RAPTOR {
 
-template <typename PROFILER = NoProfiler, typename INITIAL_TRANSFERS = BucketCHInitialTransfers>
+template <typename PROFILER = NoProfiler,
+    typename INITIAL_TRANSFERS = BucketCHInitialTransfers>
 class ForwardPruningULTRARAPTOR {
 public:
     using Profiler = PROFILER;
@@ -22,7 +23,9 @@ private:
     using Round = std::vector<int>;
 
 public:
-    ForwardPruningULTRARAPTOR(const Data& data, InitialTransferType& initialTransfers, Profiler& profiler)
+    ForwardPruningULTRARAPTOR(const Data& data,
+        InitialTransferType& initialTransfers,
+        Profiler& profiler)
         : data(data)
         , initialTransfers(initialTransfers)
         , stopsUpdatedByRoute(data.numberOfStops())
@@ -37,10 +40,12 @@ public:
         , maxTrips(0)
         , profiler(profiler)
     {
-        AssertMsg(data.hasImplicitBufferTimes(), "Departure buffer times have to be implicit!");
+        AssertMsg(data.hasImplicitBufferTimes(),
+            "Departure buffer times have to be implicit!");
     }
 
-    inline void run(const Vertex source, const int departureTime, const Vertex target, const double arrSlack,
+    inline void run(const Vertex source, const int departureTime,
+        const Vertex target, const double arrSlack,
         const double tripSlack) noexcept
     {
         profiler.startPhase();
@@ -78,12 +83,10 @@ public:
         return anchorLabels;
     }
 
-    inline size_t getMaxTrips() const noexcept
-    {
-        return maxTrips;
-    }
+    inline size_t getMaxTrips() const noexcept { return maxTrips; }
 
-    inline int getArrivalTime(const StopId stop, const size_t round) const noexcept
+    inline int getArrivalTime(const StopId stop,
+        const size_t round) const noexcept
     {
         return rounds[std::min(2 * round + 1, rounds.size() - 1)][stop];
     }
@@ -99,8 +102,8 @@ private:
         rounds.clear();
     }
 
-    inline void initialize(const Vertex source, const int departureTime, const Vertex target,
-        const double slack) noexcept
+    inline void initialize(const Vertex source, const int departureTime,
+        const Vertex target, const double slack) noexcept
     {
         sourceVertex = source;
         targetVertex = target;
@@ -120,7 +123,8 @@ private:
             const int arrivalTime = previousRound()[stop];
             AssertMsg(arrivalTime < never, "Updated stop has arrival time = never!");
             for (const RouteSegment& route : data.routesContainingStop(stop)) {
-                AssertMsg(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
+                AssertMsg(data.isRoute(route.routeId),
+                    "Route " << route.routeId << " is out of range!");
                 AssertMsg(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop,
                     "RAPTOR data contains invalid route segments!");
                 if (route.stopIndex + 1 == data.numberOfStopsInRoute(route.routeId))
@@ -128,7 +132,8 @@ private:
                 if (data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime < arrivalTime)
                     continue;
                 if (routesServingUpdatedStops.contains(route.routeId)) {
-                    routesServingUpdatedStops[route.routeId] = std::min(routesServingUpdatedStops[route.routeId], route.stopIndex);
+                    routesServingUpdatedStops[route.routeId] = std::min(
+                        routesServingUpdatedStops[route.routeId], route.stopIndex);
                 } else {
                     routesServingUpdatedStops.insert(route.routeId, route.stopIndex);
                 }
@@ -143,15 +148,20 @@ private:
             profiler.countMetric(METRIC_ROUTES);
             StopIndex stopIndex = routesServingUpdatedStops[route];
             const size_t tripSize = data.numberOfStopsInRoute(route);
-            AssertMsg(stopIndex < tripSize - 1, "Cannot scan a route starting at/after the last stop (Route: " << route << ", StopIndex: " << stopIndex << ", TripSize: " << tripSize << ")!");
+            AssertMsg(stopIndex < tripSize - 1,
+                "Cannot scan a route starting at/after the last stop (Route: "
+                    << route << ", StopIndex: " << stopIndex
+                    << ", TripSize: " << tripSize << ")!");
 
             const StopId* stops = data.stopArrayOfRoute(route);
             const StopEvent* trip = data.lastTripOfRoute(route);
             StopId stop = stops[stopIndex];
             AssertMsg(trip[stopIndex].departureTime >= previousRound()[stop],
                 "Cannot scan a route after the last trip has departed (Route: "
-                    << route << ", Stop: " << stop << ", StopIndex: " << stopIndex << ", Time: "
-                    << previousRound()[stop] << ", LastDeparture: " << trip[stopIndex].departureTime << ")!");
+                    << route << ", Stop: " << stop << ", StopIndex: "
+                    << stopIndex << ", Time: " << previousRound()[stop]
+                    << ", LastDeparture: " << trip[stopIndex].departureTime
+                    << ")!");
 
             StopIndex parentIndex = stopIndex;
             const StopEvent* firstTrip = data.firstTripOfRoute(route);
@@ -175,11 +185,14 @@ private:
             if (stop == targetStop)
                 continue;
             AssertMsg(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
-            AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY, "Vertex " << stop << " was not reached!");
-            arrivalByTransfer(StopId(stop), sourceDepartureTime + initialTransfers.getForwardDistance(stop));
+            AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY,
+                "Vertex " << stop << " was not reached!");
+            arrivalByTransfer(StopId(stop),
+                sourceDepartureTime + initialTransfers.getForwardDistance(stop));
         }
         if (initialTransfers.getDistance() != INFTY) {
-            arrivalByTransfer(targetStop, sourceDepartureTime + initialTransfers.getDistance());
+            arrivalByTransfer(targetStop,
+                sourceDepartureTime + initialTransfers.getDistance());
         }
         if (data.isStop(sourceStop))
             stopsUpdatedByTransfer.insert(sourceStop);
@@ -194,7 +207,8 @@ private:
             const int earliestArrivalTime = previousRound()[stop];
             relaxShortcuts(stop, earliestArrivalTime);
             if (initialTransfers.getBackwardDistance(stop) != INFTY) {
-                arrivalByTransfer(targetStop, earliestArrivalTime + initialTransfers.getBackwardDistance(stop));
+                arrivalByTransfer(targetStop,
+                    earliestArrivalTime + initialTransfers.getBackwardDistance(stop));
             }
             stopsUpdatedByTransfer.insert(stop);
         }
@@ -203,7 +217,8 @@ private:
         }
     }
 
-    inline void relaxShortcuts(const StopId stop, const int earliestArrivalTime) noexcept
+    inline void relaxShortcuts(const StopId stop,
+        const int earliestArrivalTime) noexcept
     {
         for (const Edge edge : data.transferGraph.edgesFrom(stop)) {
             profiler.countMetric(METRIC_EDGES);
@@ -216,13 +231,16 @@ private:
 
     inline Round& currentRound() noexcept
     {
-        AssertMsg(!rounds.empty(), "Cannot return current round, because no round exists!");
+        AssertMsg(!rounds.empty(),
+            "Cannot return current round, because no round exists!");
         return rounds.back();
     }
 
     inline Round& previousRound() noexcept
     {
-        AssertMsg(rounds.size() >= 2, "Cannot return previous round, because less than two rounds exist!");
+        AssertMsg(
+            rounds.size() >= 2,
+            "Cannot return previous round, because less than two rounds exist!");
         return rounds[rounds.size() - 2];
     }
 
@@ -235,7 +253,8 @@ private:
         }
     }
 
-    inline void arrival(const StopId stop, const int time, IndexedSet<false, StopId>& updatedStops,
+    inline void arrival(const StopId stop, const int time,
+        IndexedSet<false, StopId>& updatedStops,
         Metric metric) noexcept
     {
         if ((currentRound()[targetStop] - sourceDepartureTime) * arrivalSlack < time - sourceDepartureTime)

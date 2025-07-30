@@ -15,7 +15,8 @@ public:
     static const std::string CSV_HEADER;
 
 public:
-    Trip(const std::string& tripName = "", const std::string& routeName = "", const int type = -1)
+    Trip(const std::string& tripName = "", const std::string& routeName = "",
+        const int type = -1)
         : tripName(tripName)
         , routeName(routeName)
         , type(type)
@@ -28,13 +29,11 @@ public:
         , type(t.type)
     {
     }
-    Trip(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Trip(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
     friend std::ostream& operator<<(std::ostream& out, const Trip& t)
     {
-        return out << "Trip{" << t.routeName << ", " << t.tripName << ", " << t.type << "}";
+        return out << "Trip{" << t.routeName << ", " << t.tripName << ", " << t.type
+                   << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept
@@ -49,7 +48,8 @@ public:
 
     inline std::ostream& toCSV(std::ostream& out) const
     {
-        return out << "[" << routeName << "]" << tripName << "," << GTFS::typeName(type);
+        return out << "[" << routeName << "]" << tripName << ","
+                   << GTFS::typeName(type);
     }
 
     inline std::string toCSV() const

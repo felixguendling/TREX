@@ -86,20 +86,20 @@ public:
 class Dir : public ParameterizedCommand {
 public:
     Dir(BasicShell& shell)
-        : ParameterizedCommand(shell, "dir", "Displays the current working directory.")
+        : ParameterizedCommand(shell, "dir",
+            "Displays the current working directory.")
     {
     }
 
-    virtual void execute() noexcept
-    {
-        shell << shell.getDir() << newLine;
-    }
+    virtual void execute() noexcept { shell << shell.getDir() << newLine; }
 };
 
 class Ls : public ParameterizedCommand {
 public:
     Ls(BasicShell& shell)
-        : ParameterizedCommand(shell, "ls", "Displays all files in the current working directory.")
+        : ParameterizedCommand(
+            shell, "ls",
+            "Displays all files in the current working directory.")
     {
     }
 
@@ -128,7 +128,9 @@ public:
 class Cd : public ParameterizedCommand {
 public:
     Cd(BasicShell& shell)
-        : ParameterizedCommand(shell, "cd", "Changes the current working directory of the shell.")
+        : ParameterizedCommand(
+            shell, "cd",
+            "Changes the current working directory of the shell.")
     {
         addParameter("Directory");
     }
@@ -154,7 +156,8 @@ private:
 class RunScript : public ParameterizedCommand {
 public:
     RunScript(BasicShell& shell)
-        : ParameterizedCommand(shell, "runScript", "Runs all the commands in the script file.")
+        : ParameterizedCommand(shell, "runScript",
+            "Runs all the commands in the script file.")
     {
         addParameter("Script file");
     }
@@ -209,7 +212,8 @@ public:
 class ToggleParameterReporting : public ParameterizedCommand {
 public:
     ToggleParameterReporting(BasicShell& shell)
-        : ParameterizedCommand(shell, "toggleParameterReporting",
+        : ParameterizedCommand(
+            shell, "toggleParameterReporting",
             "Toggles whether commands print their parameter values ore not.")
     {
         size_t toggleCount = 0;
@@ -227,7 +231,8 @@ public:
     {
         if (shell.getReportParameters()) {
             shell.setReportParameters(false);
-            shell << "Parameters and their values will no longer be reported!" << newLine;
+            shell << "Parameters and their values will no longer be reported!"
+                  << newLine;
         } else {
             shell.setReportParameters(true);
             shell << "Parameters and their values will now be reported!" << newLine;

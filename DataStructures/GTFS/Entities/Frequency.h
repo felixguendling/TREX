@@ -11,8 +11,9 @@ namespace GTFS {
 
 class Frequency {
 public:
-    Frequency(const std::string& tripId = "", const int startTime = -1, const int endTime = -2,
-        const int headwaySecs = 0, const bool exactTimes = true)
+    Frequency(const std::string& tripId = "", const int startTime = -1,
+        const int endTime = -2, const int headwaySecs = 0,
+        const bool exactTimes = true)
         : tripId(tripId)
         , startTime(startTime)
         , endTime(endTime)
@@ -20,8 +21,9 @@ public:
         , exactTimes(exactTimes)
     {
     }
-    Frequency(const std::string& tripId, const std::string& startTime, const std::string& endTime,
-        const int headwaySecs = 0, const bool exactTimes = true)
+    Frequency(const std::string& tripId, const std::string& startTime,
+        const std::string& endTime, const int headwaySecs = 0,
+        const bool exactTimes = true)
         : tripId(tripId)
         , startTime(String::parseSeconds(startTime))
         , endTime(String::parseSeconds(endTime))
@@ -41,8 +43,9 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const Frequency& f)
     {
-        return out << "Frequency{" << f.tripId << ", " << f.startTime << ", " << f.endTime << ", " << f.headwaySecs
-                   << ", " << f.exactTimes << "}";
+        return out << "Frequency{" << f.tripId << ", " << f.startTime << ", "
+                   << f.endTime << ", " << f.headwaySecs << ", " << f.exactTimes
+                   << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept

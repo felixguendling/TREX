@@ -1,6 +1,7 @@
 #pragma once
 namespace CSA {
-// time has 32 bits [32 ... 14 | 13 ... 9 | 8 ... 1] - rounded | number of legs | lower exact arr time bits
+// time has 32 bits [32 ... 14 | 13 ... 9 | 8 ... 1] - rounded | number of legs
+// | lower exact arr time bits
 
 const int offset = (1 << 8);
 
@@ -24,8 +25,5 @@ inline int shiftTime(int time) noexcept
     return ((0xFF & (time)) + ((0xFFFFFF00 & (time)) << 5));
 }
 
-inline int increaseTransferCounter(int time) noexcept
-{
-    return time + offset;
-}
-}
+inline int increaseTransferCounter(int time) noexcept { return time + offset; }
+} // namespace CSA

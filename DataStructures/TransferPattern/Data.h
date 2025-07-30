@@ -14,9 +14,7 @@ namespace TransferPattern {
 
 class Data {
 public:
-    Data()
-    {
-    }
+    Data() { }
 
     Data(const RAPTOR::Data& data)
         : raptorData(data)
@@ -35,16 +33,14 @@ public:
         buildStopLookup();
     }
 
-    Data(const std::string& fileName)
-    {
-        deserialize(fileName);
-    }
+    Data(const std::string& fileName) { deserialize(fileName); }
 
 private:
     inline void buildLineLookup(const bool verbose = true)
     {
         if (verbose)
-            std::cout << "Building the Direct-Connection-Lookup Datastructure" << std::endl;
+            std::cout << "Building the Direct-Connection-Lookup Datastructure"
+                      << std::endl;
 
         Progress progress(raptorData.numberOfRoutes());
 
@@ -60,7 +56,8 @@ private:
             currentNumberOfStopsInRoute = raptorData.numberOfStopsInRoute(route);
 
             std::vector<RAPTOR::StopEvent> reserveVector(currentNumberOfTrips);
-            lineLookup[route].stopsAlongLine.assign(currentNumberOfStopsInRoute, reserveVector);
+            lineLookup[route].stopsAlongLine.assign(currentNumberOfStopsInRoute,
+                reserveVector);
 
             firstTripIdOfLine[route] = currentFirstTripId;
             currentFirstTripId += currentNumberOfTrips;
@@ -68,7 +65,10 @@ private:
             for (size_t tripIndex(0); tripIndex < currentNumberOfTrips; ++tripIndex) {
                 size_t stopsOfRouteIndex(0);
                 for (auto stopEvent : raptorData.stopEventsOfTrip(route, tripIndex)) {
-                    AssertMsg(tripIndex < lineLookup[route].stopsAlongLine[stopsOfRouteIndex].halts.size(), "TripIndex is too big for the halts vector!");
+                    AssertMsg(tripIndex < lineLookup[route]
+                                              .stopsAlongLine[stopsOfRouteIndex]
+                                              .halts.size(),
+                        "TripIndex is too big for the halts vector!");
                     lineLookup[route].stopsAlongLine[stopsOfRouteIndex].halts[tripIndex] = stopEvent;
                     ++stopsOfRouteIndex;
                 }
@@ -93,14 +93,16 @@ private:
             auto stopsOfRoute = raptorData.stopsOfRoute(route);
 
             for (size_t i(0); i < stopsOfRoute.size(); ++i) {
-                stopLookup[stopsOfRoute[i]].incidentLines.push_back(RAPTOR::RouteSegment(route, StopIndex(i)));
+                stopLookup[stopsOfRoute[i]].incidentLines.push_back(
+                    RAPTOR::RouteSegment(route, StopIndex(i)));
             }
 
             ++progress;
         }
 
         for (const StopId stop : raptorData.stops()) {
-            std::sort(stopLookup[stop].incidentLines.begin(), stopLookup[stop].incidentLines.end());
+            std::sort(stopLookup[stop].incidentLines.begin(),
+                stopLookup[stop].incidentLines.end());
             ++progress;
         }
 
@@ -108,15 +110,21 @@ private:
     }
 
 public:
-    inline void assignLowerBounds(const StopId stop, std::vector<int> bestTravelTimes, std::vector<uint8_t> bestMinNumberOfTrips)
+    inline void assignLowerBounds(const StopId stop,
+        std::vector<int>& bestTravelTimes,
+        std::vector<uint8_t>& bestMinNumberOfTrips)
     {
         AssertMsg(raptorData.isStop(stop), "Stop is not a valid stop!");
-        AssertMsg(bestTravelTimes.size() == raptorData.numberOfStops(), "BestTravelTimes has not the right amount of elements!");
-        AssertMsg(bestMinNumberOfTrips.size() == raptorData.numberOfStops(), "BestMinNumberOfTrips has not the right amount of elements!");
+        AssertMsg(bestTravelTimes.size() == raptorData.numberOfStops(),
+            "BestTravelTimes has not the right amount of elements!");
+        AssertMsg(bestMinNumberOfTrips.size() == raptorData.numberOfStops(),
+            "BestMinNumberOfTrips has not the right amount of elements!");
 
         for (size_t i(0); i < raptorData.numberOfStops(); ++i) {
-            AssertMsg(stop < lowerBounds[i].travelTimes.size(), "Size is not correct!");
-            AssertMsg(stop < lowerBounds[i].numberOfTrips.size(), "Size is not correct!");
+            AssertMsg(stop < lowerBounds[i].travelTimes.size(),
+                "Size is not correct!");
+            AssertMsg(stop < lowerBounds[i].numberOfTrips.size(),
+                "Size is not correct!");
 
             lowerBounds[i].travelTimes[stop] = bestTravelTimes[i];
             lowerBounds[i].numberOfTrips[stop] = bestMinNumberOfTrips[i];
@@ -139,30 +147,42 @@ public:
         return lowerBounds[target].numberOfTrips[u];
     }
 
-    inline RAPTOR::StopEvent getStopEvent(const RouteId routeId = noRouteId, const size_t tripIndex = (size_t)-1, const StopIndex stopIndex = StopIndex(0)) const
+    inline RAPTOR::StopEvent
+    getStopEvent(const RouteId routeId = noRouteId,
+        const size_t tripIndex = (size_t)-1,
+        const StopIndex stopIndex = StopIndex(0)) const
     {
         AssertMsg(raptorData.isRoute(routeId), "Route is not a route!");
         AssertMsg(tripIndex != (size_t)-1, "TripIndex is invalid!");
-        AssertMsg(StopIndex(0) <= stopIndex && stopIndex < StopIndex(raptorData.numberOfStopsInRoute(routeId)), "StopIndex is out of bounds!");
+        AssertMsg(StopIndex(0) <= stopIndex && stopIndex < StopIndex(raptorData.numberOfStopsInRoute(routeId)),
+            "StopIndex is out of bounds!");
 
         return lineLookup[routeId].stopsAlongLine[stopIndex].halts[tripIndex];
     }
 
-    inline int getArrivalTime(const RouteId routeId = noRouteId, const size_t tripIndex = (size_t)-1, const StopIndex stopIndex = StopIndex(0)) const
+    inline int getArrivalTime(const RouteId routeId = noRouteId,
+        const size_t tripIndex = (size_t)-1,
+        const StopIndex stopIndex = StopIndex(0)) const
     {
         return getStopEvent(routeId, tripIndex, stopIndex).arrivalTime;
     }
 
-    inline int getDepartureTime(const RouteId routeId = noRouteId, const size_t tripIndex = (size_t)-1, const StopIndex stopIndex = StopIndex(0)) const
+    inline int getDepartureTime(const RouteId routeId = noRouteId,
+        const size_t tripIndex = (size_t)-1,
+        const StopIndex stopIndex = StopIndex(0)) const
     {
         return getStopEvent(routeId, tripIndex, stopIndex).departureTime;
     }
 
-    inline size_t earliestTripIndexOfLineByStopIndex(const StopIndex stopIndex, const RouteId route, const int departureTime = 0) const
+    inline size_t
+    earliestTripIndexOfLineByStopIndex(const StopIndex stopIndex,
+        const RouteId route,
+        const int departureTime = 0) const
     {
         AssertMsg(raptorData.isRoute(route), "Route is not a route!");
 
-        for (size_t tripIndex(0); tripIndex < raptorData.numberOfTripsInRoute(route); ++tripIndex) {
+        for (size_t tripIndex(0);
+             tripIndex < raptorData.numberOfTripsInRoute(route); ++tripIndex) {
             if (getDepartureTime(route, tripIndex, stopIndex) >= departureTime)
                 return tripIndex;
         }
@@ -170,7 +190,8 @@ public:
         return (size_t)-1;
     }
 
-    inline TripId tripIdOfLineByTripIndex(const RouteId route = noRouteId, const size_t tripIndex = 0)
+    inline TripId tripIdOfLineByTripIndex(const RouteId route = noRouteId,
+        const size_t tripIndex = 0)
     {
         AssertMsg(tripIndex != (size_t)-1, "TripIndex is -1?");
         AssertMsg(raptorData.isRoute(route), "Route is not a route!");
@@ -200,10 +221,14 @@ public:
             sumEdges += tp.numEdges();
         }
 
-        std::cout << "   Total # of vertices:      " << std::setw(12) << String::prettyInt(sumVertices) << std::endl;
-        std::cout << "   Total # of edges:         " << std::setw(12) << String::prettyInt(sumEdges) << std::endl;
-        std::cout << "   Max # of vertices:        " << std::setw(12) << String::prettyInt(maxVertices) << std::endl;
-        std::cout << "   Max # of edges:           " << std::setw(12) << String::prettyInt(maxEdges) << std::endl;
+        std::cout << "   Total # of vertices:      " << std::setw(12)
+                  << String::prettyInt(sumVertices) << std::endl;
+        std::cout << "   Total # of edges:         " << std::setw(12)
+                  << String::prettyInt(sumEdges) << std::endl;
+        std::cout << "   Max # of vertices:        " << std::setw(12)
+                  << String::prettyInt(maxVertices) << std::endl;
+        std::cout << "   Max # of edges:           " << std::setw(12)
+                  << String::prettyInt(maxEdges) << std::endl;
     }
 
     inline long long byteSize() const noexcept
@@ -227,22 +252,26 @@ public:
 
         std::cout << "Info about Transfer Pattern:" << std::endl;
         printStatsAboutTP();
-        std::cout << "   Storage usage of all TP:  " << std::setw(12) << String::bytesToString(byteSize()) << std::endl;
+        std::cout << "   Storage usage of all TP:  " << std::setw(12)
+                  << String::bytesToString(byteSize()) << std::endl;
     }
 
     inline void serialize(const std::string& fileName)
     {
         raptorData.serialize(fileName + ".raptor");
-        IO::serialize(fileName, lineLookup, stopLookup, firstTripIdOfLine, lowerBounds);
+        IO::serialize(fileName, lineLookup, stopLookup, firstTripIdOfLine,
+            lowerBounds);
         IO::serialize(fileName + ".transferPattern", transferPatternOfStop);
     }
 
     inline void deserialize(const std::string& fileName)
     {
         raptorData.deserialize(fileName + ".raptor");
-        IO::deserialize(fileName, lineLookup, stopLookup, firstTripIdOfLine, lowerBounds);
+        IO::deserialize(fileName, lineLookup, stopLookup, firstTripIdOfLine,
+            lowerBounds);
 
-        std::cout << "Loading all transfer patterns from " << fileName << ".transferPattern!" << std::endl;
+        std::cout << "Loading all transfer patterns from " << fileName
+                  << ".transferPattern!" << std::endl;
         IO::deserialize(fileName + ".transferPattern", transferPatternOfStop);
     }
 

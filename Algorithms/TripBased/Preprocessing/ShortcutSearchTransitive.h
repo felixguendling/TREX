@@ -36,7 +36,9 @@ public:
     };
 
     struct DepartureLabel {
-        DepartureLabel(const RouteId routeId = noRouteId, const StopIndex stopIndex = noStopIndex, const int departureTime = never)
+        DepartureLabel(const RouteId routeId = noRouteId,
+            const StopIndex stopIndex = noStopIndex,
+            const int departureTime = never)
             : route(routeId, stopIndex)
             , departureTime(departureTime)
         {
@@ -56,7 +58,8 @@ public:
         }
         std::vector<RAPTOR::RouteSegment> routes;
         int departureTime;
-        inline bool operator<(const ConsolidatedDepartureLabel& other) const noexcept
+        inline bool
+        operator<(const ConsolidatedDepartureLabel& other) const noexcept
         {
             return departureTime > other.departureTime;
         }
@@ -98,7 +101,8 @@ public:
         , earliestDepartureTime(data.getMinDepartureTime())
         , timestamp(0)
     {
-        AssertMsg(data.hasImplicitBufferTimes(), "Shortcut search requires implicit departure buffer times!");
+        AssertMsg(data.hasImplicitBufferTimes(),
+            "Shortcut search requires implicit departure buffer times!");
         for (const StopId stop : data.stops()) {
             stationOfStop[stop].add(stop);
             for (const Edge edge : data.transferGraph.edgesFrom(stop)) {
@@ -110,13 +114,15 @@ public:
         }
     }
 
-    inline void run(const StopId source, const int minTime, const int maxTime) noexcept
+    inline void run(const StopId source, const int minTime,
+        const int maxTime) noexcept
     {
         AssertMsg(data.isStop(source), "source (" << source << ") is not a stop!");
         if (stationOfStop[source].representative != source)
             return;
         setSource(source);
-        for (const ConsolidatedDepartureLabel& label : collectDepartures(minTime, maxTime)) {
+        for (const ConsolidatedDepartureLabel& label :
+            collectDepartures(minTime, maxTime)) {
             runForDepartureTime(label);
         }
     }
@@ -129,21 +135,27 @@ public:
 private:
     inline void setSource(const StopId source) noexcept
     {
-        AssertMsg(stationOfStop[source].representative == source, "Source " << source << " is not representative of its station!");
+        AssertMsg(stationOfStop[source].representative == source,
+            "Source " << source << " is not representative of its station!");
         clear();
         sourceStation = stationOfStop[source];
         collectInitialTransfers();
         sort(stopsReachedByDirectTransfer);
         if constexpr (Debug) {
             std::cout << "   Source stop: " << source << std::endl;
-            std::cout << "   Number of stops reached by direct transfer: " << String::prettyInt(stopsReachedByDirectTransfer.size()) << std::endl;
+            std::cout << "   Number of stops reached by direct transfer: "
+                      << String::prettyInt(stopsReachedByDirectTransfer.size())
+                      << std::endl;
         }
     }
 
-    inline void runForDepartureTime(const ConsolidatedDepartureLabel& label) noexcept
+    inline void
+    runForDepartureTime(const ConsolidatedDepartureLabel& label) noexcept
     {
         if constexpr (Debug)
-            std::cout << "   Running search for departure time: " << label.departureTime << " (" << String::secToTime(label.departureTime) << ")" << std::endl;
+            std::cout << "   Running search for departure time: "
+                      << label.departureTime << " ("
+                      << String::secToTime(label.departureTime) << ")" << std::endl;
 
         timestamp++;
         shortcutDestinationCandidates.clear();
@@ -162,16 +174,21 @@ private:
         relaxFinalTransfers();
     }
 
-    inline std::vector<ConsolidatedDepartureLabel> collectDepartures(const int minTime, const int maxTime) noexcept
+    inline std::vector<ConsolidatedDepartureLabel>
+    collectDepartures(const int minTime, const int maxTime) noexcept
     {
-        AssertMsg(directTransferArrivalLabels[sourceStation.representative].arrivalTime == 0, "Direct transfer for source " << sourceStation.representative << " is incorrect!");
+        AssertMsg(
+            directTransferArrivalLabels[sourceStation.representative].arrivalTime == 0,
+            "Direct transfer for source " << sourceStation.representative
+                                          << " is incorrect!");
         const int cutoffTime = std::max(minTime, earliestDepartureTime);
         std::vector<DepartureLabel> departureLabels;
         for (const RouteId route : data.routes()) {
             const StopId* stops = data.stopArrayOfRoute(route);
             const size_t tripSize = data.numberOfStopsInRoute(route);
             for (size_t stopIndex = 0; stopIndex + 1 < tripSize; stopIndex++) {
-                for (const RAPTOR::StopEvent* trip = data.firstTripOfRoute(route); trip <= data.lastTripOfRoute(route); trip += tripSize) {
+                for (const RAPTOR::StopEvent* trip = data.firstTripOfRoute(route);
+                     trip <= data.lastTripOfRoute(route); trip += tripSize) {
                     const int departureTime = trip[stopIndex].departureTime - directTransferArrivalLabels[stops[stopIndex]].arrivalTime;
                     if (departureTime < cutoffTime)
                         continue;
@@ -180,7 +197,8 @@ private:
                     if (stationOfStop[stops[stopIndex]].representative == sourceStation.representative) {
                         departureLabels.emplace_back(noRouteId, noStopIndex, departureTime);
                     }
-                    departureLabels.emplace_back(route, StopIndex(stopIndex), departureTime);
+                    departureLabels.emplace_back(route, StopIndex(stopIndex),
+                        departureTime);
                 }
             }
         }
@@ -208,10 +226,12 @@ private:
     {
         sourceStation = Station();
 
-        std::vector<ArrivalLabel>(data.numberOfStops()).swap(directTransferArrivalLabels);
+        std::vector<ArrivalLabel>(data.numberOfStops())
+            .swap(directTransferArrivalLabels);
         stopsReachedByDirectTransfer.clear();
 
-        std::vector<ArrivalLabel>(data.numberOfStops()).swap(zeroTripsArrivalLabels);
+        std::vector<ArrivalLabel>(data.numberOfStops())
+            .swap(zeroTripsArrivalLabels);
 
         std::vector<ArrivalLabel>(data.numberOfStops()).swap(oneTripArrivalLabels);
         std::vector<u_int16_t>(data.numberOfStops(), 0).swap(oneTripTimestamps);
@@ -219,7 +239,8 @@ private:
         std::vector<ArrivalLabel>(data.numberOfStops()).swap(twoTripsArrivalLabels);
         std::vector<u_int16_t>(data.numberOfStops(), 0).swap(twoTripsTimestamps);
 
-        std::vector<StopEventId>(data.numberOfStops(), noStopEvent).swap(oneTripTransferParent);
+        std::vector<StopEventId>(data.numberOfStops(), noStopEvent)
+            .swap(oneTripTransferParent);
         std::vector<StopId>(data.numberOfStops(), noStop).swap(twoTripsRouteParent);
 
         shortcutDestinationCandidates.clear();
@@ -229,33 +250,43 @@ private:
         stopsUpdatedByTransfer.clear();
     }
 
-    inline void collectRoutes1(const std::vector<RAPTOR::RouteSegment>& routes) noexcept
+    inline void
+    collectRoutes1(const std::vector<RAPTOR::RouteSegment>& routes) noexcept
     {
         for (const RAPTOR::RouteSegment& route : routes) {
-            AssertMsg(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
-            AssertMsg(route.stopIndex + 1 < data.numberOfStopsInRoute(route.routeId), "RouteSegment " << route << " is not a departure event!");
-            AssertMsg(data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime >= arrivalTime<0>(data.stopOfRouteSegment(route)), "RouteSegment " << route << " is not reachable!");
+            AssertMsg(data.isRoute(route.routeId),
+                "Route " << route.routeId << " is out of range!");
+            AssertMsg(route.stopIndex + 1 < data.numberOfStopsInRoute(route.routeId),
+                "RouteSegment " << route << " is not a departure event!");
+            AssertMsg(
+                data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime >= arrivalTime<0>(data.stopOfRouteSegment(route)),
+                "RouteSegment " << route << " is not reachable!");
             if (routesServingUpdatedStops.contains(route.routeId)) {
                 routesServingUpdatedStops[route.routeId] = std::min(routesServingUpdatedStops[route.routeId], route.stopIndex);
             } else {
                 routesServingUpdatedStops.insert(route.routeId, route.stopIndex);
             }
         }
-        AssertMsg(routesServingUpdatedStops.isSortedByKeys(), "Collected route segments are not sorted!");
+        AssertMsg(routesServingUpdatedStops.isSortedByKeys(),
+            "Collected route segments are not sorted!");
     }
 
     inline void collectRoutes2() noexcept
     {
         for (const StopId stop : stopsUpdatedByTransfer) {
-            for (const RAPTOR::RouteSegment& route : data.routesContainingStop(stop)) {
-                AssertMsg(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
-                AssertMsg(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop, "RAPTOR data contains invalid route segments!");
+            for (const RAPTOR::RouteSegment& route :
+                data.routesContainingStop(stop)) {
+                AssertMsg(data.isRoute(route.routeId),
+                    "Route " << route.routeId << " is out of range!");
+                AssertMsg(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop,
+                    "RAPTOR data contains invalid route segments!");
                 if (route.stopIndex + 1 == data.numberOfStopsInRoute(route.routeId))
                     continue;
                 if (data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime < oneTripArrivalLabels[stop].arrivalTime)
                     continue;
                 if (routesServingUpdatedStops.contains(route.routeId)) {
-                    routesServingUpdatedStops[route.routeId] = std::min(routesServingUpdatedStops[route.routeId], route.stopIndex);
+                    routesServingUpdatedStops[route.routeId] = std::min(
+                        routesServingUpdatedStops[route.routeId], route.stopIndex);
                 } else {
                     routesServingUpdatedStops.insert(route.routeId, route.stopIndex);
                 }
@@ -279,9 +310,10 @@ private:
                         tripIterator.previousTrip();
                     } while (tripIterator.hasEarlierTrip() && (tripIterator.previousDepartureTime() >= arrivalTime<CURRENT - 1>(tripIterator.stop())));
                     if (!stopsUpdatedByTransfer.contains(tripIterator.stop())) {
-                        // Trip was improved by an arrival that was found during a previous RAPTOR iteration.
-                        // We already explored this trip during that iteration.
-                        // Fast forward to the next stop that was updated in the current iteration and can enter the current trip.
+                        // Trip was improved by an arrival that was found during a previous
+                        // RAPTOR iteration. We already explored this trip during that
+                        // iteration. Fast forward to the next stop that was updated in the
+                        // current iteration and can enter the current trip.
                         do {
                             tripIterator.nextStop();
                         } while (tripIterator.hasFurtherStops() && ((!stopsUpdatedByTransfer.contains(tripIterator.stop())) || (tripIterator.departureTime() < arrivalTime<CURRENT - 1>(tripIterator.stop()))));
@@ -298,9 +330,14 @@ private:
                 const int newArrivalTime = tripIterator.arrivalTime();
                 if (newArrivalTime < arrivalTime<CURRENT>(tripIterator.stop())) {
                     if constexpr (CURRENT == 1) {
-                        arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime, tripIterator.stop(parentIndex), StopEventId(tripIterator.stopEvent() - (&(data.stopEvents[0]))));
+                        arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime,
+                            tripIterator.stop(parentIndex),
+                            StopEventId(tripIterator.stopEvent() - (&(data.stopEvents[0]))));
                     } else {
-                        arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime, tripIterator.stop(parentIndex), StopEventId(tripIterator.stopEvent(parentIndex) - (&(data.stopEvents[0]))));
+                        arrivalByRoute<CURRENT>(
+                            tripIterator.stop(), newArrivalTime,
+                            tripIterator.stop(parentIndex),
+                            StopEventId(tripIterator.stopEvent(parentIndex) - (&(data.stopEvents[0]))));
                     }
                 }
                 // Candidates may dominate equivalent labels from previous iterations
@@ -308,11 +345,15 @@ private:
                     const StopId parent = tripIterator.stop(parentIndex);
                     if constexpr (CURRENT == 1) {
                         if (stationOfStop[parent].representative == sourceStation.representative) {
-                            arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime, parent, StopEventId(tripIterator.stopEvent() - (&(data.stopEvents[0]))));
+                            arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime,
+                                parent,
+                                StopEventId(tripIterator.stopEvent() - (&(data.stopEvents[0]))));
                         }
                     } else {
                         if (oneTripTransferParent[parent] != noStopEvent) {
-                            arrivalByRoute<CURRENT>(tripIterator.stop(), newArrivalTime, parent, StopEventId(tripIterator.stopEvent(parentIndex) - (&(data.stopEvents[0]))));
+                            arrivalByRoute<CURRENT>(
+                                tripIterator.stop(), newArrivalTime, parent,
+                                StopEventId(tripIterator.stopEvent(parentIndex) - (&(data.stopEvents[0]))));
                         }
                     }
                 }
@@ -337,7 +378,8 @@ private:
     template <int CURRENT>
     inline bool isFromCurrentIteration(const StopId stop) const noexcept
     {
-        static_assert((CURRENT == 0) | (CURRENT == 1) | (CURRENT == 2), "Invalid round!");
+        static_assert((CURRENT == 0) | (CURRENT == 1) | (CURRENT == 2),
+            "Invalid round!");
         if constexpr (CURRENT == 0) {
             suppressUnusedParameterWarning(stop);
             return true;
@@ -352,20 +394,23 @@ private:
     {
         directTransferArrivalLabels[sourceStation.representative].arrivalTime = 0;
         stopsReachedByDirectTransfer.emplace_back(sourceStation.representative);
-        for (const Edge edge : data.transferGraph.edgesFrom(sourceStation.representative)) {
+        for (const Edge edge :
+            data.transferGraph.edgesFrom(sourceStation.representative)) {
             const Vertex to = data.transferGraph.get(ToVertex, edge);
             directTransferArrivalLabels[to].arrivalTime = data.transferGraph.get(TravelTime, edge);
             stopsReachedByDirectTransfer.emplace_back(StopId(to));
         }
 
         for (const StopId sourceStop : sourceStation.stops) {
-            AssertMsg(Vector::contains(stopsReachedByDirectTransfer, sourceStop), "Source was not updated by transfer!");
+            AssertMsg(Vector::contains(stopsReachedByDirectTransfer, sourceStop),
+                "Source was not updated by transfer!");
         }
     }
 
     inline void relaxInitialTransfers() noexcept
     {
-        AssertMsg(stopsUpdatedByTransfer.empty(), "stopsUpdatedByTransfer is not empty!");
+        AssertMsg(stopsUpdatedByTransfer.empty(),
+            "stopsUpdatedByTransfer is not empty!");
         for (const StopId stop : stopsReachedByDirectTransfer) {
             const int newArrivalTime = sourceDepartureTime + directTransferArrivalLabels[stop].arrivalTime;
             arrivalByEdge0(stop, newArrivalTime);
@@ -375,7 +420,8 @@ private:
 
     inline void relaxIntermediateTransfers() noexcept
     {
-        AssertMsg(stopsUpdatedByTransfer.empty(), "stopsUpdatedByTransfer is not empty!");
+        AssertMsg(stopsUpdatedByTransfer.empty(),
+            "stopsUpdatedByTransfer is not empty!");
 
         for (const StopId stop : stopsUpdatedByRoute) {
             stopsUpdatedByTransfer.insert(stop);
@@ -402,17 +448,20 @@ private:
 
     inline void relaxFinalTransfers() noexcept
     {
-        AssertMsg(stopsUpdatedByTransfer.empty(), "stopsUpdatedByTransfer is not empty!");
+        AssertMsg(stopsUpdatedByTransfer.empty(),
+            "stopsUpdatedByTransfer is not empty!");
 
         for (const StopId stop : stopsUpdatedByRoute) {
             const StopId routeParent = twoTripsRouteParent[stop];
-            if (routeParent != noStop) { // This is the only place where shortcutDestinationCandidates are added
+            if (routeParent != noStop) { // This is the only place where
+                                         // shortcutDestinationCandidates are added
                 const StopEventId routeParentEvent = twoTripsRouteParentEvent[stop];
                 if (!shortcutDestinationCandidates.contains(routeParentEvent)) {
                     shortcutDestinationCandidates.insert(routeParentEvent);
                     shortcutDestinationCandidates[routeParentEvent].destinationStop = routeParent;
                 }
-                shortcutDestinationCandidates[routeParentEvent].targetStops.insert(stop);
+                shortcutDestinationCandidates[routeParentEvent].targetStops.insert(
+                    stop);
             }
         }
 
@@ -427,13 +476,15 @@ private:
             }
         }
 
-        for (const StopEventId destinationEvent : shortcutDestinationCandidates.getKeys()) {
+        for (const StopEventId destinationEvent :
+            shortcutDestinationCandidates.getKeys()) {
             const StopId destinationStop = shortcutDestinationCandidates[destinationEvent].destinationStop;
             const StopEventId originEvent = oneTripTransferParent[destinationStop];
             const int walkingDistance = oneTripArrivalLabels[destinationStop].arrivalTime - data.stopEvents[originEvent].arrivalTime;
             shortcuts.emplace_back(originEvent, destinationEvent, walkingDistance);
             // Unmark candidates using this shortcut, since we don't need them anymore
-            for (const StopId obsoleteCandidate : shortcutDestinationCandidates[destinationEvent].targetStops) {
+            for (const StopId obsoleteCandidate :
+                shortcutDestinationCandidates[destinationEvent].targetStops) {
                 twoTripsRouteParent[obsoleteCandidate] = noStop;
             }
         }
@@ -456,7 +507,9 @@ private:
     }
 
     template <int ROUND>
-    inline void arrivalByRoute(const StopId stop, const int arrivalTime, const StopId parent, const StopEventId relevantStopEvent) noexcept
+    inline void arrivalByRoute(const StopId stop, const int arrivalTime,
+        const StopId parent,
+        const StopEventId relevantStopEvent) noexcept
     {
         static_assert((ROUND == 1) | (ROUND == 2), "Invalid round!");
         if constexpr (ROUND == 1) {
@@ -466,7 +519,9 @@ private:
         }
     }
 
-    inline void arrivalByRoute1(const StopId stop, const int arrivalTime, const StopId parent, const StopEventId arrivalStopEvent) noexcept
+    inline void arrivalByRoute1(const StopId stop, const int arrivalTime,
+        const StopId parent,
+        const StopEventId arrivalStopEvent) noexcept
     {
         // Mark journey as candidate or witness
         if (stationOfStop[parent].representative == sourceStation.representative) {
@@ -481,7 +536,9 @@ private:
         stopsUpdatedByRoute.insert(stop);
     }
 
-    inline void arrivalByRoute2(const StopId stop, const int arrivalTime, const StopId parent, const StopEventId parentStopEvent) noexcept
+    inline void arrivalByRoute2(const StopId stop, const int arrivalTime,
+        const StopId parent,
+        const StopEventId parentStopEvent) noexcept
     {
         // Mark journey as candidate or witness
         if (oneTripTransferParent[parent] != noStopEvent) {
@@ -494,7 +551,8 @@ private:
         stopsUpdatedByRoute.insert(stop);
     }
 
-    inline void arrivalByEdge0(const StopId stop, const int arrivalTime) noexcept
+    inline void arrivalByEdge0(const StopId stop,
+        const int arrivalTime) noexcept
     {
         updateArrival<0>(stop, arrivalTime, timestamp);
         if (oneTripArrivalLabels[stop].arrivalTime > arrivalTime) {
@@ -505,7 +563,8 @@ private:
         }
     }
 
-    inline void arrivalByEdge1(const StopId stop, const int arrivalTime, const Vertex parent) noexcept
+    inline void arrivalByEdge1(const StopId stop, const int arrivalTime,
+        const Vertex parent) noexcept
     {
         oneTripTransferParent[stop] = oneTripTransferParent[parent];
         updateArrival<1>(stop, arrivalTime, oneTripTimestamps[parent]);
@@ -515,14 +574,24 @@ private:
         stopsUpdatedByTransfer.insert(stop);
     }
 
-    inline void arrivalByEdge2(const StopId stop, const int arrivalTime, const Vertex parent) noexcept
+    inline void arrivalByEdge2(const StopId stop, const int arrivalTime,
+        const Vertex parent) noexcept
     {
         updateArrival<2>(stop, arrivalTime, twoTripsTimestamps[parent]);
         if (twoTripsRouteParent[stop] != noStop) {
-            // Candidate was dominated by a witness => remove from shortcutDestinationCandidates list.
+            // Candidate was dominated by a witness => remove from
+            // shortcutDestinationCandidates list.
             const StopEventId routeParentEvent = twoTripsRouteParentEvent[stop];
-            AssertMsg(shortcutDestinationCandidates.contains(routeParentEvent), "Stop " << stop << " has route parent " << routeParentEvent << " but the route parent does not know about this!");
-            AssertMsg(shortcutDestinationCandidates[routeParentEvent].targetStops.contains(stop), "Stop " << stop << " is not contained in shortcutDestinationCandidates List of " << routeParentEvent << "!");
+            AssertMsg(shortcutDestinationCandidates.contains(routeParentEvent),
+                "Stop " << stop << " has route parent " << routeParentEvent
+                        << " but the route parent does not know about this!");
+            AssertMsg(
+                shortcutDestinationCandidates[routeParentEvent].targetStops.contains(
+                    stop),
+                "Stop "
+                    << stop
+                    << " is not contained in shortcutDestinationCandidates List of "
+                    << routeParentEvent << "!");
             shortcutDestinationCandidates[routeParentEvent].targetStops.erase(stop);
             if (shortcutDestinationCandidates[routeParentEvent].targetStops.empty()) {
                 shortcutDestinationCandidates.remove(routeParentEvent);
@@ -532,7 +601,8 @@ private:
     }
 
     template <int ROUND>
-    inline void updateArrival(const StopId stop, const int arrivalTime, const u_int16_t labelTimestamp) noexcept
+    inline void updateArrival(const StopId stop, const int arrivalTime,
+        const u_int16_t labelTimestamp) noexcept
     {
         if constexpr (ROUND == 0) {
             zeroTripsArrivalLabels[stop].arrivalTime = arrivalTime;
@@ -572,8 +642,10 @@ private:
     // Only valid for candidates
     std::vector<StopEventId> twoTripsRouteParentEvent;
 
-    // Maps potential shortcut destinations to the final stops of the candidate journeys using that shortcut
-    IndexedMap<ShortcutDestinationCandidateData, false, StopEventId> shortcutDestinationCandidates;
+    // Maps potential shortcut destinations to the final stops of the candidate
+    // journeys using that shortcut
+    IndexedMap<ShortcutDestinationCandidateData, false, StopEventId>
+        shortcutDestinationCandidates;
     std::vector<Shortcut> shortcuts;
 
     IndexedMap<StopIndex, false, RouteId> routesServingUpdatedStops;
@@ -585,4 +657,4 @@ private:
     u_int16_t timestamp;
 };
 
-}
+} // namespace TripBased

@@ -15,7 +15,8 @@
 
 namespace CSA {
 
-template <bool TRANSFERS_SECOND_CRIT = true, typename PROFILER = NoProfiler, bool PATH_RETRIEVAL = true>
+template <bool TRANSFERS_SECOND_CRIT = true, typename PROFILER = NoProfiler,
+    bool PATH_RETRIEVAL = true>
 class ProfileCSA {
 public:
     constexpr static bool TransfersSecondCrit = TRANSFERS_SECOND_CRIT;
@@ -26,7 +27,8 @@ public:
 
 private:
     struct Leg {
-        Leg(const ConnectionId enter = ConnectionId(-1), const ConnectionId exit = ConnectionId(-1))
+        Leg(const ConnectionId enter = ConnectionId(-1),
+            const ConnectionId exit = ConnectionId(-1))
             : enter(enter)
             , exit(exit)
         {
@@ -36,7 +38,8 @@ private:
         ConnectionId exit;
     };
     struct TripArrivalElement {
-        TripArrivalElement(int arrivalTime = never, ConnectionId exit = ConnectionId(-1))
+        TripArrivalElement(int arrivalTime = never,
+            ConnectionId exit = ConnectionId(-1))
             : arrivalTime(arrivalTime)
             , exit(exit)
         {
@@ -47,7 +50,9 @@ private:
     };
 
     struct ProfileElement {
-        ProfileElement(int departureTime = never, int arrivalTime = never, ConnectionId enter = ConnectionId(-1), ConnectionId exit = ConnectionId(-1))
+        ProfileElement(int departureTime = never, int arrivalTime = never,
+            ConnectionId enter = ConnectionId(-1),
+            ConnectionId exit = ConnectionId(-1))
             : arrivalTime(arrivalTime)
             , departureTime(departureTime)
             , enter(enter)
@@ -87,8 +92,11 @@ private:
 
         inline bool isDominated(ProfileElement newProfileElement)
         {
-            // one element in the profile (call it P) domiantes currentProfile iff P.departureTime >= currentProfile.departureTime && P.arrivalTime <= currentProfile.arrivalTime
-            // In other words: We don't need currentProfile if there is a ProfileElement 'P' that departs later (or equal) and arrives earlier (or equal) as currentProfile
+            // one element in the profile (call it P) domiantes currentProfile iff
+            // P.departureTime >= currentProfile.departureTime && P.arrivalTime <=
+            // currentProfile.arrivalTime In other words: We don't need currentProfile
+            // if there is a ProfileElement 'P' that departs later (or equal) and
+            // arrives earlier (or equal) as currentProfile
 
             int i = findIndex(newProfileElement);
 
@@ -103,11 +111,10 @@ private:
             iter = elements.insert(iter, newProfileElement);
 
             // remove all dominated element that come later in the vector
-            elements.erase(
-                std::remove_if(std::next(iter), elements.end(),
-                    [&](auto& other) {
-                        return newProfileElement.dominates(other);
-                    }),
+            elements.erase(std::remove_if(std::next(iter), elements.end(),
+                               [&](auto& other) {
+                                   return newProfileElement.dominates(other);
+                               }),
                 elements.end());
         }
 
@@ -124,10 +131,17 @@ private:
         {
             if (TransfersSecondCrit) {
                 for (auto e : elements)
-                    std::cout << String::secToString(getExactArrivalTime(e.getDepartureTime())) << "\t" << String::secToString(getExactArrivalTime(e.getArrivalTime())) << " @ " << getNumberOfTransfers(e.getArrivalTime()) << " [ " << e.enter << " -> " << e.exit << " ]\n";
+                    std::cout
+                        << String::secToString(getExactArrivalTime(e.getDepartureTime()))
+                        << "\t"
+                        << String::secToString(getExactArrivalTime(e.getArrivalTime()))
+                        << " @ " << getNumberOfTransfers(e.getArrivalTime()) << " [ "
+                        << e.enter << " -> " << e.exit << " ]\n";
             } else {
                 for (auto e : elements)
-                    std::cout << String::secToString(e.getDepartureTime()) << "\t" << String::secToString(e.getArrivalTime()) << " [ " << e.enter << " : " << e.exit << "]\n";
+                    std::cout << String::secToString(e.getDepartureTime()) << "\t"
+                              << String::secToString(e.getArrivalTime()) << " [ "
+                              << e.enter << " : " << e.exit << "]\n";
             }
         }
 
@@ -155,19 +169,29 @@ public:
                 connection.arrivalTime = shiftTime(connection.arrivalTime);
             }
         }
-        AssertMsg(Vector::isSorted(data.connections), "Connections must be sorted in ascending order!");
-        profiler.registerPhases({ PHASE_CLEAR, PHASE_INITIALIZATION, PHASE_CONNECTION_SCAN, PHASE_REACHABLE_EA_QUERY });
-        profiler.registerMetrics({ METRIC_CONNECTIONS, METRIC_EDGES, METRIC_STOPS_BY_TRIP, METRIC_STOPS_BY_TRANSFER });
+        AssertMsg(Vector::isSorted(data.connections),
+            "Connections must be sorted in ascending order!");
+        profiler.registerPhases({ PHASE_CLEAR, PHASE_INITIALIZATION,
+            PHASE_CONNECTION_SCAN, PHASE_REACHABLE_EA_QUERY });
+        profiler.registerMetrics({ METRIC_CONNECTIONS, METRIC_EDGES,
+            METRIC_STOPS_BY_TRIP, METRIC_STOPS_BY_TRANSFER });
         profiler.initialize();
     }
 
-    inline void run(const StopId source, const StopId target, int minDepartureTime = 0, int maxDepartureTime = 86400) noexcept
+    inline void run(const StopId source, const StopId target,
+        int minDepartureTime = 0,
+        int maxDepartureTime = 86400) noexcept
     {
-        AssertMsg(data.isStop(source), "Source stop " << source << " is not a valid stop!");
-        AssertMsg(data.isStop(target), "Target stop " << target << " is not a valid stop!");
-        AssertMsg(minDepartureTime >= 0 && minDepartureTime < 24 * 60 * 60, "Min Departure Time is not in the first day!");
-        AssertMsg(maxDepartureTime > 0 && maxDepartureTime <= 24 * 60 * 60, "Max Departure Time is not in the first day!");
-        AssertMsg(minDepartureTime < maxDepartureTime, "Min Departure Time should be smaller than Max Departure Time!");
+        AssertMsg(data.isStop(source),
+            "Source stop " << source << " is not a valid stop!");
+        AssertMsg(data.isStop(target),
+            "Target stop " << target << " is not a valid stop!");
+        AssertMsg(minDepartureTime >= 0 && minDepartureTime < 24 * 60 * 60,
+            "Min Departure Time is not in the first day!");
+        AssertMsg(maxDepartureTime > 0 && maxDepartureTime <= 24 * 60 * 60,
+            "Max Departure Time is not in the first day!");
+        AssertMsg(minDepartureTime < maxDepartureTime,
+            "Min Departure Time should be smaller than Max Departure Time!");
 
         profiler.start();
 
@@ -199,14 +223,14 @@ public:
         profiler.done();
     }
 
-    /* template <bool T = PathRetrieval, typename = std::enable_if_t<T == PathRetrieval && T>>
-    inline Journey getJourney() const noexcept
+    /* template <bool T = PathRetrieval, typename = std::enable_if_t<T ==
+    PathRetrieval && T>> inline Journey getJourney() const noexcept
     {
         return getJourney(targetStop);
     }
 
-    template <bool T = PathRetrieval, typename = std::enable_if_t<T == PathRetrieval && T>>
-    inline Journey getJourney(StopId stop) const noexcept
+    template <bool T = PathRetrieval, typename = std::enable_if_t<T ==
+    PathRetrieval && T>> inline Journey getJourney(StopId stop) const noexcept
     {
         Journey journey;
         if (!reachable(stop))
@@ -215,12 +239,12 @@ public:
         while (stop != sourceStop) {
             const ParentLabel& label = parentLabel[stop];
             if (label.reachedByTransfer) {
-                const int travelTime = data.transferGraph.get(TravelTime, label.transferId);
-                journey.emplace_back(label.parent, stop, arrivalTime[stop] - travelTime, arrivalTime[stop],
-                    label.transferId);
-            } else {
-                journey.emplace_back(label.parent, stop, data.connections[tripReached[label.tripId]].departureTime,
-                    arrivalTime[stop], label.tripId);
+                const int travelTime = data.transferGraph.get(TravelTime,
+    label.transferId); journey.emplace_back(label.parent, stop, arrivalTime[stop]
+    - travelTime, arrivalTime[stop], label.transferId); } else {
+                journey.emplace_back(label.parent, stop,
+    data.connections[tripReached[label.tripId]].departureTime, arrivalTime[stop],
+    label.tripId);
             }
             stop = label.parent;
         }
@@ -234,7 +258,8 @@ public:
         return journeyToPath(getJourney(stop));
     }
 
-    inline std::vector<std::string> getRouteDescription(const StopId stop) const noexcept
+    inline std::vector<std::string> getRouteDescription(const StopId stop) const
+    noexcept
     {
         return data.journeyToText(getJourney(stop));
     } */
@@ -270,7 +295,8 @@ public:
             stop = data.connections[e.exit].arrivalStopId;
 
             std::cout << "Current Number of legs: " << journey.size() << "\n";
-            std::cout << "Stop : " << stop << " distanceToTarget: " << distanceToTarget[stop] << "\n";
+            std::cout << "Stop : " << stop
+                      << " distanceToTarget: " << distanceToTarget[stop] << "\n";
             profil.printElements();
         }
 
@@ -284,20 +310,11 @@ public:
         return profiles[stop].elements.back().arrivalTime < never;
     }
 
-    inline const Profiler& getProfiler() const noexcept
-    {
-        return profiler;
-    }
+    inline const Profiler& getProfiler() const noexcept { return profiler; }
 
-    void printProfile(const StopId stop) const
-    {
-        profiles[stop].printElements();
-    }
+    void printProfile(const StopId stop) const { profiles[stop].printElements(); }
 
-    int numberOfJourneys(const StopId stop)
-    {
-        return profiles[stop].size() - 1;
-    }
+    int numberOfJourneys(const StopId stop) { return profiles[stop].size() - 1; }
 
 private:
     inline void resetDistancesToTarget(const StopId newTarget)
@@ -325,15 +342,19 @@ private:
         sourceDominationIndex = 0;
     }
 
-    inline ConnectionId firstReachableConnection(const int departureTime) const noexcept
+    inline ConnectionId
+    firstReachableConnection(const int departureTime) const noexcept
     {
         return ConnectionId(
-            Vector::lowerBound(data.connections, departureTime, [](const Connection& connection, const int time) {
-                return connection.departureTime < time;
-            }));
+            Vector::lowerBound(data.connections, departureTime,
+                [](const Connection& connection, const int time) {
+                    return connection.departureTime < time;
+                }));
     }
 
-    inline void runOneEAQuery(const ConnectionId earliestConnection, const ConnectionId latestConnection, const int minDepartureTime) noexcept
+    inline void runOneEAQuery(const ConnectionId earliestConnection,
+        const ConnectionId latestConnection,
+        const int minDepartureTime) noexcept
     {
         arrivalTimeToStop[sourceStop] = minDepartureTime;
         relaxOutgoingEdges(sourceStop, minDepartureTime);
@@ -346,10 +367,13 @@ private:
         }
     }
 
-    inline void scanConnections(const ConnectionId earliestConnection, const ConnectionId latestConnection) noexcept
+    inline void scanConnections(const ConnectionId earliestConnection,
+        const ConnectionId latestConnection) noexcept
     {
-        AssertMsg(earliestConnection < data.connections.size(), "earliestConnection out of bounds!\n");
-        AssertMsg(latestConnection - 1 < data.connections.size(), "latestConnection out of bounds!\n");
+        AssertMsg(earliestConnection < data.connections.size(),
+            "earliestConnection out of bounds!\n");
+        AssertMsg(latestConnection - 1 < data.connections.size(),
+            "latestConnection out of bounds!\n");
 
         for (ConnectionId i(latestConnection); i > earliestConnection; --i) {
             const Connection& connection = data.connections[i - 1];
@@ -370,7 +394,9 @@ private:
 
             const int tau1 = connection.arrivalTime + distanceToTarget[connection.arrivalStopId];
             const int tau2 = tripArrivalTime[connection.tripId].arrivalTime;
-            const int tau3 = earliestArrivalTimeInProfiles(connection.arrivalStopId, connection.arrivalTime) + (TransfersSecondCrit ? offset : 0);
+            const int tau3 = earliestArrivalTimeInProfiles(connection.arrivalStopId,
+                                 connection.arrivalTime)
+                + (TransfersSecondCrit ? offset : 0);
 
             const int tauC = std::min(tau1, std::min(tau2, tau3));
 
@@ -384,7 +410,9 @@ private:
 
             profiler.countMetric(METRIC_CONNECTIONS);
             Assert(tripArrivalTime[connection.tripId].exit != ConnectionId(-1));
-            const ProfileElement currentProfile(connection.departureTime, tauC, i, tripArrivalTime[connection.tripId].exit);
+            const ProfileElement currentProfile(
+                connection.departureTime, tauC, i,
+                tripArrivalTime[connection.tripId].exit);
             Profile& profileArrivalStop = profiles[connection.arrivalStopId];
 
             if (!profileArrivalStop.isDominated(currentProfile) && checkSourceDomination(currentProfile)) {
@@ -396,7 +424,8 @@ private:
         }
     }
 
-    inline bool checkSourceDomination(const ProfileElement currentProfile) noexcept
+    inline bool
+    checkSourceDomination(const ProfileElement currentProfile) noexcept
     {
         Profile& sourceProfile = profiles[sourceStop];
 
@@ -405,7 +434,8 @@ private:
         return sourceProfile.elements[sourceDominationIndex].getArrivalTime() > currentProfile.getArrivalTime();
     }
 
-    inline int earliestArrivalTimeInProfiles(const StopId stop, const int arrivalTime) noexcept
+    inline int earliestArrivalTimeInProfiles(const StopId stop,
+        const int arrivalTime) noexcept
     {
         auto stopProfile = profiles[stop];
 
@@ -416,13 +446,16 @@ private:
         return stopProfile.elements[i].getArrivalTime();
     }
 
-    inline void relaxIncommingEdges(const StopId stop, ProfileElement currentProfile) noexcept
+    inline void relaxIncommingEdges(const StopId stop,
+        ProfileElement currentProfile) noexcept
     {
         for (auto edge : reverseTransferGraph.edgesFrom(stop)) {
             profiler.countMetric(METRIC_EDGES);
             const StopId fromStop = StopId(reverseTransferGraph.get(ToVertex, edge));
             const int newDepartureTime = currentProfile.getDepartureTime() - transformTime(reverseTransferGraph.get(TravelTime, edge));
-            ProfileElement newElement(newDepartureTime, currentProfile.getArrivalTime(), currentProfile.enter, currentProfile.exit);
+            ProfileElement newElement(newDepartureTime,
+                currentProfile.getArrivalTime(),
+                currentProfile.enter, currentProfile.exit);
             Profile& profileFromStop(profiles[fromStop]);
 
             if (profileFromStop.isDominated(newElement))
@@ -441,12 +474,14 @@ private:
         }
     }
 
-    inline bool connectionIsReachableFromStop(const Connection& connection) const noexcept
+    inline bool
+    connectionIsReachableFromStop(const Connection& connection) const noexcept
     {
         return arrivalTimeToStop[connection.departureStopId] <= connection.departureTime - data.minTransferTime(connection.departureStopId);
     }
 
-    inline bool connectionIsReachableFromTrip(const Connection& connection) const noexcept
+    inline bool
+    connectionIsReachableFromTrip(const Connection& connection) const noexcept
     {
         return tripReached[connection.tripId];
     }

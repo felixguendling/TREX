@@ -9,7 +9,8 @@
 
 namespace TripBased {
 
-template <typename PROFILER = NoProfiler, typename INITIAL_TRANSFERS = RAPTOR::BucketCHInitialTransfers>
+template <typename PROFILER = NoProfiler,
+    typename INITIAL_TRANSFERS = RAPTOR::BucketCHInitialTransfers>
 class ForwardPruningQuery {
 public:
     using Profiler = PROFILER;
@@ -18,7 +19,8 @@ public:
 
 private:
     struct TripLabel {
-        TripLabel(const StopEventId begin = noStopEvent, const StopEventId end = noStopEvent)
+        TripLabel(const StopEventId begin = noStopEvent,
+            const StopEventId end = noStopEvent)
             : begin(begin)
             , end(end)
         {
@@ -39,7 +41,8 @@ private:
     };
 
     struct EdgeLabel {
-        EdgeLabel(const StopEventId stopEvent = noStopEvent, const TripId trip = noTripId,
+        EdgeLabel(const StopEventId stopEvent = noStopEvent,
+            const TripId trip = noTripId,
             const StopEventId firstEvent = noStopEvent)
             : stopEvent(stopEvent)
             , trip(trip)
@@ -65,7 +68,8 @@ private:
     };
 
 public:
-    ForwardPruningQuery(const Data& data, InitialTransferType& bucketQuery, Profiler& profiler)
+    ForwardPruningQuery(const Data& data, InitialTransferType& bucketQuery,
+        Profiler& profiler)
         : data(data)
         , bucketQuery(bucketQuery)
         , queue(data.numberOfStopEvents())
@@ -97,13 +101,16 @@ public:
             routeLabels[route].departureTimes.resize((numberOfStops - 1) * numberOfTrips);
             for (size_t trip = 0; trip < numberOfTrips; trip++) {
                 for (size_t stopIndex = 0; stopIndex + 1 < numberOfStops; stopIndex++) {
-                    routeLabels[route].departureTimes[(stopIndex * numberOfTrips) + trip] = stopEvents[(trip * numberOfStops) + stopIndex].departureTime;
+                    routeLabels[route]
+                        .departureTimes[(stopIndex * numberOfTrips) + trip]
+                        = stopEvents[(trip * numberOfStops) + stopIndex].departureTime;
                 }
             }
         }
     }
 
-    inline void run(const Vertex source, const int departureTime, const Vertex target, const double arrSlack,
+    inline void run(const Vertex source, const int departureTime,
+        const Vertex target, const double arrSlack,
         const double tripSlack) noexcept
     {
         clear();
@@ -122,17 +129,16 @@ public:
         return targetLabels[std::min(numTrips, targetLabels.size() - 1)];
     }
 
-    inline const std::vector<RAPTOR::ArrivalLabel>& getAnchorLabels() const noexcept
+    inline const std::vector<RAPTOR::ArrivalLabel>&
+    getAnchorLabels() const noexcept
     {
         return anchorLabels;
     }
 
-    inline size_t getMaxTrips() const noexcept
-    {
-        return maxTrips;
-    }
+    inline size_t getMaxTrips() const noexcept { return maxTrips; }
 
-    inline int getArrivalTime(const StopId stop, const size_t round) const noexcept
+    inline int getArrivalTime(const StopId stop,
+        const size_t round) const noexcept
     {
         return stopArrivalTimes(stop, round);
     }
@@ -161,7 +167,8 @@ private:
     {
         std::vector<bool> reachedRoutes(data.raptorData.numberOfRoutes(), false);
         for (const Vertex stop : bucketQuery.getForwardPOIs()) {
-            for (const RAPTOR::RouteSegment& route : data.raptorData.routesContainingStop(StopId(stop))) {
+            for (const RAPTOR::RouteSegment& route :
+                data.raptorData.routesContainingStop(StopId(stop))) {
                 reachedRoutes[route.routeId] = true;
             }
         }
@@ -180,7 +187,8 @@ private:
                 const int stopDepartureTime = sourceDepartureTime + timeFromSource;
                 const u_int32_t labelIndex = stopIndex * label.numberOfTrips;
                 if (tripIndex >= label.numberOfTrips) {
-                    tripIndex = std::lower_bound(TripId(0), TripId(label.numberOfTrips), stopDepartureTime,
+                    tripIndex = std::lower_bound(
+                        TripId(0), TripId(label.numberOfTrips), stopDepartureTime,
                         [&](const TripId trip, const int time) {
                             return label.departureTimes[labelIndex + trip] < time;
                         });
@@ -257,7 +265,8 @@ private:
         if (reachedIndex.alreadyReached(trip, index))
             return;
         const StopEventId firstEvent = data.firstStopEventOfTrip[trip];
-        queue[queueSize] = TripLabel(StopEventId(firstEvent + index), StopEventId(firstEvent + reachedIndex(trip)));
+        queue[queueSize] = TripLabel(StopEventId(firstEvent + index),
+            StopEventId(firstEvent + reachedIndex(trip)));
         queueSize++;
         AssertMsg(queueSize <= queue.size(), "Queue is overfull!");
         reachedIndex.update(trip, index);
@@ -267,12 +276,15 @@ private:
     {
         profiler.countMetric(METRIC_ENQUEUES);
         const EdgeLabel& label = edgeLabels[edge];
-        if (reachedIndex.alreadyReached(label.trip, label.stopEvent - label.firstEvent))
+        if (reachedIndex.alreadyReached(label.trip,
+                label.stopEvent - label.firstEvent))
             return;
-        queue[queueSize] = TripLabel(label.stopEvent, StopEventId(label.firstEvent + reachedIndex(label.trip)));
+        queue[queueSize] = TripLabel(label.stopEvent,
+            StopEventId(label.firstEvent + reachedIndex(label.trip)));
         queueSize++;
         AssertMsg(queueSize <= queue.size(), "Queue is overfull!");
-        reachedIndex.update(label.trip, StopIndex(label.stopEvent - label.firstEvent));
+        reachedIndex.update(label.trip,
+            StopIndex(label.stopEvent - label.firstEvent));
     }
 
     inline void addTargetLabel(const int newArrivalTime) noexcept

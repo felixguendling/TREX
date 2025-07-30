@@ -10,7 +10,8 @@
 
 namespace TripBased {
 
-template <typename PROFILER = NoProfiler, typename INITIAL_TRANSFERS = RAPTOR::BucketCHInitialTransfers>
+template <typename PROFILER = NoProfiler,
+    typename INITIAL_TRANSFERS = RAPTOR::BucketCHInitialTransfers>
 class BackwardPruningQuery {
 public:
     using Profiler = PROFILER;
@@ -19,7 +20,8 @@ public:
 
 private:
     struct TripLabel {
-        TripLabel(const StopEventId begin = noStopEvent, const StopEventId end = noStopEvent)
+        TripLabel(const StopEventId begin = noStopEvent,
+            const StopEventId end = noStopEvent)
             : begin(begin)
             , end(end)
         {
@@ -50,7 +52,8 @@ private:
 public:
     BackwardPruningQuery(const Data& data,
         const ForwardPruningQuery<Profiler, InitialTransferType>& forwardPruningQuery,
-        const InitialTransferType& bucketQuery, Profiler& profiler)
+        const InitialTransferType& bucketQuery,
+        Profiler& profiler)
         : data(data)
         , forwardPruningQuery(forwardPruningQuery)
         , bucketQuery(bucketQuery)
@@ -71,20 +74,23 @@ public:
         , profiler(profiler)
     {
         for (const Edge edge : data.stopEventGraph.edges()) {
-            const StopEventId departureStopEvent(data.stopEventGraph.get(ToVertex, edge));
+            const StopEventId departureStopEvent(
+                data.stopEventGraph.get(ToVertex, edge));
             edgeLabels[edge].stopEvent = StopEventId(departureStopEvent + 1);
             edgeLabels[edge].trip = data.tripOfStopEvent[departureStopEvent];
             edgeLabels[edge].firstEvent = data.firstStopEventOfTrip[edgeLabels[edge].trip];
             edgeLabels[edge].departureStop = data.getStopOfStopEvent(departureStopEvent);
             edgeLabels[edge].departureTime = -data.raptorData.stopEvents[departureStopEvent].departureTime;
         }
-        for (StopEventId stopEvent(0); stopEvent < data.numberOfStopEvents(); stopEvent++) {
+        for (StopEventId stopEvent(0); stopEvent < data.numberOfStopEvents();
+             stopEvent++) {
             properArrivalTimes[stopEvent] = data.arrivalEvents[stopEvent].arrivalTime - data.raptorData.minTransferTime(data.getStopOfStopEvent(stopEvent));
         }
     }
 
-    inline void run(const Vertex source, const int originalDepartureTime, const Vertex target,
-        const double arrivalSlack, const double tripSlack) noexcept
+    inline void run(const Vertex source, const int originalDepartureTime,
+        const Vertex target, const double arrivalSlack,
+        const double tripSlack) noexcept
     {
         clear<true>();
         sourceVertex = source;
@@ -93,7 +99,8 @@ public:
         size_t lastNumberOfTrips = INFTY;
         maxTrips = forwardPruningQuery.getMaxTrips();
         departureTimes.resize(maxTrips + 1, INFTY);
-        for (const RAPTOR::ArrivalLabel& label : forwardPruningQuery.getAnchorLabels()) {
+        for (const RAPTOR::ArrivalLabel& label :
+            forwardPruningQuery.getAnchorLabels()) {
             sourceDepartureTime = -((label.arrivalTime - originalDepartureTime) * arrivalSlack + originalDepartureTime);
             roundOffset = maxTrips - std::min(size_t(std::ceil(label.numberOfTrips * tripSlack)), lastNumberOfTrips - 1);
             lastNumberOfTrips = label.numberOfTrips;
@@ -101,7 +108,8 @@ public:
         }
     }
 
-    inline StopIndex getReachedIndex(const TripId trip, const size_t numTrips) const noexcept
+    inline StopIndex getReachedIndex(const TripId trip,
+        const size_t numTrips) const noexcept
     {
         return reachedIndex(trip, numTrips);
     }
@@ -111,12 +119,14 @@ public:
         return departureTimes[numTrips];
     }
 
-    inline int getArrivalTime(const StopId stop, const size_t round) const noexcept
+    inline int getArrivalTime(const StopId stop,
+        const size_t round) const noexcept
     {
         return stopArrivalTimes(stop, round);
     }
 
-    inline TripId getReverseTrip(const RouteId route, const size_t tripOffset) const noexcept
+    inline TripId getReverseTrip(const RouteId route,
+        const size_t tripOffset) const noexcept
     {
         return TripId(data.firstTripOfRoute[route + 1] - tripOffset - 1);
     }
@@ -164,7 +174,8 @@ private:
             const int arrivalTime = forwardPruningQuery.getArrivalTime(StopId(stop), maxTrips - round);
             if (-stopDepartureTime < arrivalTime)
                 continue;
-            for (const RAPTOR::RouteSegment& segment : data.raptorData.routesContainingStop(StopId(stop))) {
+            for (const RAPTOR::RouteSegment& segment :
+                data.raptorData.routesContainingStop(StopId(stop))) {
                 const TripId trip = data.getEarliestTrip(segment, stopDepartureTime);
                 if (trip != noTripId) {
                     enqueue(trip, StopIndex(segment.stopIndex + 1));
@@ -218,7 +229,8 @@ private:
         if (reachedIndex.alreadyReached(trip, index))
             return;
         const StopEventId firstEvent = data.firstStopEventOfTrip[trip];
-        queue[queueSize] = TripLabel(StopEventId(firstEvent + index), StopEventId(firstEvent + reachedIndex(trip)));
+        queue[queueSize] = TripLabel(StopEventId(firstEvent + index),
+            StopEventId(firstEvent + reachedIndex(trip)));
         queueSize++;
         AssertMsg(queueSize <= queue.size(), "Queue is overfull!");
         reachedIndex.updateCopyForward(trip, index);
@@ -228,14 +240,18 @@ private:
     {
         profiler.countMetric(METRIC_ENQUEUES);
         const EdgeLabel& label = edgeLabels[edge];
-        if (reachedIndex.alreadyReached(label.trip, label.stopEvent - label.firstEvent))
+        if (reachedIndex.alreadyReached(label.trip,
+                label.stopEvent - label.firstEvent))
             return;
-        if (label.departureTime < forwardPruningQuery.getArrivalTime(label.departureStop, maxTrips - round))
+        if (label.departureTime < forwardPruningQuery.getArrivalTime(
+                label.departureStop, maxTrips - round))
             return;
-        queue[queueSize] = TripLabel(label.stopEvent, StopEventId(label.firstEvent + reachedIndex(label.trip)));
+        queue[queueSize] = TripLabel(label.stopEvent,
+            StopEventId(label.firstEvent + reachedIndex(label.trip)));
         queueSize++;
         AssertMsg(queueSize <= queue.size(), "Queue is overfull!");
-        reachedIndex.updateCopyForward(label.trip, StopIndex(label.stopEvent - label.firstEvent));
+        reachedIndex.updateCopyForward(
+            label.trip, StopIndex(label.stopEvent - label.firstEvent));
     }
 
 private:

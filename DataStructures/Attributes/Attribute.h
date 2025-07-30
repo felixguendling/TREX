@@ -29,55 +29,65 @@ namespace Meta {
 
 // INSERT ATTRIBUTE
 namespace Implementation {
-    template <typename ATTRIBUTE, typename ATTRIBUTE_LIST, typename... RESULTING_LIST>
+    template <typename ATTRIBUTE, typename ATTRIBUTE_LIST,
+        typename... RESULTING_LIST>
     struct InsertAttribute;
 
     template <typename ATTRIBUTE, typename... RESULTING_LIST>
-    struct InsertAttribute<ATTRIBUTE, List<>, RESULTING_LIST...> : List<RESULTING_LIST..., ATTRIBUTE> {
-    };
+    struct InsertAttribute<ATTRIBUTE, List<>, RESULTING_LIST...>
+        : List<RESULTING_LIST..., ATTRIBUTE> { };
 
-    template <AttributeNameType NAME, typename TYPE_A, typename TYPE_B, typename... ATTRIBUTE_LIST,
-        typename... RESULTING_LIST>
-    struct InsertAttribute<Attribute<NAME, TYPE_A>, List<Attribute<NAME, TYPE_B>, ATTRIBUTE_LIST...>, RESULTING_LIST...>
-        : List<RESULTING_LIST..., Attribute<NAME, TYPE_A>, ATTRIBUTE_LIST...> {
-    };
-
-    template <AttributeNameType NAME_A, typename TYPE_A, AttributeNameType NAME_B, typename TYPE_B,
+    template <AttributeNameType NAME, typename TYPE_A, typename TYPE_B,
         typename... ATTRIBUTE_LIST, typename... RESULTING_LIST>
-    struct InsertAttribute<Attribute<NAME_A, TYPE_A>, List<Attribute<NAME_B, TYPE_B>, ATTRIBUTE_LIST...>, RESULTING_LIST...>
+    struct InsertAttribute<Attribute<NAME, TYPE_A>,
+        List<Attribute<NAME, TYPE_B>, ATTRIBUTE_LIST...>,
+        RESULTING_LIST...>
+        : List<RESULTING_LIST..., Attribute<NAME, TYPE_A>, ATTRIBUTE_LIST...> { };
+
+    template <AttributeNameType NAME_A, typename TYPE_A, AttributeNameType NAME_B,
+        typename TYPE_B, typename... ATTRIBUTE_LIST,
+        typename... RESULTING_LIST>
+    struct InsertAttribute<Attribute<NAME_A, TYPE_A>,
+        List<Attribute<NAME_B, TYPE_B>, ATTRIBUTE_LIST...>,
+        RESULTING_LIST...>
         : IF<(NAME_A < NAME_B),
-              List<RESULTING_LIST..., Attribute<NAME_A, TYPE_A>, Attribute<NAME_B, TYPE_B>, ATTRIBUTE_LIST...>,
-              InsertAttribute<Attribute<NAME_A, TYPE_A>, List<ATTRIBUTE_LIST...>, RESULTING_LIST...,
-                  Attribute<NAME_B, TYPE_B>>> {
-    };
+              List<RESULTING_LIST..., Attribute<NAME_A, TYPE_A>,
+                  Attribute<NAME_B, TYPE_B>, ATTRIBUTE_LIST...>,
+              InsertAttribute<Attribute<NAME_A, TYPE_A>, List<ATTRIBUTE_LIST...>,
+                  RESULTING_LIST..., Attribute<NAME_B, TYPE_B>>> { };
 } // namespace Implementation
 
 template <typename ATTRIBUTE, typename ATTRIBUTE_LIST>
-using InsertAttribute = typename Implementation::InsertAttribute<ATTRIBUTE, ATTRIBUTE_LIST>::Type;
+using InsertAttribute =
+    typename Implementation::InsertAttribute<ATTRIBUTE, ATTRIBUTE_LIST>::Type;
 
 // REMOVE ATTRIBUTE
 namespace Implementation {
-    template <AttributeNameType NAME, typename ATTRIBUTE_LIST, typename... RESULTING_LIST>
+    template <AttributeNameType NAME, typename ATTRIBUTE_LIST,
+        typename... RESULTING_LIST>
     struct RemoveAttribute;
 
     template <AttributeNameType NAME, typename... RESULTING_LIST>
-    struct RemoveAttribute<NAME, List<>, RESULTING_LIST...> : List<RESULTING_LIST...> {
-    };
+    struct RemoveAttribute<NAME, List<>, RESULTING_LIST...>
+        : List<RESULTING_LIST...> { };
 
-    template <AttributeNameType NAME, typename TYPE, typename... ATTRIBUTE_LIST, typename... RESULTING_LIST>
-    struct RemoveAttribute<NAME, List<Attribute<NAME, TYPE>, ATTRIBUTE_LIST...>, RESULTING_LIST...>
-        : RemoveAttribute<NAME, List<ATTRIBUTE_LIST...>, RESULTING_LIST...> {
-    };
-
-    template <AttributeNameType NAME_A, AttributeNameType NAME_B, typename TYPE, typename... ATTRIBUTE_LIST,
+    template <AttributeNameType NAME, typename TYPE, typename... ATTRIBUTE_LIST,
         typename... RESULTING_LIST>
-    struct RemoveAttribute<NAME_A, List<Attribute<NAME_B, TYPE>, ATTRIBUTE_LIST...>, RESULTING_LIST...>
-        : RemoveAttribute<NAME_A, List<ATTRIBUTE_LIST...>, RESULTING_LIST..., Attribute<NAME_B, TYPE>> {
-    };
+    struct RemoveAttribute<NAME, List<Attribute<NAME, TYPE>, ATTRIBUTE_LIST...>,
+        RESULTING_LIST...>
+        : RemoveAttribute<NAME, List<ATTRIBUTE_LIST...>, RESULTING_LIST...> { };
+
+    template <AttributeNameType NAME_A, AttributeNameType NAME_B, typename TYPE,
+        typename... ATTRIBUTE_LIST, typename... RESULTING_LIST>
+    struct RemoveAttribute<NAME_A, List<Attribute<NAME_B, TYPE>, ATTRIBUTE_LIST...>,
+        RESULTING_LIST...>
+        : RemoveAttribute<NAME_A, List<ATTRIBUTE_LIST...>, RESULTING_LIST...,
+              Attribute<NAME_B, TYPE>> { };
 } // namespace Implementation
 
 template <AttributeNameType NAME, typename ATTRIBUTE_LIST>
-using RemoveAttribute = typename Implementation::RemoveAttribute<NAME, ATTRIBUTE_LIST>::Type;
+using RemoveAttribute =
+    typename Implementation::RemoveAttribute<NAME, ATTRIBUTE_LIST>::Type;
 
 // SORT ATTRIBUTES (by AttributeName, using insertion sort)
 namespace Implementation {
@@ -85,17 +95,18 @@ namespace Implementation {
     struct SortAttributes;
 
     template <>
-    struct SortAttributes<List<>> : List<> {
-    };
+    struct SortAttributes<List<>> : List<> { };
 
     template <typename ATTRIBUTE, typename... ATTRIBUTE_LIST>
     struct SortAttributes<List<ATTRIBUTE, ATTRIBUTE_LIST...>>
-        : InsertAttribute<ATTRIBUTE, typename SortAttributes<List<ATTRIBUTE_LIST...>>::Type> {
+        : InsertAttribute<ATTRIBUTE,
+              typename SortAttributes<List<ATTRIBUTE_LIST...>>::Type> {
     };
 } // namespace Implementation
 
 template <typename ATTRIBUTE_LIST>
-using SortAttributes = typename Implementation::SortAttributes<ATTRIBUTE_LIST>::Type;
+using SortAttributes =
+    typename Implementation::SortAttributes<ATTRIBUTE_LIST>::Type;
 
 // CONTAINS ATTRIBUTE
 namespace Implementation {
@@ -103,55 +114,68 @@ namespace Implementation {
     struct ContainsAttribute;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    struct ContainsAttribute<ATTRIBUTE_NAME, List<>> : False {
-    };
+    struct ContainsAttribute<ATTRIBUTE_NAME, List<>> : False { };
 
-    template <AttributeNameType ATTRIBUTE_NAME, AttributeNameType NAME_A, typename TYPE_A, typename... ATTRIBUTE_LIST>
-    struct ContainsAttribute<ATTRIBUTE_NAME, List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>>
-        : IF<ATTRIBUTE_NAME != NAME_A, ContainsAttribute<ATTRIBUTE_NAME, List<ATTRIBUTE_LIST...>>, True> {
-    };
+    template <AttributeNameType ATTRIBUTE_NAME, AttributeNameType NAME_A,
+        typename TYPE_A, typename... ATTRIBUTE_LIST>
+    struct ContainsAttribute<ATTRIBUTE_NAME,
+        List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>>
+        : IF<ATTRIBUTE_NAME != NAME_A,
+              ContainsAttribute<ATTRIBUTE_NAME, List<ATTRIBUTE_LIST...>>, True> { };
 } // namespace Implementation
 
 template <AttributeNameType ATTRIBUTE_NAME, typename ATTRIBUTE_LIST>
 inline constexpr bool ContainsAttribute()
 {
-    return Implementation::ContainsAttribute<ATTRIBUTE_NAME, ATTRIBUTE_LIST>::Value;
+    return Implementation::ContainsAttribute<ATTRIBUTE_NAME,
+        ATTRIBUTE_LIST>::Value;
 }
 
 // FIND ATTRIBUTE LIST
 namespace Implementation {
     template <AttributeNameType ATTRIBUTE_NAME, typename ATTRIBUTE_LIST>
     struct FindAttributeList {
-        static_assert(ATTRIBUTE_NAME != ATTRIBUTE_NAME, "ATTRIBUTE_LIST does not contain an attribute with "
-                                                        "ATTRIBUTE_NAME as name!");
+        static_assert(ATTRIBUTE_NAME != ATTRIBUTE_NAME,
+            "ATTRIBUTE_LIST does not contain an attribute with "
+            "ATTRIBUTE_NAME as name!");
     };
 
-    template <AttributeNameType ATTRIBUTE_NAME, AttributeNameType NAME_A, typename TYPE_A, typename... ATTRIBUTE_LIST>
-    struct FindAttributeList<ATTRIBUTE_NAME, List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>>
-        : IF<ATTRIBUTE_NAME != NAME_A, FindAttributeList<ATTRIBUTE_NAME, List<ATTRIBUTE_LIST...>>,
-              List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>> {
-    };
+    template <AttributeNameType ATTRIBUTE_NAME, AttributeNameType NAME_A,
+        typename TYPE_A, typename... ATTRIBUTE_LIST>
+    struct FindAttributeList<ATTRIBUTE_NAME,
+        List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>>
+        : IF<ATTRIBUTE_NAME != NAME_A,
+              FindAttributeList<ATTRIBUTE_NAME, List<ATTRIBUTE_LIST...>>,
+              List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>> { };
 } // namespace Implementation
 
 template <AttributeNameType ATTRIBUTE_NAME, typename ATTRIBUTE_LIST>
-using FindAttributeList = typename Implementation::FindAttributeList<ATTRIBUTE_NAME, ATTRIBUTE_LIST>::Type;
+using FindAttributeList =
+    typename Implementation::FindAttributeList<ATTRIBUTE_NAME,
+        ATTRIBUTE_LIST>::Type;
 
 // FIND ATTRIBUTE TYPE
 namespace Implementation {
     template <AttributeNameType ATTRIBUTE_NAME, typename ATTRIBUTE_LIST>
     struct FindAttributeType {
-        static_assert(ATTRIBUTE_NAME != ATTRIBUTE_NAME, "ATTRIBUTE_LIST does not contain an attribute with "
-                                                        "ATTRIBUTE_NAME as name!");
+        static_assert(ATTRIBUTE_NAME != ATTRIBUTE_NAME,
+            "ATTRIBUTE_LIST does not contain an attribute with "
+            "ATTRIBUTE_NAME as name!");
     };
 
-    template <AttributeNameType ATTRIBUTE_NAME, AttributeNameType NAME_A, typename TYPE_A, typename... ATTRIBUTE_LIST>
-    struct FindAttributeType<ATTRIBUTE_NAME, List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>>
-        : IF<ATTRIBUTE_NAME != NAME_A, FindAttributeType<ATTRIBUTE_NAME, List<ATTRIBUTE_LIST...>>, ID<TYPE_A>> {
-    };
+    template <AttributeNameType ATTRIBUTE_NAME, AttributeNameType NAME_A,
+        typename TYPE_A, typename... ATTRIBUTE_LIST>
+    struct FindAttributeType<ATTRIBUTE_NAME,
+        List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>>
+        : IF<ATTRIBUTE_NAME != NAME_A,
+              FindAttributeType<ATTRIBUTE_NAME, List<ATTRIBUTE_LIST...>>,
+              ID<TYPE_A>> { };
 } // namespace Implementation
 
 template <AttributeNameType ATTRIBUTE_NAME, typename ATTRIBUTE_LIST>
-using FindAttributeType = typename Implementation::FindAttributeType<ATTRIBUTE_NAME, ATTRIBUTE_LIST>::Type;
+using FindAttributeType =
+    typename Implementation::FindAttributeType<ATTRIBUTE_NAME,
+        ATTRIBUTE_LIST>::Type;
 
 // HAS DUPLICATE ATTRIBUTE
 namespace Implementation {
@@ -159,26 +183,28 @@ namespace Implementation {
     struct HasDuplicateAttribute;
 
     template <>
-    struct HasDuplicateAttribute<List<>> : False {
-    };
+    struct HasDuplicateAttribute<List<>> : False { };
 
     template <typename ATTRIBUTE>
-    struct HasDuplicateAttribute<List<ATTRIBUTE>> : False {
-    };
+    struct HasDuplicateAttribute<List<ATTRIBUTE>> : False { };
 
-    template <AttributeNameType FIRST_NAME, typename FIRST_TYPE, AttributeNameType SECOND_NAME, typename SECOND_TYPE,
+    template <AttributeNameType FIRST_NAME, typename FIRST_TYPE,
+        AttributeNameType SECOND_NAME, typename SECOND_TYPE,
         typename... ATTRIBUTE_LIST>
     struct HasDuplicateAttribute<
-        List<Attribute<FIRST_NAME, FIRST_TYPE>, Attribute<SECOND_NAME, SECOND_TYPE>, ATTRIBUTE_LIST...>>
-        : IF<FIRST_NAME != SECOND_NAME, HasDuplicateAttribute<List<Attribute<SECOND_NAME, SECOND_TYPE>, ATTRIBUTE_LIST...>>,
-              True> {
-    };
+        List<Attribute<FIRST_NAME, FIRST_TYPE>, Attribute<SECOND_NAME, SECOND_TYPE>,
+            ATTRIBUTE_LIST...>>
+        : IF<FIRST_NAME != SECOND_NAME,
+              HasDuplicateAttribute<
+                  List<Attribute<SECOND_NAME, SECOND_TYPE>, ATTRIBUTE_LIST...>>,
+              True> { };
 } // namespace Implementation
 
 template <typename ATTRIBUTE_LIST>
 inline constexpr bool HasDuplicateAttribute()
 {
-    return Implementation::HasDuplicateAttribute<SortAttributes<ATTRIBUTE_LIST>>::Value;
+    return Implementation::HasDuplicateAttribute<
+        SortAttributes<ATTRIBUTE_LIST>>::Value;
 }
 } // namespace Meta
 
@@ -195,7 +221,8 @@ struct AttributeListToString<Meta::List<ATTRIBUTE>> {
 };
 
 template <typename ATTRIBUTE_A, typename ATTRIBUTE_B, typename... ATTRIBUTES>
-struct AttributeListToString<Meta::List<ATTRIBUTE_A, ATTRIBUTE_B, ATTRIBUTES...>> {
+struct AttributeListToString<
+    Meta::List<ATTRIBUTE_A, ATTRIBUTE_B, ATTRIBUTES...>> {
     inline static const std::string String = ATTRIBUTE_A::toString() + ", " + AttributeListToString<Meta::List<ATTRIBUTE_B, ATTRIBUTES...>>::String;
 };
 

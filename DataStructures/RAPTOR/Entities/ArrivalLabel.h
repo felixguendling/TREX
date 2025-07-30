@@ -41,9 +41,11 @@ public:
         return arrivalTime <= other.arrivalTime && numberOfTrips <= other.numberOfTrips;
     }
 
-    inline friend std::ostream& operator<<(std::ostream& out, const ArrivalLabel& label) noexcept
+    inline friend std::ostream& operator<<(std::ostream& out,
+        const ArrivalLabel& label) noexcept
     {
-        return out << "arrivalTime: " << label.arrivalTime << ", numberOfTrips: " << label.numberOfTrips;
+        return out << "arrivalTime: " << label.arrivalTime
+                   << ", numberOfTrips: " << label.numberOfTrips;
     }
 
 public:
@@ -54,7 +56,9 @@ public:
 struct WalkingParetoLabel {
     inline static constexpr int NumberOfCriteria = 3;
 
-    WalkingParetoLabel(const int arrivalTime = never, const int walkingDistance = INFTY, const int numberOfTrips = -1)
+    WalkingParetoLabel(const int arrivalTime = never,
+        const int walkingDistance = INFTY,
+        const int numberOfTrips = -1)
         : arrivalTime(arrivalTime)
         , walkingDistance(walkingDistance)
         , numberOfTrips(numberOfTrips)
@@ -76,7 +80,8 @@ struct WalkingParetoLabel {
 
     inline bool operator<(const WalkingParetoLabel& other) const noexcept
     {
-        return std::tie(numberOfTrips, arrivalTime, walkingDistance) < std::tie(other.numberOfTrips, other.arrivalTime, other.walkingDistance);
+        return std::tie(numberOfTrips, arrivalTime, walkingDistance) < std::tie(other.numberOfTrips, other.arrivalTime,
+                   other.walkingDistance);
     }
 
     inline bool operator==(const WalkingParetoLabel& other) const noexcept
@@ -89,8 +94,9 @@ struct WalkingParetoLabel {
         return arrivalTime <= other.arrivalTime && walkingDistance <= other.walkingDistance && numberOfTrips <= other.numberOfTrips;
     }
 
-    inline bool isWithinSlack(const std::vector<ArrivalLabel>& anchorLabels, const int departureTime,
-        const double arrivalSlack, const double tripSlack) const noexcept
+    inline bool isWithinSlack(const std::vector<ArrivalLabel>& anchorLabels,
+        const int departureTime, const double arrivalSlack,
+        const double tripSlack) const noexcept
     {
         for (const ArrivalLabel& anchorLabel : anchorLabels) {
             if (isWithinSlack(anchorLabel, departureTime, arrivalSlack, tripSlack))
@@ -101,7 +107,8 @@ struct WalkingParetoLabel {
         return false;
     }
 
-    inline bool isWithinSlack(const ArrivalLabel& anchorLabel, const int departureTime, const double arrivalSlack,
+    inline bool isWithinSlack(const ArrivalLabel& anchorLabel,
+        const int departureTime, const double arrivalSlack,
         const double tripSlack) const noexcept
     {
         if (travelTime(departureTime) > anchorLabel.travelTime(departureTime) * arrivalSlack)
@@ -111,9 +118,11 @@ struct WalkingParetoLabel {
         return true;
     }
 
-    inline friend std::ostream& operator<<(std::ostream& out, const WalkingParetoLabel& label) noexcept
+    inline friend std::ostream&
+    operator<<(std::ostream& out, const WalkingParetoLabel& label) noexcept
     {
-        return out << "arrivalTime: " << label.arrivalTime << ", walkingDistance: " << label.walkingDistance
+        return out << "arrivalTime: " << label.arrivalTime
+                   << ", walkingDistance: " << label.walkingDistance
                    << ", numberOfTrips: " << label.numberOfTrips;
     }
 
@@ -143,7 +152,8 @@ enum TransferTimeBuckets {
     NUM_TRANSFER_TIME_BUCKETS = 5,
 };
 
-int transferTimeBucketThreshold[NUM_TRANSFER_TIME_BUCKETS - 1] = { 0, 600, 1200, 2400 };
+int transferTimeBucketThreshold[NUM_TRANSFER_TIME_BUCKETS - 1] = { 0, 600, 1200,
+    2400 };
 
 inline int getTransferTimeBucketValue(const int transferTime) noexcept
 {
@@ -170,7 +180,8 @@ struct MultimodalParetoLabel {
         : arrivalTime(label.arrivalTime)
         , numberOfTrips(numberOfTrips)
     {
-        std::copy(std::begin(label.transferTime), std::end(label.transferTime), std::begin(transferTime));
+        std::copy(std::begin(label.transferTime), std::end(label.transferTime),
+            std::begin(transferTime));
     }
 
     inline int travelTime(const int departureTime) const noexcept
@@ -178,8 +189,9 @@ struct MultimodalParetoLabel {
         return arrivalTime - departureTime;
     }
 
-    inline bool isWithinSlack(const std::vector<ArrivalLabel>& anchorLabels, const int departureTime,
-        const double arrivalSlack, const double tripSlack) const noexcept
+    inline bool isWithinSlack(const std::vector<ArrivalLabel>& anchorLabels,
+        const int departureTime, const double arrivalSlack,
+        const double tripSlack) const noexcept
     {
         for (const ArrivalLabel& anchorLabel : anchorLabels) {
             if (isWithinSlack(anchorLabel, departureTime, arrivalSlack, tripSlack))
@@ -190,7 +202,8 @@ struct MultimodalParetoLabel {
         return false;
     }
 
-    inline bool isWithinSlack(const ArrivalLabel& anchorLabel, const int departureTime, const double arrivalSlack,
+    inline bool isWithinSlack(const ArrivalLabel& anchorLabel,
+        const int departureTime, const double arrivalSlack,
         const double tripSlack) const noexcept
     {
         if (travelTime(departureTime) > anchorLabel.travelTime(departureTime) * arrivalSlack)
@@ -224,7 +237,8 @@ struct MultimodalParetoLabel {
 
     inline bool operator<(const MultimodalParetoLabel& other) const noexcept
     {
-        return std::tie(numberOfTrips, arrivalTime, transferTime[0]) < std::tie(other.numberOfTrips, other.arrivalTime, other.transferTime[0]);
+        return std::tie(numberOfTrips, arrivalTime, transferTime[0]) < std::tie(other.numberOfTrips, other.arrivalTime,
+                   other.transferTime[0]);
     }
 
     inline bool operator==(const MultimodalParetoLabel& other) const noexcept
@@ -240,7 +254,8 @@ struct MultimodalParetoLabel {
         return true;
     }
 
-    inline friend std::ostream& operator<<(std::ostream& out, const MultimodalParetoLabel& label) noexcept
+    inline friend std::ostream&
+    operator<<(std::ostream& out, const MultimodalParetoLabel& label) noexcept
     {
         out << "arrivalTime: " << label.arrivalTime;
         for (size_t i = 0; i < NumTransferModes; i++) {

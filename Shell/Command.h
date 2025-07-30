@@ -10,13 +10,9 @@ namespace Shell {
 
 class Command {
 public:
-    Command()
-    {
-    }
+    Command() { }
 
-    virtual ~Command()
-    {
-    }
+    virtual ~Command() { }
 
     virtual bool matches(const std::string& s) const
     {

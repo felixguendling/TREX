@@ -12,9 +12,7 @@ struct Bag {
     using Label = LABEL;
     using Iterator = typename std::vector<Label>::const_iterator;
 
-    Bag()
-    {
-    }
+    Bag() { }
 
     Bag(const std::vector<Label>& labelVector)
     {
@@ -120,40 +118,22 @@ struct Bag {
         return true;
     }
 
-    inline size_t size() const noexcept
-    {
-        return labels.size();
-    }
+    inline size_t size() const noexcept { return labels.size(); }
 
-    inline void resize(const size_t newSize) noexcept
-    {
-        labels.resize(newSize);
-    }
+    inline void resize(const size_t newSize) noexcept { labels.resize(newSize); }
 
-    inline Label& operator[](const size_t i) noexcept
-    {
-        return labels[i];
-    }
+    inline Label& operator[](const size_t i) noexcept { return labels[i]; }
 
     inline const Label& operator[](const size_t i) const noexcept
     {
         return labels[i];
     }
 
-    inline Iterator begin() const noexcept
-    {
-        return labels.begin();
-    }
+    inline Iterator begin() const noexcept { return labels.begin(); }
 
-    inline Iterator end() const noexcept
-    {
-        return labels.end();
-    }
+    inline Iterator end() const noexcept { return labels.end(); }
 
-    inline void clear() noexcept
-    {
-        labels.clear();
-    }
+    inline void clear() noexcept { labels.clear(); }
 
     friend std::ostream& operator<<(std::ostream& out, const Bag& r)
     {
@@ -187,15 +167,9 @@ struct RouteBag {
         return;
     }
 
-    inline size_t size() const noexcept
-    {
-        return labels.size();
-    }
+    inline size_t size() const noexcept { return labels.size(); }
 
-    inline RouteLabel& operator[](const size_t i) noexcept
-    {
-        return labels[i];
-    }
+    inline RouteLabel& operator[](const size_t i) noexcept { return labels[i]; }
 
     inline const RouteLabel& operator[](const size_t i) const noexcept
     {
@@ -244,20 +218,11 @@ public:
         return true;
     }
 
-    inline size_t size() const noexcept
-    {
-        return labels.size();
-    }
+    inline size_t size() const noexcept { return labels.size(); }
 
-    inline bool empty() const noexcept
-    {
-        return labels.empty();
-    }
+    inline bool empty() const noexcept { return labels.empty(); }
 
-    inline bool heapEmpty() const noexcept
-    {
-        return heapSize == 0;
-    }
+    inline bool heapEmpty() const noexcept { return heapSize == 0; }
 
     inline const DijkstraLabel& front() const noexcept
     {
@@ -266,10 +231,7 @@ public:
         return labels[0];
     }
 
-    inline int getKey() const noexcept
-    {
-        return front().getKey();
-    }
+    inline int getKey() const noexcept { return front().getKey(); }
 
     inline bool hasSmallerKey(const DijkstraBag* const other) const noexcept
     {

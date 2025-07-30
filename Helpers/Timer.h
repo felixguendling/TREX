@@ -9,10 +9,7 @@ public:
     {
     }
 
-    inline void restart() noexcept
-    {
-        start = timestamp();
-    }
+    inline void restart() noexcept { start = timestamp(); }
 
     inline double elapsedMicroseconds() const noexcept
     {

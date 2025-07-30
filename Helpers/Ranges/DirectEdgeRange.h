@@ -26,7 +26,8 @@ public:
         }
         inline EdgeWithFromVertex operator*() const noexcept
         {
-            return EdgeWithFromVertex(*currentEdge, graph->get(FromVertex, *currentEdge));
+            return EdgeWithFromVertex(*currentEdge,
+                graph->get(FromVertex, *currentEdge));
         }
         inline Iterator& operator++() noexcept
         {
@@ -70,20 +71,11 @@ public:
         return Iterator(graph, edges.begin());
     }
 
-    inline Iterator end() const noexcept
-    {
-        return Iterator(graph, edges.end());
-    }
+    inline Iterator end() const noexcept { return Iterator(graph, edges.end()); }
 
-    inline bool empty() const noexcept
-    {
-        return edges.empty();
-    }
+    inline bool empty() const noexcept { return edges.empty(); }
 
-    inline size_t size() const noexcept
-    {
-        return edges.size();
-    }
+    inline size_t size() const noexcept { return edges.size(); }
 
     inline EdgeWithFromVertex operator[](const size_t i) const noexcept
     {

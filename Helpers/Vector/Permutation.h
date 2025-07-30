@@ -19,7 +19,8 @@
 
 #ifdef _GLIBCXX_DEBUG
 namespace std {
-inline void swap(std::vector<bool>::reference a, std::vector<bool>::reference b) noexcept
+inline void swap(std::vector<bool>::reference a,
+    std::vector<bool>::reference b) noexcept
 {
     const bool temp = a;
     a = b;
@@ -42,10 +43,7 @@ protected:
         : std::vector<size_t>(std::move(data))
     {
     }
-    IdMapping(const std::string& fileName)
-    {
-        this->deserialize(fileName);
-    }
+    IdMapping(const std::string& fileName) { this->deserialize(fileName); }
     IdMapping(IO::Deserialization& deserialize)
     {
         this->deserialize(deserialize);
@@ -83,14 +81,19 @@ protected:
     IdMapping(const Construct::SortTag, const std::vector<T>& vector)
         : IdMapping(Construct::Id, vector.size())
     {
-        std::sort(begin(), end(), [&](const size_t& a, const size_t& b) { return vector[a] < vector[b]; });
+        std::sort(begin(), end(), [&](const size_t& a, const size_t& b) {
+            return vector[a] < vector[b];
+        });
     }
 
     template <typename T, typename COMPARE>
-    IdMapping(const Construct::SortTag, const std::vector<T>& vector, const COMPARE& comp)
+    IdMapping(const Construct::SortTag, const std::vector<T>& vector,
+        const COMPARE& comp)
         : IdMapping(Construct::Id, vector.size())
     {
-        std::sort(begin(), end(), [&](const size_t& a, const size_t& b) { return comp(vector[a], vector[b]); });
+        std::sort(begin(), end(), [&](const size_t& a, const size_t& b) {
+            return comp(vector[a], vector[b]);
+        });
     }
 
     template <typename T>
@@ -124,15 +127,9 @@ protected:
         }
     }
 
-    inline std::vector<size_t>& vector() noexcept
-    {
-        return *this;
-    }
+    inline std::vector<size_t>& vector() noexcept { return *this; }
 
-    inline const std::vector<size_t>& vector() const noexcept
-    {
-        return *this;
-    }
+    inline const std::vector<size_t>& vector() const noexcept { return *this; }
 
 public:
     inline bool isValid() const noexcept
@@ -185,10 +182,7 @@ public:
         : IdMapping(std::move(data))
     {
     }
-    Permutation(const std::string& fileName)
-    {
-        this->deserialize(fileName);
-    }
+    Permutation(const std::string& fileName) { this->deserialize(fileName); }
     Permutation(IO::Deserialization& deserialize)
     {
         this->deserialize(deserialize);
@@ -222,7 +216,8 @@ public:
 
 public:
     template <typename T>
-    inline std::vector<T> getPermuted(const std::vector<T>& vector) const noexcept
+    inline std::vector<T>
+    getPermuted(const std::vector<T>& vector) const noexcept
     {
         AssertMsg(vector.size() == size(), "Cannot permute a vector of size " << vector.size() << " with a permutation of size " << size() << "!");
         AssertMsg(isValid(), "The permutation is not valid!");
@@ -267,7 +262,8 @@ public:
 
 protected:
     template <typename T>
-    inline void mapPermutationImplementation(std::vector<T>& vector) const noexcept
+    inline void
+    mapPermutationImplementation(std::vector<T>& vector) const noexcept
     {
         for (size_t i = 0; i < vector.size(); i++) {
             const size_t element = vector[i];
@@ -278,7 +274,8 @@ protected:
     }
 
     template <typename T>
-    inline void mapPermutationImplementation(std::vector<std::vector<T>>& vectors) const noexcept
+    inline void mapPermutationImplementation(
+        std::vector<std::vector<T>>& vectors) const noexcept
     {
         for (std::vector<T>& vector : vectors) {
             mapPermutationImplementation(vector);
@@ -300,14 +297,8 @@ public:
         : IdMapping(std::move(data))
     {
     }
-    Order(const std::string& fileName)
-    {
-        this->deserialize(fileName);
-    }
-    Order(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Order(const std::string& fileName) { this->deserialize(fileName); }
+    Order(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     template <typename T, typename = std::enable_if_t<!Meta::Equals<T, size_t>()>>
     explicit Order(const std::vector<T>& data)
@@ -332,7 +323,8 @@ public:
     }
 
     template <typename T, typename COMPARE>
-    Order(const Construct::SortTag, const std::vector<T>& vector, const COMPARE& comp)
+    Order(const Construct::SortTag, const std::vector<T>& vector,
+        const COMPARE& comp)
         : IdMapping(Construct::Sort, vector, comp)
     {
     }
@@ -359,7 +351,8 @@ public:
 
 public:
     template <typename T>
-    inline std::vector<T> getOrdered(const std::vector<T>& vector) const noexcept
+    inline std::vector<T>
+    getOrdered(const std::vector<T>& vector) const noexcept
     {
         std::vector<T> result;
         result.reserve(size());
@@ -403,5 +396,6 @@ public:
 
 inline Permutation Permutation::splitAt(const size_t limit) const noexcept
 {
-    return Permutation(Construct::Invert, Order(Construct::Invert, *this).splitAt(limit));
+    return Permutation(Construct::Invert,
+        Order(Construct::Invert, *this).splitAt(limit));
 }

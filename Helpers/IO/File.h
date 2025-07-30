@@ -23,7 +23,8 @@ inline FILE* openFile(const std::string& fileName) noexcept
     return file;
 }
 
-inline FILE* openFile(const std::vector<std::string>& fileNameAliases) noexcept
+inline FILE*
+openFile(const std::vector<std::string>& fileNameAliases) noexcept
 {
     FILE* file;
     for (const std::string& fileName : fileNameAliases) {
@@ -55,7 +56,8 @@ public:
         stream = new std::ifstream(fileName, mode);
         Ensure(stream->is_open(), "cannot open file: " << fileName);
     }
-    IFStream(const std::vector<std::string>& fileNameAliases, std::ios::openmode mode = std::ios::in)
+    IFStream(const std::vector<std::string>& fileNameAliases,
+        std::ios::openmode mode = std::ios::in)
         : stream(nullptr)
     {
         for (const std::string& fileName : fileNameAliases) {
@@ -82,10 +84,7 @@ public:
         other.stream = nullptr;
     }
 
-    ~IFStream()
-    {
-        close();
-    }
+    ~IFStream() { close(); }
 
     IFStream& operator=(IFStream&& other) noexcept
     {
@@ -95,14 +94,8 @@ public:
         return *this;
     }
 
-    inline std::ifstream& getStream() noexcept
-    {
-        return *stream;
-    }
-    inline operator std::ifstream&() noexcept
-    {
-        return *stream;
-    }
+    inline std::ifstream& getStream() noexcept { return *stream; }
+    inline operator std::ifstream&() noexcept { return *stream; }
 
     inline void close() noexcept
     {
@@ -110,10 +103,7 @@ public:
         delete stream;
         stream = nullptr;
     }
-    inline void read(char* s, std::streamsize n) noexcept
-    {
-        stream->read(s, n);
-    }
+    inline void read(char* s, std::streamsize n) noexcept { stream->read(s, n); }
 
 private:
     std::ifstream* stream;
@@ -134,7 +124,8 @@ public:
         Ensure(stream->is_open(), "cannot open file: " << fullFileName);
         (*stream) << std::setprecision(10);
     }
-    OFStream(const std::vector<std::string>& fileNameAliases, std::ios::openmode mode = std::ios::out)
+    OFStream(const std::vector<std::string>& fileNameAliases,
+        std::ios::openmode mode = std::ios::out)
         : stream(nullptr)
     {
         for (const std::string& fileName : fileNameAliases) {
@@ -163,10 +154,7 @@ public:
         other.stream = nullptr;
     }
 
-    ~OFStream()
-    {
-        close();
-    }
+    ~OFStream() { close(); }
 
     OFStream& operator=(OFStream&& other) noexcept
     {
@@ -183,19 +171,10 @@ public:
         return *this;
     }
 
-    inline std::ofstream& getStream() noexcept
-    {
-        return *stream;
-    }
-    inline operator std::ofstream&() noexcept
-    {
-        return *stream;
-    }
+    inline std::ofstream& getStream() noexcept { return *stream; }
+    inline operator std::ofstream&() noexcept { return *stream; }
 
-    inline void flush() noexcept
-    {
-        stream->flush();
-    }
+    inline void flush() noexcept { stream->flush(); }
 
     inline void close() noexcept
     {

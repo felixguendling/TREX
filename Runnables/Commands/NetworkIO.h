@@ -6,8 +6,11 @@
 #include "../../DataStructures/GTFS/Data.h"
 #include "../../DataStructures/Graph/Graph.h"
 #include "../../DataStructures/Intermediate/Data.h"
+#include "../../DataStructures/PTL/Data.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
+#include "../../DataStructures/TD/Data.h"
+#include "../../DataStructures/TE/Data.h"
 #include "../../DataStructures/TripBased/MultimodalData.h"
 #include "../../Shell/Shell.h"
 
@@ -38,7 +41,8 @@ public:
 class GTFSToIntermediate : public ParameterizedCommand {
 public:
     GTFSToIntermediate(BasicShell& shell)
-        : ParameterizedCommand(shell, "gtfsToIntermediate",
+        : ParameterizedCommand(
+            shell, "gtfsToIntermediate",
             "Converts binary GTFS data to the intermediate network format.")
     {
         addParameter("Input directory");
@@ -60,7 +64,8 @@ public:
 
         GTFS::Data gtfs = GTFS::Data::FromBinary(gtfsDirectory);
         gtfs.printInfo();
-        Intermediate::Data inter = Intermediate::Data::FromGTFS(gtfs, firstDay, lastDay, !useDaysOfOperation, !useFrequencies);
+        Intermediate::Data inter = Intermediate::Data::FromGTFS(
+            gtfs, firstDay, lastDay, !useDaysOfOperation, !useFrequencies);
         inter.printInfo();
         inter.serialize(outputFile);
     }
@@ -69,7 +74,9 @@ public:
 class IntermediateToCSA : public ParameterizedCommand {
 public:
     IntermediateToCSA(BasicShell& shell)
-        : ParameterizedCommand(shell, "intermediateToCSA", "Converts binary intermediate data to CSA network format.")
+        : ParameterizedCommand(
+            shell, "intermediateToCSA",
+            "Converts binary intermediate data to CSA network format.")
     {
         addParameter("Input file");
         addParameter("Output file");
@@ -91,12 +98,14 @@ public:
 class IntermediateToRAPTOR : public ParameterizedCommand {
 public:
     IntermediateToRAPTOR(BasicShell& shell)
-        : ParameterizedCommand(shell, "intermediateToRAPTOR",
+        : ParameterizedCommand(
+            shell, "intermediateToRAPTOR",
             "Converts binary intermediate data to RAPTOR network format.")
     {
         addParameter("Input file");
         addParameter("Output file");
-        addParameter("Route type", "FIFO", { "Geographic", "FIFO", "Opt-FIFO", "Offset", "Frequency" });
+        addParameter("Route type", "FIFO",
+            { "Geographic", "FIFO", "Opt-FIFO", "Offset", "Frequency" });
     }
 
     virtual void execute() noexcept
@@ -127,10 +136,98 @@ public:
     }
 };
 
+class IntermediateToTD : public ParameterizedCommand {
+public:
+    IntermediateToTD(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "intermediateToTD",
+            "Converts binary intermediate data to TD format.")
+    {
+        addParameter("Input file");
+        addParameter("Output file");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string inputFile = getParameter("Input file");
+        const std::string outputFile = getParameter("Output file");
+
+        Intermediate::Data inter = Intermediate::Data::FromBinary(inputFile);
+        inter.printInfo();
+
+        TD::Data data = TD::Data::FromIntermediate(inter);
+        data.printInfo();
+        Graph::printInfo(data.timeDependentGraph);
+        data.serialize(outputFile);
+    }
+};
+
+class IntermediateToTE : public ParameterizedCommand {
+public:
+    IntermediateToTE(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "intermediateToTE",
+            "Converts binary intermediate data to TE format.")
+    {
+        addParameter("Input file");
+        addParameter("Output file");
+        addParameter("Extract Footpaths?", "true");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string inputFile = getParameter("Input file");
+        const std::string outputFile = getParameter("Output file");
+        const bool extractFootpaths = getParameter<bool>("Extract Footpaths?");
+
+        Intermediate::Data inter = Intermediate::Data::FromBinary(inputFile);
+        inter.printInfo();
+
+        TE::Data data = TE::Data::FromIntermediate(inter, extractFootpaths);
+        data.printInfo();
+        Graph::printInfo(data.timeExpandedGraph);
+        data.serialize(outputFile);
+    }
+};
+
+class TEToPTL : public ParameterizedCommand {
+public:
+    TEToPTL(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "tEToPTL",
+            "Converts TE data to PTL format.")
+    {
+        addParameter("Input file");
+        addParameter("Output file");
+        addParameter("Input file (labels)", "");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string inputFile = getParameter("Input file");
+        const std::string outputFile = getParameter("Output file");
+        const std::string inputFileLabels = getParameter("Input file (labels)");
+
+        TE::Data data = TE::Data(inputFile);
+        data.printInfo();
+
+        PTL::Data ptl(data);
+
+        if (inputFileLabels != "") {
+            ptl.readLabels(inputFileLabels);
+            ptl.sortLabels();
+        }
+
+        ptl.printInfo();
+
+        ptl.serialize(outputFile);
+    }
+};
 class BuildMultimodalRAPTORData : public ParameterizedCommand {
 public:
     BuildMultimodalRAPTORData(BasicShell& shell)
-        : ParameterizedCommand(shell, "buildMultimodalRAPTORData",
+        : ParameterizedCommand(
+            shell, "buildMultimodalRAPTORData",
             "Builds multimodal RAPTOR data based on RAPTOR data.")
     {
         addParameter("RAPTOR data");
@@ -162,7 +259,8 @@ public:
 
     virtual void execute() noexcept
     {
-        RAPTOR::MultimodalData multimodalData(getParameter("Multimodal RAPTOR data"));
+        RAPTOR::MultimodalData multimodalData(
+            getParameter("Multimodal RAPTOR data"));
         multimodalData.printInfo();
         RAPTOR::TransferGraph graph;
         graph.readBinary(getParameter("Transfer graph"));
@@ -176,7 +274,8 @@ public:
 class BuildMultimodalTripBasedData : public ParameterizedCommand {
 public:
     BuildMultimodalTripBasedData(BasicShell& shell)
-        : ParameterizedCommand(shell, "buildMultimodalTripBasedData",
+        : ParameterizedCommand(
+            shell, "buildMultimodalTripBasedData",
             "Builds multimodal Trip-Based data based on Trip-Based data.")
     {
         addParameter("Trip-Based data");
@@ -208,7 +307,8 @@ public:
 
     virtual void execute() noexcept
     {
-        TripBased::MultimodalData multimodalData(getParameter("Multimodal Trip-Based data"));
+        TripBased::MultimodalData multimodalData(
+            getParameter("Multimodal Trip-Based data"));
         multimodalData.printInfo();
         TransferGraph graph;
         graph.readBinary(getParameter("Transfer graph"));
@@ -222,7 +322,9 @@ public:
 class LoadDimacsGraph : public ParameterizedCommand {
 public:
     LoadDimacsGraph(BasicShell& shell)
-        : ParameterizedCommand(shell, "loadDimacsGraph", "Converts DIMACS graph data to our transfer graph format.")
+        : ParameterizedCommand(
+            shell, "loadDimacsGraph",
+            "Converts DIMACS graph data to our transfer graph format.")
     {
         addParameter("Input file");
         addParameter("Output file");
@@ -245,7 +347,8 @@ private:
     inline void load() const noexcept
     {
         DimacsGraphWithCoordinates dimacs;
-        dimacs.fromDimacs<true>(getParameter("Input file"), getParameter<double>("Coordinate factor"));
+        dimacs.fromDimacs<true>(getParameter("Input file"),
+            getParameter<double>("Coordinate factor"));
         Graph::printInfo(dimacs);
         dimacs.printAnalysis();
         GRAPH_TYPE graph;
@@ -259,7 +362,9 @@ private:
 class WriteIntermediateToCSV : public ParameterizedCommand {
 public:
     WriteIntermediateToCSV(BasicShell& shell)
-        : ParameterizedCommand(shell, "writeIntermediateToCSV", "Writes all the intermediate Data into csv files.")
+        : ParameterizedCommand(
+            shell, "writeIntermediateToCSV",
+            "Writes all the intermediate Data into csv files.")
     {
         addParameter("Intermediate Binary");
         addParameter("Output file");
@@ -278,7 +383,8 @@ public:
 class WriteRAPTORToCSV : public ParameterizedCommand {
 public:
     WriteRAPTORToCSV(BasicShell& shell)
-        : ParameterizedCommand(shell, "writeRAPTORToCSV", "Writes all the RAPTOR Data into csv files.")
+        : ParameterizedCommand(shell, "writeRAPTORToCSV",
+            "Writes all the RAPTOR Data into csv files.")
     {
         addParameter("RAPTOR Binary");
         addParameter("Output file");
@@ -299,7 +405,8 @@ public:
 class WriteLayoutGraphToGraphML : public ParameterizedCommand {
 public:
     WriteLayoutGraphToGraphML(BasicShell& shell)
-        : ParameterizedCommand(shell, "writeLayoutGraphToGraphML", "Writes the Layout Graph into a GraphML file.")
+        : ParameterizedCommand(shell, "writeLayoutGraphToGraphML", "Writes the
+Layout Graph into a GraphML file.")
     {
         addParameter("RAPTOR Binary");
         addParameter("Output file (Layout Graph)");
@@ -308,10 +415,12 @@ public:
     virtual void execute() noexcept
     {
         const std::string networkFile = getParameter("RAPTOR Binary");
-        const std::string outputFileLayout = getParameter("Output file (Layout Graph)");
+        const std::string outputFileLayout = getParameter("Output file (Layout
+Graph)");
 
         RAPTOR::Data network = RAPTOR::Data(networkFile);
-        network.createGraphForMETIS(RAPTOR::TRIP_WEIGHTED | RAPTOR::TRANSFER_WEIGHTED, true);
+        network.createGraphForMETIS(RAPTOR::TRIP_WEIGHTED |
+RAPTOR::TRANSFER_WEIGHTED, true);
 
         Graph::toGML(outputFileLayout, network.layoutGraph);
     }
@@ -320,7 +429,8 @@ public:
 class WriteTripBasedToCSV : public ParameterizedCommand {
 public:
     WriteTripBasedToCSV(BasicShell& shell)
-        : ParameterizedCommand(shell, "writeTripBasedToCSV", "Writes all the TripBased Data into csv files.")
+        : ParameterizedCommand(shell, "writeTripBasedToCSV",
+            "Writes all the TripBased Data into csv files.")
     {
         addParameter("Trip Based Binary");
         addParameter("Output file");
@@ -343,7 +453,8 @@ public:
 class WriteTripBasedToGraphML : public ParameterizedCommand {
 public:
     WriteTripBasedToGraphML(BasicShell& shell)
-        : ParameterizedCommand(shell, "writeTripBasedToGraphML", "Writes the StopEvent Graph into a GraphML file.")
+        : ParameterizedCommand(shell, "writeTripBasedToGraphML", "Writes the
+StopEvent Graph into a GraphML file.")
     {
         addParameter("Trip Based Binary");
         addParameter("Output file (StopEvent Graph)");
@@ -353,14 +464,62 @@ public:
     virtual void execute() noexcept
     {
         const std::string networkFile = getParameter("Trip Based Binary");
-        const std::string outputFileStopEvent = getParameter("Output file (StopEvent Graph)");
-        const std::string outputFileLayout = getParameter("Output file (Layout Graph)");
+        const std::string outputFileStopEvent = getParameter("Output file
+(StopEvent Graph)"); const std::string outputFileLayout = getParameter("Output
+file (Layout Graph)");
 
         TripBased::Data network = TripBased::Data(networkFile);
-        network.raptorData.createGraphForMETIS(RAPTOR::TRIP_WEIGHTED | RAPTOR::TRANSFER_WEIGHTED, true);
+        network.raptorData.createGraphForMETIS(RAPTOR::TRIP_WEIGHTED |
+RAPTOR::TRANSFER_WEIGHTED, true);
 
         Graph::toGML(outputFileLayout, network.raptorData.layoutGraph);
         Graph::toGML(outputFileStopEvent, network.stopEventGraph);
     }
 };
 */
+
+class ExportTEGraphToHubLabelFile : public ParameterizedCommand {
+public:
+    ExportTEGraphToHubLabelFile(BasicShell& shell)
+        : ParameterizedCommand(shell, "exportTEGraphToHubLabelFile",
+            "Writes all the TE Data into text file.")
+    {
+        addParameter("TE Binary");
+        addParameter("Output file");
+        addParameter("Output file (Dimacs)");
+        addParameter("Output file (Order)");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string networkFile = getParameter("TE Binary");
+        const std::string outputFile = getParameter("Output file");
+        const std::string outputFileDimcas = getParameter("Output file (Dimacs)");
+        const std::string outputFileOrder = getParameter("Output file (Order)");
+
+        TE::Data network = TE::Data(networkFile);
+
+        Graph::toDimacs(outputFileDimcas, network.timeExpandedGraph, network.timeExpandedGraph[TravelTime]);
+        std::cout << "Graph exported successfully to " << outputFileDimcas << std::endl;
+
+        std::ofstream file(outputFile);
+
+        // Check if the file is open
+        if (!file.is_open()) {
+            std::cerr << "Error: Could not open the file " << outputFile << std::endl;
+            return;
+        }
+
+        // Write each edge in the format: [src_id] [dst_id] [arc_length]
+        for (const auto [edge, from] : network.timeExpandedGraph.edgesWithFromVertex()) {
+            file << static_cast<size_t>(from + 1) << " " << static_cast<size_t>(network.timeExpandedGraph.get(ToVertex, edge) + 1) << " " << static_cast<size_t>(network.timeExpandedGraph.get(TravelTime, edge)) << std::endl;
+        }
+
+        // Close the file stream
+        file.close();
+        std::cout << "Graph exported successfully to " << outputFile << std::endl;
+
+        network.writeOrderForAkiba(outputFileOrder);
+        std::cout << "Order exported successfully to " << outputFileOrder << std::endl;
+    }
+};

@@ -15,12 +15,13 @@
 
 namespace CSA {
 
-template <bool PATH_RETRIEVAL = true, typename PROFILER = NoProfiler, bool LIMITED_WALKING = true>
+template <bool PATH_RETRIEVAL = true, typename PROFILER = NoProfiler>
 class CSA {
+
 public:
     constexpr static bool PathRetrieval = PATH_RETRIEVAL;
     using Profiler = PROFILER;
-    using Type = CSA<PathRetrieval, Profiler, LIMITED_WALKING>;
+    using Type = CSA<PathRetrieval, Profiler>;
     using TripFlag = Meta::IF<PathRetrieval, ConnectionId, bool>;
 
 private:
@@ -56,7 +57,7 @@ public:
         profiler.initialize();
     }
 
-    inline void run(const StopId source, int departureTime, const StopId target = noStop) noexcept
+    inline void run(const StopId source, const int departureTime, const StopId target = noStop) noexcept
     {
         profiler.start();
 
@@ -106,11 +107,9 @@ public:
             const ParentLabel& label = parentLabel[stop];
             if (label.reachedByTransfer) {
                 const int travelTime = data.transferGraph.get(TravelTime, label.transferId);
-                journey.emplace_back(label.parent, stop, arrivalTime[stop] - travelTime, arrivalTime[stop],
-                    label.transferId);
+                journey.emplace_back(label.parent, stop, arrivalTime[stop] - travelTime, arrivalTime[stop], label.transferId);
             } else {
-                journey.emplace_back(label.parent, stop, data.connections[tripReached[label.tripId]].departureTime,
-                    arrivalTime[stop], label.tripId);
+                journey.emplace_back(label.parent, stop, data.connections[tripReached[label.tripId]].departureTime, arrivalTime[stop], label.tripId);
             }
             stop = label.parent;
         }
@@ -147,10 +146,9 @@ private:
 
     inline ConnectionId firstReachableConnection(const int departureTime) const noexcept
     {
-        return ConnectionId(
-            Vector::lowerBound(data.connections, departureTime, [](const Connection& connection, const int time) {
-                return connection.departureTime < time;
-            }));
+        return ConnectionId(Vector::lowerBound(data.connections, departureTime, [](const Connection& connection, const int time) {
+            return connection.departureTime < time;
+        }));
     }
 
     inline void scanConnections(const ConnectionId begin, const ConnectionId end) noexcept
@@ -159,7 +157,6 @@ private:
             const Connection& connection = data.connections[i];
             if (targetStop != noStop && connection.departureTime > arrivalTime[targetStop])
                 break;
-
             if (connectionIsReachable(connection, i)) {
                 profiler.countMetric(METRIC_CONNECTIONS);
                 arrivalByTrip(connection.arrivalStopId, connection.arrivalTime, connection.tripId);
@@ -195,7 +192,7 @@ private:
 
     inline void arrivalByTrip(const StopId stop, const int time, const TripId trip) noexcept
     {
-        if (LIMITED_WALKING && arrivalTime[stop] <= time)
+        if (arrivalTime[stop] <= time)
             return;
         profiler.countMetric(METRIC_STOPS_BY_TRIP);
         arrivalTime[stop] = time;
@@ -242,4 +239,4 @@ private:
 
     Profiler profiler;
 };
-} // namespace CSA
+}

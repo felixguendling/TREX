@@ -7,8 +7,9 @@ namespace RAPTOR {
 
 class TripIterator {
 public:
-    TripIterator(const u_int32_t tripSize, const StopId* const stops, const StopEvent* const firstTrip,
-        const StopIndex stopIndex, const StopEvent* const trip)
+    TripIterator(const u_int32_t tripSize, const StopId* const stops,
+        const StopEvent* const firstTrip, const StopIndex stopIndex,
+        const StopEvent* const trip)
         : tripSize(tripSize)
         , stops(stops)
         , firstTrip(firstTrip)
@@ -17,14 +18,14 @@ public:
     {
     }
 
-    inline StopIndex getStopIndex() const noexcept
-    {
-        return stopIndex;
-    }
+    inline StopIndex getStopIndex() const noexcept { return stopIndex; }
 
     inline void setStopIndex(const StopIndex newStopIndex) noexcept
     {
-        AssertMsg(newStopIndex < tripSize, "Stop index " << newStopIndex << " is out of bounds, because the trip has only " << tripSize << " stops!");
+        AssertMsg(newStopIndex < tripSize,
+            "Stop index " << newStopIndex
+                          << " is out of bounds, because the trip has only "
+                          << tripSize << " stops!");
         stopIndex = newStopIndex;
     }
 
@@ -35,7 +36,8 @@ public:
 
     inline void nextStop() noexcept
     {
-        AssertMsg(hasFurtherStops(), "There is no next stop (number of stops: " << tripSize << ")!");
+        AssertMsg(hasFurtherStops(),
+            "There is no next stop (number of stops: " << tripSize << ")!");
         ++stopIndex;
     }
 
@@ -47,10 +49,7 @@ public:
         return true;
     }
 
-    inline bool hasEarlierTrip() const noexcept
-    {
-        return trip > firstTrip;
-    }
+    inline bool hasEarlierTrip() const noexcept { return trip > firstTrip; }
 
     inline bool hasEarlierTrip(const StopEvent* otherTrip) const noexcept
     {
@@ -62,7 +61,8 @@ public:
         return hasEarlierTrip() && (previousDepartureTime() >= arrivalTime);
     }
 
-    inline bool hasEarlierTrip(const StopEvent* otherTrip, const int arrivalTime) const noexcept
+    inline bool hasEarlierTrip(const StopEvent* otherTrip,
+        const int arrivalTime) const noexcept
     {
         return hasEarlierTrip(otherTrip) && (previousDepartureTime(otherTrip) >= arrivalTime);
     }
@@ -73,7 +73,8 @@ public:
         trip = trip - tripSize;
     }
 
-    inline const StopEvent* previousTrip(const StopEvent* otherTrip) const noexcept
+    inline const StopEvent*
+    previousTrip(const StopEvent* otherTrip) const noexcept
     {
         AssertMsg(hasEarlierTrip(otherTrip), "There is no earlier trip!");
         return otherTrip - tripSize;
@@ -125,10 +126,7 @@ public:
         return (otherTrip + stopIndex - tripSize)->departureTime;
     }
 
-    inline StopId stop() const noexcept
-    {
-        return stops[stopIndex];
-    }
+    inline StopId stop() const noexcept { return stops[stopIndex]; }
 
     inline StopId stop(const StopIndex index) const noexcept
     {
@@ -150,10 +148,7 @@ public:
         return trip + index;
     }
 
-    inline const StopEvent* getCurrentTrip() const noexcept
-    {
-        return trip;
-    }
+    inline const StopEvent* getCurrentTrip() const noexcept { return trip; }
 
     inline size_t getCurrentTripNumber() const noexcept
     {

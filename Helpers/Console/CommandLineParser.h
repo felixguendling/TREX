@@ -56,10 +56,7 @@ public:
         return arguments.find(key) != arguments.end();
     }
 
-    inline size_t numberOfArguments() const noexcept
-    {
-        return arguments.size();
-    }
+    inline size_t numberOfArguments() const noexcept { return arguments.size(); }
 
 private:
     std::map<std::string, std::string> arguments;

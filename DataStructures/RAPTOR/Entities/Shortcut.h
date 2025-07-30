@@ -5,7 +5,8 @@
 namespace RAPTOR {
 
 struct Shortcut {
-    Shortcut(const StopId origin, const StopId destination, const int travelTime = 0)
+    Shortcut(const StopId origin, const StopId destination,
+        const int travelTime = 0)
         : origin(origin)
         , destination(destination)
         , travelTime(travelTime)

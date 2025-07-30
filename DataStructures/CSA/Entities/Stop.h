@@ -15,7 +15,8 @@ public:
     static const std::string CSV_HEADER;
 
 public:
-    Stop(const std::string& name = "", const Geometry::Point& coordinates = Geometry::Point(),
+    Stop(const std::string& name = "",
+        const Geometry::Point& coordinates = Geometry::Point(),
         const int minTransferTime = 0)
         : name(name)
         , coordinates(coordinates)
@@ -29,14 +30,12 @@ public:
         , minTransferTime(s.minTransferTime)
     {
     }
-    Stop(IO::Deserialization& deserialize)
-    {
-        this->deserialize(deserialize);
-    }
+    Stop(IO::Deserialization& deserialize) { this->deserialize(deserialize); }
 
     friend std::ostream& operator<<(std::ostream& out, const Stop& s)
     {
-        return out << "Stop{" << s.name << ", " << s.coordinates << ", " << s.minTransferTime << "}";
+        return out << "Stop{" << s.name << ", " << s.coordinates << ", "
+                   << s.minTransferTime << "}";
     }
 
     inline void serialize(IO::Serialization& serialize) const noexcept
@@ -51,7 +50,8 @@ public:
 
     inline std::ostream& toCSV(std::ostream& out) const
     {
-        return out << coordinates.longitude << "," << coordinates.latitude << "," << name << "," << minTransferTime;
+        return out << coordinates.longitude << "," << coordinates.latitude << ","
+                   << name << "," << minTransferTime;
     }
 
     inline std::string toCSV() const

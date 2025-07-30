@@ -44,7 +44,8 @@ struct LookupOfLine {
 };
 
 struct LineAndStopIndex {
-    LineAndStopIndex(RouteId routeId = noRouteId, StopIndex stopIndex = noStopIndex)
+    LineAndStopIndex(RouteId routeId = noRouteId,
+        StopIndex stopIndex = noStopIndex)
         : routeId(routeId)
         , stopIndex(stopIndex)
     {
@@ -92,4 +93,4 @@ struct StopLookup {
 
     std::vector<RAPTOR::RouteSegment> incidentLines;
 };
-}
+} // namespace TransferPattern

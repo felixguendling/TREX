@@ -22,10 +22,13 @@
 
 template <typename LIST_OF_VERTEX_ATTRIBUTES, typename LIST_OF_EDGE_ATTRIBUTES>
 class EdgeListImplementation {
-    static_assert(Meta::Equals<Vertex, Meta::FindAttributeType<FromVertex, LIST_OF_EDGE_ATTRIBUTES>>(),
+    static_assert(
+        Meta::Equals<Vertex, Meta::FindAttributeType<FromVertex, LIST_OF_EDGE_ATTRIBUTES>>(),
         "An edge list requires an edge attribute named FromVertex of type "
         "Vertex!");
-    static_assert(Meta::Equals<Vertex, Meta::FindAttributeType<ToVertex, LIST_OF_EDGE_ATTRIBUTES>>(),
+    static_assert(
+        Meta::Equals<
+            Vertex, Meta::FindAttributeType<ToVertex, LIST_OF_EDGE_ATTRIBUTES>>(),
         "An edge list requires an edge attribute named ToVertex of type "
         "Vertex!");
 
@@ -42,73 +45,92 @@ public:
 
     using ListOfRecordVertexAttributes = LIST_OF_VERTEX_ATTRIBUTES;
     using ListOfRecordEdgeAttributes = Meta::RemoveAttribute<
-        FromVertex, Meta::RemoveAttribute<ToVertex, Meta::RemoveAttribute<ReverseEdge, ListOfEdgeAttributes>>>;
+        FromVertex,
+        Meta::RemoveAttribute<
+            ToVertex, Meta::RemoveAttribute<ReverseEdge, ListOfEdgeAttributes>>>;
     using VertexRecord = AttributeRecord<ListOfRecordVertexAttributes>;
     using EdgeRecord = AttributeRecord<ListOfRecordEdgeAttributes>;
 
     using ListOfAllAttributes = Meta::Concat<ListOfVertexAttributes, ListOfEdgeAttributes>;
 
-    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-        typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+        typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+        typename... ATTRIBUTE_NAME_CHANGES>
+    friend inline void Graph::move(
+        EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         StaticGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
-    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-        typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+        typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+        typename... ATTRIBUTE_NAME_CHANGES>
+    friend inline void Graph::move(
+        EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
-    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-        typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+        typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+        typename... ATTRIBUTE_NAME_CHANGES>
+    friend inline void Graph::move(
+        EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
-    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-        typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+        typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+        typename... ATTRIBUTE_NAME_CHANGES>
+    friend inline void Graph::move(
+        DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
-    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-        typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+    template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+        typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+        typename... ATTRIBUTE_NAME_CHANGES>
+    friend inline void Graph::move(
+        StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline constexpr static bool HasVertexAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
+    inline constexpr static bool
+    HasVertexAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
     {
-        return VertexAttributes::HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>());
+        return VertexAttributes::HasAttribute(
+            AttributeNameWrapper<ATTRIBUTE_NAME>());
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    using VertexAttributeType = typename VertexAttributes::template AttributeType<ATTRIBUTE_NAME>;
+    using VertexAttributeType =
+        typename VertexAttributes::template AttributeType<ATTRIBUTE_NAME>;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline constexpr static bool HasEdgeAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
+    inline constexpr static bool
+    HasEdgeAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept
     {
         return EdgeAttributes::HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>());
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    using EdgeAttributeType = typename EdgeAttributes::template AttributeType<ATTRIBUTE_NAME>;
+    using EdgeAttributeType =
+        typename EdgeAttributes::template AttributeType<ATTRIBUTE_NAME>;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    using AttributeType = typename Meta::FindAttributeType<ATTRIBUTE_NAME, ListOfAllAttributes>;
+    using AttributeType =
+        typename Meta::FindAttributeType<ATTRIBUTE_NAME, ListOfAllAttributes>;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    using AttributeReferenceType =
-        typename std::vector<Meta::FindAttributeType<ATTRIBUTE_NAME, ListOfAllAttributes>>::reference;
+    using AttributeReferenceType = typename std::vector<
+        Meta::FindAttributeType<ATTRIBUTE_NAME, ListOfAllAttributes>>::reference;
 
     template <AttributeNameType ATTRIBUTE_NAME>
     using AttributeConstReferenceType =
-        typename std::vector<Meta::FindAttributeType<ATTRIBUTE_NAME, ListOfAllAttributes>>::const_reference;
+        typename std::vector<Meta::FindAttributeType<
+            ATTRIBUTE_NAME, ListOfAllAttributes>>::const_reference;
 
 public:
-    EdgeListImplementation()
-    {
-    }
+    EdgeListImplementation() { }
 
-    EdgeListImplementation(const std::string& fileName, const std::string& separator = ".", const bool debug = true)
+    EdgeListImplementation(const std::string& fileName,
+        const std::string& separator = ".",
+        const bool debug = true)
     {
         readBinary(fileName, separator, debug);
     }
@@ -120,20 +142,11 @@ public:
     Type& operator=(Type&&) = default;
 
     // Access
-    inline size_t numVertices() const noexcept
-    {
-        return vertexAttributes.size();
-    }
+    inline size_t numVertices() const noexcept { return vertexAttributes.size(); }
 
-    inline size_t numEdges() const noexcept
-    {
-        return edgeAttributes.size();
-    }
+    inline size_t numEdges() const noexcept { return edgeAttributes.size(); }
 
-    inline size_t edgeLimit() const noexcept
-    {
-        return edgeAttributes.size();
-    }
+    inline size_t edgeLimit() const noexcept { return edgeAttributes.size(); }
 
     inline bool isVertex(const Vertex vertex) const noexcept
     {
@@ -190,10 +203,7 @@ public:
         return isEdge(findReverseEdge(edge));
     }
 
-    inline bool empty() const
-    {
-        return numVertices() == 0;
-    }
+    inline bool empty() const { return numVertices() == 0; }
 
     inline long long byteSize() const noexcept
     {
@@ -218,7 +228,8 @@ public:
         edgeAttributes.clear();
     }
 
-    inline void reserve(const size_t numVertices, const size_t numEdges) noexcept
+    inline void reserve(const size_t numVertices,
+        const size_t numEdges) noexcept
     {
         vertexAttributes.reserve(numVertices);
         edgeAttributes.reserve(numEdges);
@@ -269,9 +280,11 @@ public:
     }
 
     template <typename T>
-    inline void deleteVertices(const std::vector<T>& vertexMap, const T deleteValue) noexcept
+    inline void deleteVertices(const std::vector<T>& vertexMap,
+        const T deleteValue) noexcept
     {
-        deleteVertices([&](const Vertex vertex) { return vertexMap[vertex] == deleteValue; });
+        deleteVertices(
+            [&](const Vertex vertex) { return vertexMap[vertex] == deleteValue; });
     }
 
     inline EdgeHandle addEdge(const Vertex from, const Vertex to) noexcept
@@ -289,7 +302,8 @@ public:
         return EdgeHandle(edgeAttributes, newEdge);
     }
 
-    inline EdgeHandle addEdge(const Vertex from, const Vertex to, const EdgeRecord& record) noexcept
+    inline EdgeHandle addEdge(const Vertex from, const Vertex to,
+        const EdgeRecord& record) noexcept
     {
         return addEdge(from, to).set(record);
     }
@@ -298,13 +312,15 @@ public:
     {
         AssertMsg(isEdge(edge), edge << " is not a valid edge!");
         if constexpr (HasEdgeAttribute(ReverseEdge)) {
-            AssertMsg(!isEdge(get(ReverseEdge, edge)), edge << " has already a reverse edge!");
+            AssertMsg(!isEdge(get(ReverseEdge, edge)),
+                edge << " has already a reverse edge!");
         }
         const Edge newEdge = insertNewEdge(get(ToVertex, edge), get(FromVertex, edge));
         edgeAttributes.set(newEdge, edgeRecord(edge));
         if constexpr (HasEdgeAttribute(ReverseEdge)) {
             AssertMsg(!isEdge(get(ReverseEdge, edge)),
-                "Edge " << edge << " already has reverse edge " << get(ReverseEdge, edge));
+                "Edge " << edge << " already has reverse edge "
+                        << get(ReverseEdge, edge));
             set(ReverseEdge, newEdge, edge);
             set(ReverseEdge, edge, newEdge);
         }
@@ -367,7 +383,8 @@ public:
     template <typename DELETE_EDGE>
     inline void deleteEdges(const DELETE_EDGE& deleteEdge) noexcept
     {
-        for (Edge edge(edgeAttributes.size() - 1); edge < edgeAttributes.size(); edge--) {
+        for (Edge edge(edgeAttributes.size() - 1); edge < edgeAttributes.size();
+             edge--) {
             if (deleteEdge(edge)) {
                 this->deleteEdge(edge);
             }
@@ -375,7 +392,8 @@ public:
     }
 
     template <typename T>
-    inline void deleteEdges(const std::vector<T>& edgeMap, const T& deleteValue) noexcept
+    inline void deleteEdges(const std::vector<T>& edgeMap,
+        const T& deleteValue) noexcept
     {
         deleteEdges([&](Edge edge) { return edgeMap[edge] == deleteValue; });
     }
@@ -383,31 +401,45 @@ public:
     inline void applyVertexPermutation(const Permutation& permutation) noexcept
     {
         AssertMsg(permutation.size() == numVertices(),
-            "Permutation has the wrong size! (permutation.size(): " << permutation.size()
-                                                                    << ", numVertices: " << numVertices() << ")");
-        vertexAttributes.forEach([&](std::vector<Vertex>& values) { permutation.mapPermutation(values); });
-        edgeAttributes.forEach([&](std::vector<Vertex>& values) { permutation.mapPermutation(values); });
-        vertexAttributes.forEach([&](auto& values) { permutation.permutate(values); });
+            "Permutation has the wrong size! (permutation.size(): "
+                << permutation.size() << ", numVertices: " << numVertices()
+                << ")");
+        vertexAttributes.forEach([&](std::vector<Vertex>& values) {
+            permutation.mapPermutation(values);
+        });
+        edgeAttributes.forEach([&](std::vector<Vertex>& values) {
+            permutation.mapPermutation(values);
+        });
+        vertexAttributes.forEach(
+            [&](auto& values) { permutation.permutate(values); });
     }
 
     inline void applyVertexOrder(const Order& order) noexcept
     {
-        AssertMsg(order.size() == numVertices(), "Order has the wrong size! (order.size(): " << order.size() << ", numVertices: " << numVertices() << ")");
+        AssertMsg(order.size() == numVertices(),
+            "Order has the wrong size! (order.size(): "
+                << order.size() << ", numVertices: " << numVertices() << ")");
         applyVertexPermutation(Permutation(Construct::Invert, order));
     }
 
     inline void applyEdgePermutation(const Permutation& permutation) noexcept
     {
-        AssertMsg(permutation.size() == numEdges(), "Permutation has the wrong size! (permutation.size(): " << permutation.size() << ", numEdges: " << numEdges() << ")");
-        vertexAttributes.forEach([&](std::vector<Edge>& values) { permutation.mapPermutation(values); });
-        edgeAttributes.forEach([&](std::vector<Edge>& values) { permutation.mapPermutation(values); });
-        edgeAttributes.forEach([&](auto& values) { permutation.permutate(values); });
+        AssertMsg(permutation.size() == numEdges(),
+            "Permutation has the wrong size! (permutation.size(): "
+                << permutation.size() << ", numEdges: " << numEdges() << ")");
+        vertexAttributes.forEach(
+            [&](std::vector<Edge>& values) { permutation.mapPermutation(values); });
+        edgeAttributes.forEach(
+            [&](std::vector<Edge>& values) { permutation.mapPermutation(values); });
+        edgeAttributes.forEach(
+            [&](auto& values) { permutation.permutate(values); });
     }
 
     inline void applyEdgeOrder(const Order& order) noexcept
     {
         AssertMsg(order.size() == numEdges(),
-            "Order has the wrong size! (order.size(): " << order.size() << ", numEdges: " << numEdges() << ")");
+            "Order has the wrong size! (order.size(): "
+                << order.size() << ", numEdges: " << numEdges() << ")");
         applyEdgePermutation(Permutation(Construct::Invert, order));
     }
 
@@ -419,11 +451,14 @@ public:
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline void sortEdges(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName) noexcept
+    inline void
+    sortEdges(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName) noexcept
     {
         std::vector<Edge> edgeOrder = Vector::id<Edge>(numEdges());
         std::stable_sort(edgeOrder.begin(), edgeOrder.end(),
-            [&](const Edge a, const Edge b) { return get(attributeName, a) < get(attributeName, b); });
+            [&](const Edge a, const Edge b) {
+                return get(attributeName, a) < get(attributeName, b);
+            });
         applyEdgeOrder(Order(edgeOrder));
     }
 
@@ -440,7 +475,9 @@ public:
 
     inline void removeLoopEdges() noexcept
     {
-        deleteEdges([&](Edge edge) { return get(FromVertex, edge) == get(ToVertex, edge); });
+        deleteEdges([&](Edge edge) {
+            return get(FromVertex, edge) == get(ToVertex, edge);
+        });
     }
 
     // Attributes:
@@ -459,8 +496,8 @@ public:
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline std::vector<AttributeType<ATTRIBUTE_NAME>>& get(
-        const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName) noexcept
+    inline std::vector<AttributeType<ATTRIBUTE_NAME>>&
+    get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName) noexcept
     {
         if constexpr (HasVertexAttribute(attributeName)) {
             return vertexAttributes.get(attributeName);
@@ -470,8 +507,8 @@ public:
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline const std::vector<AttributeType<ATTRIBUTE_NAME>>& get(
-        const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName) const noexcept
+    inline const std::vector<AttributeType<ATTRIBUTE_NAME>>&
+    get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName) const noexcept
     {
         if constexpr (HasVertexAttribute(attributeName)) {
             return vertexAttributes.get(attributeName);
@@ -481,14 +518,16 @@ public:
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline AttributeReferenceType<ATTRIBUTE_NAME> get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
+    inline AttributeReferenceType<ATTRIBUTE_NAME>
+    get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
         const Vertex vertex) noexcept
     {
         AssertMsg(isVertex(vertex), vertex << " is not a valid vertex!");
         return vertexAttributes.get(attributeName, vertex);
     }
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline AttributeReferenceType<ATTRIBUTE_NAME> get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
+    inline AttributeReferenceType<ATTRIBUTE_NAME>
+    get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
         const Edge edge) noexcept
     {
         AssertMsg(isEdge(edge), edge << " is not a valid edge!");
@@ -496,14 +535,16 @@ public:
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline AttributeConstReferenceType<ATTRIBUTE_NAME> get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
+    inline AttributeConstReferenceType<ATTRIBUTE_NAME>
+    get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
         const Vertex vertex) const noexcept
     {
         AssertMsg(isVertex(vertex), vertex << " is not a valid vertex!");
         return vertexAttributes.get(attributeName, vertex);
     }
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline AttributeConstReferenceType<ATTRIBUTE_NAME> get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
+    inline AttributeConstReferenceType<ATTRIBUTE_NAME>
+    get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
         const Edge edge) const noexcept
     {
         AssertMsg(isEdge(edge), edge << " is not a valid edge!");
@@ -511,27 +552,31 @@ public:
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline void set(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
+    inline void
+    set(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
         const std::vector<VertexAttributeType<ATTRIBUTE_NAME>>& values) noexcept
     {
         return vertexAttributes.set(attributeName, values);
     }
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline void set(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
+    inline void
+    set(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
         const std::vector<EdgeAttributeType<ATTRIBUTE_NAME>>& values) noexcept
     {
         return edgeAttributes.set(attributeName, values);
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline void set(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName, const Vertex vertex,
+    inline void set(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
+        const Vertex vertex,
         const VertexAttributeType<ATTRIBUTE_NAME>& value) noexcept
     {
         AssertMsg(isVertex(vertex), vertex << " is not a valid vertex!");
         return vertexAttributes.set(attributeName, vertex, value);
     }
     template <AttributeNameType ATTRIBUTE_NAME>
-    inline void set(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName, const Edge edge,
+    inline void set(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
+        const Edge edge,
         const EdgeAttributeType<ATTRIBUTE_NAME>& value) noexcept
     {
         AssertMsg(isEdge(edge), edge << " is not a valid edge!");
@@ -550,13 +595,15 @@ public:
         return EdgeRecord(edgeAttributes, edge);
     }
 
-    inline void setVertexAttributes(const Vertex vertex, const VertexRecord& record) noexcept
+    inline void setVertexAttributes(const Vertex vertex,
+        const VertexRecord& record) noexcept
     {
         AssertMsg(isVertex(vertex), vertex << " is not a valid vertex!");
         vertexAttributes.set(vertex, record);
     }
 
-    inline void setEdgeAttributes(const Edge edge, const EdgeRecord& record) noexcept
+    inline void setEdgeAttributes(const Edge edge,
+        const EdgeRecord& record) noexcept
     {
         AssertMsg(isEdge(edge), edge << " is not a valid edge!");
         edgeAttributes.set(edge, record);
@@ -597,14 +644,17 @@ public:
         IO::deserialize(fileName, vertexAttributes, edgeAttributes);
     }
 
-    inline void writeBinary(const std::string& fileName, const std::string& separator = ".") const noexcept
+    inline void writeBinary(const std::string& fileName,
+        const std::string& separator = ".") const noexcept
     {
         vertexAttributes.serialize(fileName, separator);
         edgeAttributes.serialize(fileName, separator);
         // Graph::writeStatisticsFile(*this, fileName, separator);
     }
 
-    inline void readBinary(const std::string& fileName, const std::string& separator = ".", bool debug = true) noexcept
+    inline void readBinary(const std::string& fileName,
+        const std::string& separator = ".",
+        bool debug = true) noexcept
     {
         clear();
         if (debug)
@@ -615,7 +665,8 @@ public:
 
     // TODO Utils
     template <bool VERBOSE = false>
-    inline void fromDimacs(const std::string& fileBaseName, const double coordinateFactor = 1) noexcept
+    inline void fromDimacs(const std::string& fileBaseName,
+        const double coordinateFactor = 1) noexcept
     {
         clear();
         const std::string grFilename = FileSystem::ensureExtension(fileBaseName, ".gr");
@@ -637,7 +688,8 @@ public:
             const std::vector<std::string> tokens = String::split(line, ' ');
             if (vertexCount == size_t(-1)) {
                 if (tokens.size() != 4 || tokens[0] != "p" || tokens[1] != "sp") {
-                    std::cout << "ERROR, invalid DIMACS .gr-file header: " << line << std::endl;
+                    std::cout << "ERROR, invalid DIMACS .gr-file header: " << line
+                              << std::endl;
                     break;
                 } else {
                     vertexCount = String::lexicalCast<size_t>(tokens[2]);
@@ -648,24 +700,28 @@ public:
                 }
             } else {
                 if (tokens.size() != 4 || tokens[0] != "a") {
-                    std::cout << "WARNING, ignoring line in .gr-file: " << line << std::endl;
+                    std::cout << "WARNING, ignoring line in .gr-file: " << line
+                              << std::endl;
                     continue;
                 } else {
                     const Vertex from(String::lexicalCast<size_t>(tokens[1]) - 1);
                     const Vertex to(String::lexicalCast<size_t>(tokens[2]) - 1);
                     const double weight = String::lexicalCast<double>(tokens[3]);
                     if (!isVertex(from)) {
-                        std::cout << "ERROR, " << tokens[1] << " does not name a vertex!" << std::endl;
+                        std::cout << "ERROR, " << tokens[1] << " does not name a vertex!"
+                                  << std::endl;
                         break;
                     } else if (!isVertex(to)) {
-                        std::cout << "ERROR, " << tokens[2] << " does not name a vertex!" << std::endl;
+                        std::cout << "ERROR, " << tokens[2] << " does not name a vertex!"
+                                  << std::endl;
                         break;
                     } else {
                         const Edge edge = addEdge(from, to);
                         // ToDo
                         // addEdge(from, to, AnyAttribute(weight));
                         edgeAttributes.forEach([&](auto& values) {
-                            using ValueType = typename Meta::RemoveReference<decltype(values)>::value_type;
+                            using ValueType =
+                                typename Meta::RemoveReference<decltype(values)>::value_type;
                             if constexpr (std::is_arithmetic<ValueType>::value && !Meta::Equals<ValueType, bool>()) {
                                 values[edge] = weight;
                             }
@@ -680,13 +736,14 @@ public:
         if (VERBOSE)
             std::cout << std::endl;
         if (numEdges() != edgeCount) {
-            std::cout << "WARNING, found " << numEdges() << " edges, but " << edgeCount << " edges were declared."
-                      << std::endl;
+            std::cout << "WARNING, found " << numEdges() << " edges, but "
+                      << edgeCount << " edges were declared." << std::endl;
         }
         if constexpr (HasVertexAttribute(Coordinates)) {
             const std::string coFilename = FileSystem::ensureExtension(fileBaseName, ".co");
             if (VERBOSE)
-                std::cout << "Reading dimacs coordinates from: " << coFilename << std::endl
+                std::cout << "Reading dimacs coordinates from: " << coFilename
+                          << std::endl
                           << std::flush;
             if (VERBOSE)
                 bar.init(vertexCount);
@@ -702,27 +759,31 @@ public:
                 const std::vector<std::string> tokens = String::split(line, ' ');
                 if (!header) {
                     if (tokens.size() != 5 || tokens[0] != "p" || tokens[1] != "aux" || tokens[2] != "sp" || tokens[3] != "co") {
-                        std::cout << "ERROR, invalid DIMACS .co-file header: " << line << std::endl;
+                        std::cout << "ERROR, invalid DIMACS .co-file header: " << line
+                                  << std::endl;
                         break;
                     } else {
                         const size_t n = String::lexicalCast<size_t>(tokens[4]);
                         if (n != numVertices()) {
-                            std::cout << "ERROR, .co-file header declares " << n << " vertices, but graph contains "
-                                      << numVertices() << " vertices." << std::endl;
+                            std::cout << "ERROR, .co-file header declares " << n
+                                      << " vertices, but graph contains " << numVertices()
+                                      << " vertices." << std::endl;
                             break;
                         }
                         header = true;
                     }
                 } else {
                     if (tokens.size() != 4 || tokens[0] != "v") {
-                        std::cout << "WARNING, ignoring line in .co-file: " << line << std::endl;
+                        std::cout << "WARNING, ignoring line in .co-file: " << line
+                                  << std::endl;
                         continue;
                     } else {
                         const Vertex v(String::lexicalCast<size_t>(tokens[1]) - 1);
                         const double x = String::lexicalCast<double>(tokens[2]) * coordinateFactor;
                         const double y = String::lexicalCast<double>(tokens[3]) * coordinateFactor;
                         if (!isVertex(v)) {
-                            std::cout << "ERROR, " << tokens[1] << " does not name a vertex!" << std::endl;
+                            std::cout << "ERROR, " << tokens[1] << " does not name a vertex!"
+                                      << std::endl;
                             break;
                         } else {
                             get(Coordinates, v).x = x;
@@ -779,7 +840,8 @@ public:
                 hash += get(ViaVertex, edge);
             }
             if constexpr (HasEdgeAttribute(TravelTime) && HasVertexAttribute(Coordinates)) {
-                const double dist = Geometry::geoDistanceInCM(get(Coordinates, fromVertex), get(Coordinates, toVertex));
+                const double dist = Geometry::geoDistanceInCM(
+                    get(Coordinates, fromVertex), get(Coordinates, toVertex));
                 if (dist > 50000 || get(TravelTime, edge) > 10) {
                     const double speed = (dist * 0.036) / get(TravelTime, edge);
                     graphDistance += dist;
@@ -823,23 +885,39 @@ public:
         }
         const int tabSize = 18;
         out << std::right;
-        out << "                  #Vertices : " << std::setw(tabSize) << String::prettyInt(numVertices()) << std::endl;
-        out << "          #IsolatedVertices : " << std::setw(tabSize) << String::prettyInt(isolatedVertexCount) << "  ("
-            << String::percent(isolatedVertexCount / (double)numVertices()) << ")" << std::endl;
-        out << "                   #Sources : " << std::setw(tabSize) << String::prettyInt(sourceCount) << "  ("
-            << String::percent(sourceCount / (double)numVertices()) << ")" << std::endl;
-        out << "                     #Sinks : " << std::setw(tabSize) << String::prettyInt(sinkCount) << "  ("
-            << String::percent(sinkCount / (double)numVertices()) << ")" << std::endl;
-        out << "                minInDegree : " << std::setw(tabSize) << String::prettyInt(minInDegree) << std::endl;
-        out << "                maxInDegree : " << std::setw(tabSize) << String::prettyInt(maxInDegree) << std::endl;
-        out << "               minOutDegree : " << std::setw(tabSize) << String::prettyInt(minOutDegree) << std::endl;
-        out << "               maxOutDegree : " << std::setw(tabSize) << String::prettyInt(maxOutDegree) << std::endl;
-        out << "                     #Edges : " << std::setw(tabSize) << String::prettyInt(edgeCount) << "  ("
+        out << "                  #Vertices : " << std::setw(tabSize)
+            << String::prettyInt(numVertices()) << std::endl;
+        out << "          #IsolatedVertices : " << std::setw(tabSize)
+            << String::prettyInt(isolatedVertexCount) << "  ("
+            << String::percent(isolatedVertexCount / (double)numVertices()) << ")"
+            << std::endl;
+        out << "                   #Sources : " << std::setw(tabSize)
+            << String::prettyInt(sourceCount) << "  ("
+            << String::percent(sourceCount / (double)numVertices()) << ")"
+            << std::endl;
+        out << "                     #Sinks : " << std::setw(tabSize)
+            << String::prettyInt(sinkCount) << "  ("
+            << String::percent(sinkCount / (double)numVertices()) << ")"
+            << std::endl;
+        out << "                minInDegree : " << std::setw(tabSize)
+            << String::prettyInt(minInDegree) << std::endl;
+        out << "                maxInDegree : " << std::setw(tabSize)
+            << String::prettyInt(maxInDegree) << std::endl;
+        out << "               minOutDegree : " << std::setw(tabSize)
+            << String::prettyInt(minOutDegree) << std::endl;
+        out << "               maxOutDegree : " << std::setw(tabSize)
+            << String::prettyInt(maxOutDegree) << std::endl;
+        out << "                     #Edges : " << std::setw(tabSize)
+            << String::prettyInt(edgeCount) << "  ("
             << String::percent(edgeCount / (double)numEdges()) << ")" << std::endl;
-        out << "                 #LoopEdges : " << std::setw(tabSize) << String::prettyInt(loopEdgeCount) << "  ("
-            << String::percent(loopEdgeCount / (double)edgeCount) << ")" << std::endl;
-        edgeAttributes.forEach([&](const auto& values, const AttributeNameType attribute) {
-            using ValueType = typename Meta::RemoveReference<decltype(values)>::value_type;
+        out << "                 #LoopEdges : " << std::setw(tabSize)
+            << String::prettyInt(loopEdgeCount) << "  ("
+            << String::percent(loopEdgeCount / (double)edgeCount) << ")"
+            << std::endl;
+        edgeAttributes.forEach([&](const auto& values,
+                                   const AttributeNameType attribute) {
+            using ValueType =
+                typename Meta::RemoveReference<decltype(values)>::value_type;
             const std::string attributeName = attributeToString(attribute);
             if constexpr (std::is_arithmetic<ValueType>::value && !Meta::Equals<ValueType, bool>()) {
                 ValueType minWeight = std::numeric_limits<ValueType>::max();
@@ -854,40 +932,55 @@ public:
                     if (values[e] < 0)
                         negativeWeightCount++;
                 }
-                out << std::setw(27 - attributeName.size()) << "min" << attributeName << " : " << std::setw(tabSize)
-                    << minWeight << std::endl;
-                out << std::setw(27 - attributeName.size()) << "max" << attributeName << " : " << std::setw(tabSize)
-                    << maxWeight << std::endl;
-                out << std::setw(27 - attributeName.size()) << "#Negative" << attributeName << " : "
-                    << std::setw(tabSize) << String::prettyInt(negativeWeightCount) << "  ("
-                    << String::percent(negativeWeightCount / (double)edgeCount) << ")" << std::endl;
+                out << std::setw(27 - attributeName.size()) << "min" << attributeName
+                    << " : " << std::setw(tabSize) << minWeight << std::endl;
+                out << std::setw(27 - attributeName.size()) << "max" << attributeName
+                    << " : " << std::setw(tabSize) << maxWeight << std::endl;
+                out << std::setw(27 - attributeName.size()) << "#Negative"
+                    << attributeName << " : " << std::setw(tabSize)
+                    << String::prettyInt(negativeWeightCount) << "  ("
+                    << String::percent(negativeWeightCount / (double)edgeCount) << ")"
+                    << std::endl;
             }
         });
         if constexpr (HasEdgeAttribute(ReverseEdge)) {
-            out << "        #ReverseEdgeEntries : " << std::setw(tabSize) << String::prettyInt(reverseEdgeEntryCount)
-                << "  (" << String::percent(reverseEdgeEntryCount / (double)edgeCount) << ")" << std::endl;
-            out << "         #ReverseEdgeErrors : " << std::setw(tabSize) << String::prettyInt(reverseEdgeErrorCount)
+            out << "        #ReverseEdgeEntries : " << std::setw(tabSize)
+                << String::prettyInt(reverseEdgeEntryCount) << "  ("
+                << String::percent(reverseEdgeEntryCount / (double)edgeCount) << ")"
                 << std::endl;
+            out << "         #ReverseEdgeErrors : " << std::setw(tabSize)
+                << String::prettyInt(reverseEdgeErrorCount) << std::endl;
         }
         if constexpr (HasEdgeAttribute(TravelTime) && HasVertexAttribute(Coordinates)) {
             out << "              graphDistance : " << std::setw(tabSize)
-                << String::prettyDouble(graphDistance / 100000.0, 3) << " km" << std::endl;
-            out << "                   minSpeed : " << std::setw(tabSize)
-                << ((graphDistance == 0) ? "undefined" : String::prettyDouble(minSpeed)) << " km/h" << std::endl;
-            out << "                   maxSpeed : " << std::setw(tabSize)
-                << ((graphDistance == 0) ? "undefined" : String::prettyDouble(maxSpeed)) << " km/h" << std::endl;
-            out << "                   avgSpeed : " << std::setw(tabSize)
-                << ((graphDistance == 0) ? "undefined" : String::prettyDouble(avgSpeed / graphDistance)) << " km/h"
+                << String::prettyDouble(graphDistance / 100000.0, 3) << " km"
                 << std::endl;
+            out << "                   minSpeed : " << std::setw(tabSize)
+                << ((graphDistance == 0) ? "undefined"
+                                         : String::prettyDouble(minSpeed))
+                << " km/h" << std::endl;
+            out << "                   maxSpeed : " << std::setw(tabSize)
+                << ((graphDistance == 0) ? "undefined"
+                                         : String::prettyDouble(maxSpeed))
+                << " km/h" << std::endl;
+            out << "                   avgSpeed : " << std::setw(tabSize)
+                << ((graphDistance == 0)
+                           ? "undefined"
+                           : String::prettyDouble(avgSpeed / graphDistance))
+                << " km/h" << std::endl;
         }
         if constexpr (HasEdgeAttribute(ViaVertex)) {
-            out << "        #EdgesWithViaVertex : " << std::setw(tabSize) << String::prettyInt(edgeWithViaVertexCount)
-                << "  (" << String::percent(edgeWithViaVertexCount / (double)edgeCount) << ")" << std::endl;
+            out << "        #EdgesWithViaVertex : " << std::setw(tabSize)
+                << String::prettyInt(edgeWithViaVertexCount) << "  ("
+                << String::percent(edgeWithViaVertexCount / (double)edgeCount) << ")"
+                << std::endl;
         }
         if constexpr (HasVertexAttribute(Coordinates)) {
-            out << "                boundingBox : " << std::setw(tabSize) << boundingBox << std::endl;
+            out << "                boundingBox : " << std::setw(tabSize)
+                << boundingBox << std::endl;
         }
-        out << "                       hash : " << std::setw(tabSize) << String::prettyInt(hash) << std::endl;
+        out << "                       hash : " << std::setw(tabSize)
+            << String::prettyInt(hash) << std::endl;
     }
 
 private:
@@ -905,14 +998,13 @@ private:
 public:
     inline void checkVectorSize() const noexcept
     {
-        AssertMsg(vertexAttributes.hasSize(vertexAttributes.size()), "Size of vertex attributes is inconsistent!");
-        AssertMsg(edgeAttributes.hasSize(edgeAttributes.size()), "Size of edge attributes is inconsistent!");
+        AssertMsg(vertexAttributes.hasSize(vertexAttributes.size()),
+            "Size of vertex attributes is inconsistent!");
+        AssertMsg(edgeAttributes.hasSize(edgeAttributes.size()),
+            "Size of edge attributes is inconsistent!");
     }
 
-    inline bool satisfiesInvariants() const noexcept
-    {
-        return true;
-    }
+    inline bool satisfiesInvariants() const noexcept { return true; }
 
 private:
     VertexAttributes vertexAttributes;

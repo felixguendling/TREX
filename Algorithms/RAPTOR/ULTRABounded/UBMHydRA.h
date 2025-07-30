@@ -144,15 +144,18 @@ private:
     using RouteBagType = RouteBag<RouteLabel>;
 
 public:
-    UBMHydRA(const TripBased::Data& tripData, const TripBased::Data& forwardTBData,
-        const TripBased::Data& backwardTBData, const CH::CH& chData, const Profiler& profilerTemplate = Profiler())
+    UBMHydRA(const TripBased::Data& tripData,
+        const TripBased::Data& forwardTBData,
+        const TripBased::Data& backwardTBData, const CH::CH& chData,
+        const Profiler& profilerTemplate = Profiler())
         : tripData(tripData)
         , data(tripData.raptorData)
         , stopOfStopEvent(tripData.numberOfStopEvents(), noStop)
         , initialTransfers(chData, FORWARD, data.numberOfStops())
         , profiler(profilerTemplate)
         , forwardPruningQuery(forwardTBData, initialTransfers, dummy)
-        , backwardPruningQuery(backwardTBData, forwardPruningQuery, initialTransfers, dummy)
+        , backwardPruningQuery(backwardTBData, forwardPruningQuery,
+              initialTransfers, dummy)
         , maxTrips(-1)
         , bestLabels(data.numberOfStops() + 1)
         , stopsUpdatedByRoute(data.numberOfStops())
@@ -163,19 +166,25 @@ public:
         , targetStop(StopId(data.numberOfStops()))
         , sourceDepartureTime(never)
     {
-        AssertMsg(data.hasImplicitBufferTimes(), "Departure buffer times have to be implicit!");
-        for (StopEventId stopEvent(0); stopEvent < stopOfStopEvent.size(); stopEvent++) {
+        AssertMsg(data.hasImplicitBufferTimes(),
+            "Departure buffer times have to be implicit!");
+        for (StopEventId stopEvent(0); stopEvent < stopOfStopEvent.size();
+             stopEvent++) {
             stopOfStopEvent[stopEvent] = tripData.getStopOfStopEvent(stopEvent);
         }
         profiler.registerExtraRounds(
-            { EXTRA_ROUND_CLEAR, EXTRA_ROUND_FORWARD_PRUNING, EXTRA_ROUND_BACKWARD_PRUNING, EXTRA_ROUND_INITIALIZATION });
-        profiler.registerPhases({ PHASE_INITIALIZATION, PHASE_COLLECT, PHASE_SCAN, PHASE_TRANSFERS });
-        profiler.registerMetrics(
-            { METRIC_ROUTES, METRIC_ROUTE_SEGMENTS, METRIC_EDGES, METRIC_STOPS_BY_TRIP, METRIC_STOPS_BY_TRANSFER });
+            { EXTRA_ROUND_CLEAR, EXTRA_ROUND_FORWARD_PRUNING,
+                EXTRA_ROUND_BACKWARD_PRUNING, EXTRA_ROUND_INITIALIZATION });
+        profiler.registerPhases(
+            { PHASE_INITIALIZATION, PHASE_COLLECT, PHASE_SCAN, PHASE_TRANSFERS });
+        profiler.registerMetrics({ METRIC_ROUTES, METRIC_ROUTE_SEGMENTS,
+            METRIC_EDGES, METRIC_STOPS_BY_TRIP,
+            METRIC_STOPS_BY_TRANSFER });
         profiler.initialize();
     }
 
-    inline void run(const Vertex source, const int departureTime, const Vertex target, const double arrivalSlack,
+    inline void run(const Vertex source, const int departureTime,
+        const Vertex target, const double arrivalSlack,
         const double tripSlack) noexcept
     {
         profiler.start();
@@ -184,12 +193,14 @@ public:
         profiler.doneRound();
 
         profiler.startExtraRound(EXTRA_ROUND_FORWARD_PRUNING);
-        forwardPruningQuery.run(source, departureTime, target, arrivalSlack, tripSlack);
+        forwardPruningQuery.run(source, departureTime, target, arrivalSlack,
+            tripSlack);
         profiler.doneRound();
         if (forwardPruningQuery.getAnchorLabels().empty())
             return;
         profiler.startExtraRound(EXTRA_ROUND_BACKWARD_PRUNING);
-        backwardPruningQuery.run(target, departureTime, source, arrivalSlack, tripSlack);
+        backwardPruningQuery.run(target, departureTime, source, arrivalSlack,
+            tripSlack);
         profiler.doneRound();
 
         profiler.startExtraRound(EXTRA_ROUND_INITIALIZATION);
@@ -235,14 +246,16 @@ public:
         profiler.done();
     }
 
-    inline void verify(const double arrivalSlack, const double tripSlack, const int departureTime) const noexcept
+    inline void verify(const double arrivalSlack, const double tripSlack,
+        const int departureTime) const noexcept
     {
         const std::vector<ArrivalLabel>& anchorLabels = forwardPruningQuery.getAnchorLabels();
         for (const ArrivalLabel& anchorLabel : anchorLabels) {
             Ensure(isContained(anchorLabel), "Anchor label with arrival time " << anchorLabel.arrivalTime << " and " << anchorLabel.numberOfTrips << " was not found!");
         }
         for (const WalkingParetoLabel& label : getResults()) {
-            if (!label.isWithinSlack(anchorLabels, departureTime, arrivalSlack, tripSlack)) {
+            if (!label.isWithinSlack(anchorLabels, departureTime, arrivalSlack,
+                    tripSlack)) {
                 std::cout << "No anchor label found for " << label << std::endl;
                 std::cout << "Anchor labels:" << std::endl;
                 for (const ArrivalLabel& anchorLabel : anchorLabels) {
@@ -281,7 +294,8 @@ public:
         return getResults(targetStop);
     }
 
-    inline std::vector<WalkingParetoLabel> getResults(const Vertex vertex) const noexcept
+    inline std::vector<WalkingParetoLabel>
+    getResults(const Vertex vertex) const noexcept
     {
         const StopId target = (vertex == targetVertex) ? (targetStop) : (StopId(vertex));
         std::vector<WalkingParetoLabel> result;
@@ -309,15 +323,9 @@ public:
         }
     }
 
-    inline void reset() noexcept
-    {
-        clear<true>();
-    }
+    inline void reset() noexcept { clear<true>(); }
 
-    inline const Profiler& getProfiler() const noexcept
-    {
-        return profiler;
-    }
+    inline const Profiler& getProfiler() const noexcept { return profiler; }
 
 private:
     inline void initialize() noexcept
@@ -335,13 +343,15 @@ private:
         for (const StopId stop : stopsUpdatedByTransfer) {
             AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
             for (const RouteSegment& route : data.routesContainingStop(stop)) {
-                AssertMsg(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
+                AssertMsg(data.isRoute(route.routeId),
+                    "Route " << route.routeId << " is out of range!");
                 AssertMsg(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop,
                     "RAPTOR data contains invalid route segments!");
                 if (route.stopIndex + 1 == data.numberOfStopsInRoute(route.routeId))
                     continue;
                 if (routesServingUpdatedStops.contains(route.routeId)) {
-                    routesServingUpdatedStops[route.routeId] = std::min(routesServingUpdatedStops[route.routeId], route.stopIndex);
+                    routesServingUpdatedStops[route.routeId] = std::min(
+                        routesServingUpdatedStops[route.routeId], route.stopIndex);
                 } else {
                     routesServingUpdatedStops.insert(route.routeId, route.stopIndex);
                 }
@@ -356,7 +366,10 @@ private:
             profiler.countMetric(METRIC_ROUTES);
             StopIndex stopIndex = routesServingUpdatedStops[route];
             const size_t tripSize = data.numberOfStopsInRoute(route);
-            AssertMsg(stopIndex < tripSize - 1, "Cannot scan a route starting at/after the last stop (Route: " << route << ", StopIndex: " << stopIndex << ", TripSize: " << tripSize << ")!");
+            AssertMsg(stopIndex < tripSize - 1,
+                "Cannot scan a route starting at/after the last stop (Route: "
+                    << route << ", StopIndex: " << stopIndex
+                    << ", TripSize: " << tripSize << ")!");
 
             const StopId* stops = data.stopArrayOfRoute(route);
             StopId stop = stops[stopIndex];
@@ -377,8 +390,7 @@ private:
                         continue;
                     const size_t tripOffset = (trip - firstTrip) / tripSize;
                     const TripId reverseTrip = backwardPruningQuery.getReverseTrip(route, tripOffset);
-                    const StopIndex reachedIndex = StopIndex(
-                        tripSize - backwardPruningQuery.getReachedIndex(reverseTrip, maxTrips - currentNumberOfTrips()) - 1);
+                    const StopIndex reachedIndex = StopIndex(tripSize - backwardPruningQuery.getReachedIndex(reverseTrip, maxTrips - currentNumberOfTrips()) - 1);
                     if (reachedIndex < stopIndex)
                         continue;
 
@@ -427,7 +439,8 @@ private:
                     tripSize - backwardPruningQuery.getReachedIndex(reverseTrip, maxTrips - currentNumberOfTrips()));
                 StopIndex stopIndex = StopIndex(tripData.indexOfStopEvent[enterEvent] + 1);
                 StopEventId stopEvent = StopEventId(tripData.firstStopEventOfTrip[trip] + stopIndex);
-                for (; stopIndex < StopIndex(reachedIndex + 1); stopIndex++, stopEvent++) {
+                for (; stopIndex < StopIndex(reachedIndex + 1);
+                     stopIndex++, stopEvent++) {
                     const StopId toStop = stopOfStopEvent[stopEvent];
                     Label newLabel;
                     newLabel.arrivalTime = data.stopEvents[stopEvent].arrivalTime;
@@ -454,7 +467,8 @@ private:
             if (stop == targetVertex)
                 continue;
             AssertMsg(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
-            AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY, "Vertex " << stop << " was not reached!");
+            AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY,
+                "Vertex " << stop << " was not reached!");
             Label newLabel;
             newLabel.arrivalTime = sourceDepartureTime + initialTransfers.getForwardDistance(stop);
             newLabel.walkingDistance = initialTransfers.getForwardDistance(stop);
@@ -483,7 +497,8 @@ private:
         for (const StopId stop : stopsUpdatedByRoute) {
             const BagType& bag = previousRound()[stop];
             for (size_t i = 0; i < bag.size(); i++) {
-                for (const Edge edge : tripData.stopEventGraph.edgesFrom(Vertex(bag[i].stopEvent))) {
+                for (const Edge edge :
+                    tripData.stopEventGraph.edgesFrom(Vertex(bag[i].stopEvent))) {
                     profiler.countMetric(METRIC_EDGES);
                     const StopEventId toStopEvent = StopEventId(tripData.stopEventGraph.get(ToVertex, edge));
                     const StopId toStop = stopOfStopEvent[toStopEvent];
@@ -517,13 +532,16 @@ private:
 
     inline Round& currentRound() noexcept
     {
-        AssertMsg(!rounds.empty(), "Cannot return current round, because no round exists!");
+        AssertMsg(!rounds.empty(),
+            "Cannot return current round, because no round exists!");
         return rounds.back();
     }
 
     inline Round& previousRound() noexcept
     {
-        AssertMsg(rounds.size() >= 2, "Cannot return previous round, because less than two rounds exist!");
+        AssertMsg(
+            rounds.size() >= 2,
+            "Cannot return previous round, because less than two rounds exist!");
         return rounds[rounds.size() - 2];
     }
 
@@ -537,10 +555,13 @@ private:
         return (rounds.size() - 1) / 2;
     }
 
-    inline void arrivalByTransfer(const StopId stop, const Label& label) noexcept
+    inline void arrivalByTransfer(const StopId stop,
+        const Label& label) noexcept
     {
         AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
-        if (-backwardPruningQuery.getArrivalTime(stop, maxTrips - currentNumberOfTrips()) < label.arrivalTime)
+        if (-backwardPruningQuery.getArrivalTime(
+                stop, maxTrips - currentNumberOfTrips())
+            < label.arrivalTime)
             return;
         if (bestLabels[targetStop].dominates(label))
             return;
@@ -567,7 +588,9 @@ private:
 
     inline void targetArrivalByTransfer(const Label& label) noexcept
     {
-        if (-backwardPruningQuery.getDepartureTime(maxTrips - currentNumberOfTrips()) < label.arrivalTime)
+        if (-backwardPruningQuery.getDepartureTime(
+                maxTrips - currentNumberOfTrips())
+            < label.arrivalTime)
             return;
         if (!bestLabels[targetStop].merge(BestLabel(label)))
             return;
@@ -577,15 +600,16 @@ private:
             "Best bag does not dominate current bag!");
     }
 
-    inline void getJourney(std::vector<Journey>& journeys, size_t round, StopId stop, size_t index) const noexcept
+    inline void getJourney(std::vector<Journey>& journeys, size_t round,
+        StopId stop, size_t index) const noexcept
     {
         Journey journey;
         do {
             AssertMsg(round != size_t(-1), "Backtracking parent pointers did "
                                            "not pass through the source stop!");
             const Label& label = rounds[round][stop][index];
-            journey.emplace_back(label.parentStop, stop, label.parentDepartureTime, label.arrivalTime, round % 2 == 0,
-                label.routeId);
+            journey.emplace_back(label.parentStop, stop, label.parentDepartureTime,
+                label.arrivalTime, round % 2 == 0, label.routeId);
             stop = label.parentStop;
             index = label.parentIndex;
             round--;

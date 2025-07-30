@@ -23,10 +23,7 @@ public:
         {
             return i != other.i;
         }
-        inline Element operator*() const noexcept
-        {
-            return i;
-        }
+        inline Element operator*() const noexcept { return i; }
         inline Iterator& operator++() noexcept
         {
             do {
@@ -74,20 +71,14 @@ public:
 
     SparseRange(const std::vector<bool>&&) = delete;
 
-    inline Iterator begin() const noexcept
-    {
-        return Iterator(flag, beginIndex);
-    }
+    inline Iterator begin() const noexcept { return Iterator(flag, beginIndex); }
 
     inline Iterator end() const noexcept
     {
         return Iterator(flag, (flag) ? Element(flag->size()) : beginIndex);
     }
 
-    inline bool empty() const noexcept
-    {
-        return endIndex <= beginIndex;
-    }
+    inline bool empty() const noexcept { return endIndex <= beginIndex; }
 
     inline size_t size() const noexcept
     {

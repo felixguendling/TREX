@@ -4,17 +4,22 @@
 
  MIT License
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
- is furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **********************************************************************************/
 #pragma once
@@ -38,7 +43,8 @@
 
 namespace RAPTOR::RangeRAPTOR {
 
-template <typename RAPTOR_MODULE, bool ONE_TO_ONE = false, bool DEBUG = false, bool CORRECT_DEPARTURE_TIMES = true>
+template <typename RAPTOR_MODULE, bool ONE_TO_ONE = false, bool DEBUG = false,
+    bool CORRECT_DEPARTURE_TIMES = true>
 class RangeRAPTOR {
 
 public:
@@ -66,7 +72,8 @@ private:
 
 public:
     template <typename ATTRIBUTE>
-    RangeRAPTOR(Data& data, const InitialTransferGraph& forwardGraph, const ATTRIBUTE weight)
+    RangeRAPTOR(Data& data, const InitialTransferGraph& forwardGraph,
+        const ATTRIBUTE weight)
         : forwardRaptor(data, forwardGraph, weight)
         , data(data)
         , sourceVertex(noVertex)
@@ -75,38 +82,57 @@ public:
     {
     }
 
-    template <typename T = TransferGraph, typename = std::enable_if_t<Meta::Equals<T, TransferGraph>() && Meta::Equals<T, InitialTransferGraph>()>>
+    template <
+        typename T = TransferGraph,
+        typename = std::enable_if_t<Meta::Equals<T, TransferGraph>() && Meta::Equals<T, InitialTransferGraph>()>>
     RangeRAPTOR(Data& data, const TransferGraph& forwardGraph)
         : RangeRAPTOR(data, forwardGraph, TravelTime)
     {
     }
 
-    template <typename T = TransferGraph, typename = std::enable_if_t<Meta::Equals<T, TransferGraph>() && Meta::Equals<T, InitialTransferGraph>()>>
+    template <
+        typename T = TransferGraph,
+        typename = std::enable_if_t<Meta::Equals<T, TransferGraph>() && Meta::Equals<T, InitialTransferGraph>()>>
     RangeRAPTOR(Data& data)
         : RangeRAPTOR(data, data.transferGraph)
     {
     }
 
     template <bool T = OneToOne, typename = std::enable_if_t<T == OneToOne && !T>>
-    inline void runOneToAll(const Vertex source, const int minTime = 0, const int maxTime = 60 * 60 * 24, const size_t maxRounds = INFTY) noexcept
+    inline void runOneToAll(const Vertex source, const int minTime = 0,
+        const int maxTime = 60 * 60 * 24,
+        const size_t maxRounds = INFTY) noexcept
     {
-        run(source, IndexedSet<false, Vertex>(Construct::Complete, data.transferGraph.numVertices()), minTime, maxTime, maxRounds);
+        run(source,
+            IndexedSet<false, Vertex>(Construct::Complete,
+                data.transferGraph.numVertices()),
+            minTime, maxTime, maxRounds);
     }
 
     template <bool T = OneToOne, typename = std::enable_if_t<T == OneToOne && !T>>
-    inline void runOneToAllStops(const Vertex source, const int minTime = 0, const int maxTime = 60 * 60 * 24, const size_t maxRounds = INFTY) noexcept
+    inline void runOneToAllStops(const Vertex source, const int minTime = 0,
+        const int maxTime = 60 * 60 * 24,
+        const size_t maxRounds = INFTY) noexcept
     {
-        run(source, IndexedSet<false, Vertex>(Construct::Complete, data.numberOfStops()), minTime, maxTime, maxRounds);
+        run(source,
+            IndexedSet<false, Vertex>(Construct::Complete, data.numberOfStops()),
+            minTime, maxTime, maxRounds);
     }
 
     template <bool T = OneToOne, typename = std::enable_if_t<T == OneToOne && !T>>
-    inline void run(const Vertex source, const std::vector<Vertex>& targets, const int minTime = 0, const int maxTime = 60 * 60 * 24, const size_t maxRounds = INFTY) noexcept
+    inline void run(const Vertex source, const std::vector<Vertex>& targets,
+        const int minTime = 0, const int maxTime = 60 * 60 * 24,
+        const size_t maxRounds = INFTY) noexcept
     {
-        run(source, IndexedSet<false, Vertex>(data.transferGraph.numVertices(), targets), minTime, maxTime, maxRounds);
+        run(source,
+            IndexedSet<false, Vertex>(data.transferGraph.numVertices(), targets),
+            minTime, maxTime, maxRounds);
     }
 
     template <bool T = OneToOne, typename = std::enable_if_t<T == OneToOne && !T>>
-    inline void run(const Vertex source, const IndexedSet<false, Vertex>& targets, const int minTime = 0, const int maxTime = 60 * 60 * 24, const size_t maxRounds = INFTY) noexcept
+    inline void run(const Vertex source, const IndexedSet<false, Vertex>& targets,
+        const int minTime = 0, const int maxTime = 60 * 60 * 24,
+        const size_t maxRounds = INFTY) noexcept
     {
         clear();
         sourceVertex = source;
@@ -117,7 +143,8 @@ public:
         allJourneys.clear();
 
         if constexpr (CorrectDepartureTimes) {
-            forwardRaptor.template run<true>(source, maxDepartureTime, noVertex, maxRounds);
+            forwardRaptor.template run<true>(source, maxDepartureTime, noVertex,
+                maxRounds);
             collectArrivals<false>(targets, forwardRaptor.getReachedVertices());
         } else {
             forwardRaptor.template runInitialize<true>(source, maxDepartureTime);
@@ -126,21 +153,28 @@ public:
 
         collectDepartures();
         for (size_t i = 0; i < departures.size(); ++i) {
-            forwardRaptor.template runInitialize<false>(source, departures[i].departureTime);
-            forwardRaptor.runAddSource(departures[i].departureStop, departures[i].departureTime + forwardRaptor.getWalkingTravelTime(departures[i].departureStop));
+            forwardRaptor.template runInitialize<false>(source,
+                departures[i].departureTime);
+            forwardRaptor.runAddSource(
+                departures[i].departureStop,
+                departures[i].departureTime + forwardRaptor.getWalkingTravelTime(departures[i].departureStop));
             while (i + 1 < departures.size() && departures[i].departureTime == departures[i + 1].departureTime) {
                 ++i;
-                forwardRaptor.runAddSource(departures[i].departureStop, departures[i].departureTime + forwardRaptor.getWalkingTravelTime(departures[i].departureStop));
+                forwardRaptor.runAddSource(departures[i].departureStop,
+                    departures[i].departureTime + forwardRaptor.getWalkingTravelTime(departures[i].departureStop));
             }
             if constexpr (Debug)
-                std::cout << "Departure Time: " << departures[i].departureTime << std::endl;
+                std::cout << "Departure Time: " << departures[i].departureTime
+                          << std::endl;
             forwardRaptor.template runRounds(maxRounds);
             collectArrivals(targets, forwardRaptor.getReachedVertices());
         }
     }
 
     template <bool T = OneToOne, typename = std::enable_if_t<T == OneToOne && T>>
-    inline void run(const Vertex source, const Vertex target, const int minTime = 0, const int maxTime = 60 * 60 * 24, const size_t maxRounds = INFTY) noexcept
+    inline void run(const Vertex source, const Vertex target,
+        const int minTime = 0, const int maxTime = 60 * 60 * 24,
+        const size_t maxRounds = INFTY) noexcept
     {
         clear();
         sourceVertex = source;
@@ -148,7 +182,8 @@ public:
         maxDepartureTime = maxTime;
 
         if constexpr (CorrectDepartureTimes) {
-            forwardRaptor.template run<true>(source, maxDepartureTime, target, maxRounds);
+            forwardRaptor.template run<true>(source, maxDepartureTime, target,
+                maxRounds);
             collectArrivals<false>(target);
         } else {
             forwardRaptor.template runInitialize<true>(source, 0, target);
@@ -157,14 +192,19 @@ public:
 
         collectDepartures();
         for (size_t i = 0; i < departures.size(); ++i) {
-            forwardRaptor.template runInitialize<false>(source, departures[i].departureTime, target);
-            forwardRaptor.runAddSource(departures[i].departureStop, departures[i].departureTime + forwardRaptor.getWalkingTravelTime(departures[i].departureStop));
+            forwardRaptor.template runInitialize<false>(
+                source, departures[i].departureTime, target);
+            forwardRaptor.runAddSource(
+                departures[i].departureStop,
+                departures[i].departureTime + forwardRaptor.getWalkingTravelTime(departures[i].departureStop));
             while (i + 1 < departures.size() && departures[i].departureTime == departures[i + 1].departureTime) {
                 ++i;
-                forwardRaptor.runAddSource(departures[i].departureStop, departures[i].departureTime + forwardRaptor.getWalkingTravelTime(departures[i].departureStop));
+                forwardRaptor.runAddSource(departures[i].departureStop,
+                    departures[i].departureTime + forwardRaptor.getWalkingTravelTime(departures[i].departureStop));
             }
             if constexpr (Debug)
-                std::cout << "Departure Time: " << departures[i].departureTime << std::endl;
+                std::cout << "Departure Time: " << departures[i].departureTime
+                          << std::endl;
             forwardRaptor.template runRounds(maxRounds);
             if (forwardRaptor.targetReached()) {
                 collectArrivals(target);
@@ -172,15 +212,10 @@ public:
         }
     }
 
-    inline void reset() noexcept
-    {
-        forwardRaptor.reset();
-    }
+    inline void reset() noexcept { forwardRaptor.reset(); }
 
 private:
-    inline void clear() noexcept
-    {
-    }
+    inline void clear() noexcept { }
 
     inline void collectDepartures() noexcept
     {
@@ -189,7 +224,9 @@ private:
             const size_t numberOfStops = data.numberOfStopsInRoute(route);
             const StopId* stops = data.stopArrayOfRoute(route);
             const StopEvent* stopEvents = data.firstTripOfRoute(route);
-            for (uint32_t stopEventIndex = 0; stopEventIndex < data.numberOfStopEventsInRoute(route); ++stopEventIndex) {
+            for (uint32_t stopEventIndex = 0;
+                 stopEventIndex < data.numberOfStopEventsInRoute(route);
+                 ++stopEventIndex) {
                 if ((stopEventIndex + 1) % numberOfStops == 0)
                     continue;
                 const StopId stop = stops[stopEventIndex % numberOfStops];
@@ -212,7 +249,9 @@ private:
     }
 
     template <bool RUN_BACKWARD_QUERIES = false>
-    inline void collectArrivals(const IndexedSet<false, Vertex>& targets, const IndexedSet<false, Vertex>& reachedVertices) noexcept
+    inline void
+    collectArrivals(const IndexedSet<false, Vertex>& targets,
+        const IndexedSet<false, Vertex>& reachedVertices) noexcept
     {
         const IndexedSet<false, Vertex>& smallTargetSet = (targets.size() < reachedVertices.size()) ? targets : reachedVertices;
         const IndexedSet<false, Vertex>& largeTargetSet = (targets.size() < reachedVertices.size()) ? reachedVertices : targets;
@@ -252,4 +291,4 @@ private:
     std::vector<JourneyWithStopEvent> allJourneys;
 };
 
-}
+} // namespace RAPTOR::RangeRAPTOR

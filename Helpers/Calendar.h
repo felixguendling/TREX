@@ -7,7 +7,8 @@
 #include "Ranges/Range.h"
 #include "String/String.h"
 
-const std::string dayName[7] { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
+const std::string dayName[7] { "sunday", "monday", "tuesday", "wednesday",
+    "thursday", "friday", "saturday" };
 
 const Range<int> week { 0, 7 };
 
@@ -20,7 +21,8 @@ inline int stringToDay(const std::string& time)
     int day = String::lexicalCast<int>(time.substr(6, 2));
     std::tm t = { 0, 0, 12, day, month, year, 0, 0, 0, 0, 0 };
     time_t seconds = std::mktime(&t);
-    return (seconds < 0) ? (seconds / (60 * 60 * 24)) - 1 : (seconds / (60 * 60 * 24));
+    return (seconds < 0) ? (seconds / (60 * 60 * 24)) - 1
+                         : (seconds / (60 * 60 * 24));
 }
 
 inline std::string dayToString(const int day)

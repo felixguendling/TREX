@@ -93,7 +93,8 @@ public:
         run();
     }
 
-    inline void run(const std::vector<Vertex>& sources, const std::vector<Vertex>& targets)
+    inline void run(const std::vector<Vertex>& sources,
+        const std::vector<Vertex>& targets)
     {
         clear();
         sourceVertices.insert(sources);
@@ -117,50 +118,26 @@ public:
         flow = 0;
     }
 
-    inline size_t getFlow() const
-    {
-        return flow;
-    }
+    inline size_t getFlow() const { return flow; }
 
     inline size_t getFlow(const Edge edge) const
     {
         return graph.get(Capacity, edge) - residualFlows[edge];
     }
 
-    inline std::vector<CutEdge> sourceCut()
-    {
-        return getCut<true>().edges;
-    }
+    inline std::vector<CutEdge> sourceCut() { return getCut<true>().edges; }
 
-    inline std::vector<CutEdge> targetCut()
-    {
-        return getCut<false>().edges;
-    }
+    inline std::vector<CutEdge> targetCut() { return getCut<false>().edges; }
 
-    inline Cut sourceCutAndSide()
-    {
-        return getCut<true>();
-    }
+    inline Cut sourceCutAndSide() { return getCut<true>(); }
 
-    inline Cut targetCutAndSide()
-    {
-        return getCut<false>();
-    }
+    inline Cut targetCutAndSide() { return getCut<false>(); }
 
-    inline StaticFlowGraph& getFlowGraph()
-    {
-        return graph;
-    }
+    inline StaticFlowGraph& getFlowGraph() { return graph; }
 
-    inline const StaticFlowGraph& getFlowGraph() const
-    {
-        return graph;
-    }
+    inline const StaticFlowGraph& getFlowGraph() const { return graph; }
 
-    inline std::vector<int>& getCapacities()
-    {
-        return graph.get(Capacity);
-    }
+    inline std::vector<int>& getCapacities() { return graph.get(Capacity); }
 
     inline const std::vector<int>& getCapacities() const
     {
@@ -287,7 +264,8 @@ private:
                 openVertices.emplace_back(to);
             }
         }
-        AssertMsg(usedEdges.empty() || targetVertices.contains(graph.get(ToVertex, usedEdges.back())), "The blocking path does not end with a target vertex!");
+        AssertMsg(usedEdges.empty() || targetVertices.contains(graph.get(ToVertex, usedEdges.back())),
+            "The blocking path does not end with a target vertex!");
         if (usedEdges.empty())
             return 0;
         size_t newFlow = residualFlows[usedEdges.back()];
@@ -325,7 +303,11 @@ private:
                     cut.edges.pop_back();
                 } else {
                     cutSize += graph.get(Capacity, cut.edges.back().edge);
-                    AssertMsg(residualFlows[cut.edges.back().edge] == 0, "Non saturated edge " << cut.edges.back().edge << " from " << cut.edges.back().from << " to " << cut.edges.back().to << " is part of the cut!");
+                    AssertMsg(residualFlows[cut.edges.back().edge] == 0,
+                        "Non saturated edge " << cut.edges.back().edge << " from "
+                                              << cut.edges.back().from << " to "
+                                              << cut.edges.back().to
+                                              << " is part of the cut!");
                 }
             }
         }

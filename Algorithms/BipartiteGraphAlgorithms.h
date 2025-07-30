@@ -20,13 +20,16 @@ class BipartiteGraph {
 public:
     BipartiteGraph() { }
 
-    BipartiteGraph(DynamicFlowGraph& graph, IndexedSet<false, Vertex>& leftSide, IndexedSet<false, Vertex>& rightSide)
+    BipartiteGraph(DynamicFlowGraph& graph, IndexedSet<false, Vertex>& leftSide,
+        IndexedSet<false, Vertex>& rightSide)
         : graph(graph)
         , leftSide(leftSide)
         , rightSide(rightSide)
     {
-        AssertMsg(checkSideContainsOnlyVerticesInGraph(leftSide), "LeftSide contains vertices not present in the graph!");
-        AssertMsg(checkSideContainsOnlyVerticesInGraph(rightSide), "RightSide contains vertices not present in the graph!");
+        AssertMsg(checkSideContainsOnlyVerticesInGraph(leftSide),
+            "LeftSide contains vertices not present in the graph!");
+        AssertMsg(checkSideContainsOnlyVerticesInGraph(rightSide),
+            "RightSide contains vertices not present in the graph!");
     }
 
     template <typename GRAPH>
@@ -52,7 +55,8 @@ public:
         }
     }
 
-    inline bool checkSideContainsOnlyVerticesInGraph(IndexedSet<false, Vertex>& side)
+    inline bool
+    checkSideContainsOnlyVerticesInGraph(IndexedSet<false, Vertex>& side)
     {
         for (auto& vertex : side.getValues()) {
             if (!graph.isVertex(vertex))
@@ -67,7 +71,8 @@ public:
     IndexedSet<false, Vertex> rightSide;
 };
 
-inline std::vector<Dinic::CutEdge> maximumBipartiteMatching(BipartiteGraph& data)
+inline std::vector<Dinic::CutEdge>
+maximumBipartiteMatching(BipartiteGraph& data)
 {
     const Vertex source = data.graph.addVertex();
     for (const Vertex to : data.leftSide) {
@@ -100,7 +105,8 @@ inline std::vector<Dinic::CutEdge> maximumBipartiteMatching(BipartiteGraph& data
     return result;
 }
 
-inline std::vector<Dinic::CutEdge> maximumBipartiteMatching(DynamicFlowGraph& graph)
+inline std::vector<Dinic::CutEdge>
+maximumBipartiteMatching(DynamicFlowGraph& graph)
 {
     const Vertex source = graph.addVertex();
     const Vertex target = graph.addVertex();
@@ -132,7 +138,8 @@ inline std::vector<Dinic::CutEdge> maximumBipartiteMatching(DynamicFlowGraph& gr
 }
 
 template <typename GRAPH>
-inline std::vector<Dinic::CutEdge> maximumBipartiteMatching(const GRAPH& graph)
+inline std::vector<Dinic::CutEdge>
+maximumBipartiteMatching(const GRAPH& graph)
 {
     BipartiteGraph data(graph);
     return maximumBipartiteMatching(data);
@@ -151,8 +158,10 @@ inline std::vector<Vertex> minimumBipartiteVertexCover(const GRAPH& graph)
     }
     IndexedSet<false, Vertex> connectedVertices = data.leftSide;
     for (const Dinic::CutEdge edge : maximumBipartiteMatching(data)) {
-        AssertMsg(data.leftSide.contains(edge.from), "Matching edge is not directed from left to right side!");
-        AssertMsg(data.rightSide.contains(edge.to), "Matching edge is not directed from left to right side!");
+        AssertMsg(data.leftSide.contains(edge.from),
+            "Matching edge is not directed from left to right side!");
+        AssertMsg(data.rightSide.contains(edge.to),
+            "Matching edge is not directed from left to right side!");
         matchingGraph.deleteEdge(edge.from, edge.to);
         matchingGraph.addEdge(edge.to, edge.from);
         connectedVertices.remove(edge.from);

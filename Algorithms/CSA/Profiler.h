@@ -25,8 +25,13 @@ typedef enum {
     NUM_PHASES
 } Phase;
 
-constexpr const char* PhaseNames[] = { "Clear", "Initialization", "Connection scan",
-    "Final transfers", "Final upward sweep", "Final downward search", "One Reachability-EA Query" };
+constexpr const char* PhaseNames[] = { "Clear",
+    "Initialization",
+    "Connection scan",
+    "Final transfers",
+    "Final upward sweep",
+    "Final downward search",
+    "One Reachability-EA Query" };
 
 typedef enum {
     METRIC_CONNECTIONS,
@@ -45,34 +50,20 @@ constexpr const char* MetricNames[] = {
 
 class NoProfiler {
 public:
-    inline void registerPhases(const std::initializer_list<Phase>&) const noexcept
-    {
-    }
-    inline void registerMetrics(const std::initializer_list<Metric>&) const noexcept
-    {
-    }
+    inline void
+    registerPhases(const std::initializer_list<Phase>&) const noexcept { }
+    inline void
+    registerMetrics(const std::initializer_list<Metric>&) const noexcept { }
 
-    inline void initialize() const noexcept
-    {
-    }
+    inline void initialize() const noexcept { }
 
-    inline void start() const noexcept
-    {
-    }
-    inline void done() const noexcept
-    {
-    }
+    inline void start() const noexcept { }
+    inline void done() const noexcept { }
 
-    inline void startPhase() const noexcept
-    {
-    }
-    inline void donePhase(const Phase) const noexcept
-    {
-    }
+    inline void startPhase() const noexcept { }
+    inline void donePhase(const Phase) const noexcept { }
 
-    inline void countMetric(const Metric) const noexcept
-    {
-    }
+    inline void countMetric(const Metric) const noexcept { }
 };
 
 class SimpleProfiler : public NoProfiler {
@@ -84,14 +75,16 @@ public:
     {
     }
 
-    inline void registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
+    inline void
+    registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
     {
         for (const Phase phase : phaseList) {
             phases.push_back(phase);
         }
     }
 
-    inline void registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
+    inline void
+    registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
     {
         for (const Metric metric : metricList) {
             metrics.push_back(metric);
@@ -117,10 +110,7 @@ public:
         printStatistics();
     }
 
-    inline void startPhase() noexcept
-    {
-        phaseTimer.restart();
-    }
+    inline void startPhase() noexcept { phaseTimer.restart(); }
 
     inline void donePhase(const Phase phase) noexcept
     {
@@ -132,10 +122,7 @@ public:
         metricValue[metric]++;
     }
 
-    inline double getTotalTime() const noexcept
-    {
-        return totalTime;
-    }
+    inline double getTotalTime() const noexcept { return totalTime; }
 
     inline double getPhaseTime(const Phase phase) const noexcept
     {
@@ -165,11 +152,13 @@ private:
         std::cout << std::endl;
         std::cout << "Total time: " << String::musToString(totalTime) << std::endl;
         for (const Phase phase : phases) {
-            std::cout << "\t" << PhaseNames[phase] << ": " << String::musToString(phaseTime[phase]) << std::endl;
+            std::cout << "\t" << PhaseNames[phase] << ": "
+                      << String::musToString(phaseTime[phase]) << std::endl;
         }
         std::cout << std::endl;
         for (const Metric metric : metrics) {
-            std::cout << MetricNames[metric] << ": " << String::prettyInt(metricValue[metric]) << std::endl;
+            std::cout << MetricNames[metric] << ": "
+                      << String::prettyInt(metricValue[metric]) << std::endl;
         }
     }
 
@@ -193,14 +182,16 @@ public:
     {
     }
 
-    inline void registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
+    inline void
+    registerPhases(const std::initializer_list<Phase>& phaseList) noexcept
     {
         for (const Phase phase : phaseList) {
             phases.push_back(phase);
         }
     }
 
-    inline void registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
+    inline void
+    registerMetrics(const std::initializer_list<Metric>& metricList) noexcept
     {
         for (const Metric metric : metricList) {
             metrics.push_back(metric);
@@ -215,10 +206,7 @@ public:
         numQueries = 0;
     }
 
-    inline void start() noexcept
-    {
-        totalTimer.restart();
-    }
+    inline void start() noexcept { totalTimer.restart(); }
 
     inline void done() noexcept
     {
@@ -226,10 +214,7 @@ public:
         numQueries++;
     }
 
-    inline void startPhase() noexcept
-    {
-        phaseTimer.restart();
-    }
+    inline void startPhase() noexcept { phaseTimer.restart(); }
 
     inline void donePhase(const Phase phase) noexcept
     {
@@ -241,10 +226,7 @@ public:
         metricValue[metric]++;
     }
 
-    inline double getTotalTime() const noexcept
-    {
-        return totalTime / numQueries;
-    }
+    inline double getTotalTime() const noexcept { return totalTime / numQueries; }
 
     inline double getPhaseTime(const Phase phase) const noexcept
     {
@@ -256,7 +238,8 @@ public:
         return metricValue[metric] / static_cast<double>(numQueries);
     }
 
-    inline AggregateProfiler& operator+=(const AggregateProfiler& other) noexcept
+    inline AggregateProfiler&
+    operator+=(const AggregateProfiler& other) noexcept
     {
         totalTime += other.totalTime;
         for (size_t i = 0; i < NUM_PHASES; i++) {
@@ -272,13 +255,16 @@ public:
     inline void printStatistics() const noexcept
     {
         std::cout << std::endl;
-        std::cout << "Total time: " << String::musToString(getTotalTime()) << std::endl;
+        std::cout << "Total time: " << String::musToString(getTotalTime())
+                  << std::endl;
         for (const Phase phase : phases) {
-            std::cout << "\t" << PhaseNames[phase] << ": " << String::musToString(getPhaseTime(phase)) << std::endl;
+            std::cout << "\t" << PhaseNames[phase] << ": "
+                      << String::musToString(getPhaseTime(phase)) << std::endl;
         }
         std::cout << std::endl;
         for (const Metric metric : metrics) {
-            std::cout << MetricNames[metric] << ": " << String::prettyDouble(getMetric(metric)) << std::endl;
+            std::cout << MetricNames[metric] << ": "
+                      << String::prettyDouble(getMetric(metric)) << std::endl;
         }
     }
 

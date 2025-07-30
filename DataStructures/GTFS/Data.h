@@ -30,9 +30,7 @@ namespace GTFS {
 
 class Data {
 private:
-    Data()
-    {
-    }
+    Data() { }
 
 public:
     inline static Data FromBinary(const std::string& fileName) noexcept
@@ -42,7 +40,8 @@ public:
         return data;
     }
 
-    inline static Data FromGTFS(const std::string& fileNameBase, const bool verbose = true) noexcept
+    inline static Data FromGTFS(const std::string& fileNameBase,
+        const bool verbose = true) noexcept
     {
         Data data;
         data.readAgencies(fileNameBase + "agency.txt", verbose);
@@ -58,14 +57,17 @@ public:
     }
 
 protected:
-    inline void readAgencies(const std::string& fileName, const bool verbose = true)
+    inline void readAgencies(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Agencies",
             [&]() {
                 int count = 0;
-                IO::CSVReader<3, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader(ReadMode, "agency_id", "agency_name", "agency_timezone");
+                IO::CSVReader<3, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
+                in.readHeader(ReadMode, "agency_id", "agency_name",
+                    "agency_timezone");
                 Agency agency;
                 while (in.readRow(agency.agencyId, agency.name, agency.timezone)) {
                     if (agency.validate())
@@ -77,22 +79,27 @@ protected:
             verbose);
     }
 
-    inline void readCalendars(const std::string& fileName, const bool verbose = true)
+    inline void readCalendars(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Calendars",
             [&]() {
                 int count = 0;
-                IO::CSVReader<10, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader(ReadMode, "service_id", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday",
-                    "saturday", "start_date", "end_date");
+                IO::CSVReader<10, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>>
+                    in(fileName);
+                in.readHeader(ReadMode, "service_id", "sunday", "monday", "tuesday",
+                    "wednesday", "thursday", "friday", "saturday",
+                    "start_date", "end_date");
                 Calendar calendar;
                 std::string startDate;
                 std::string endDate;
-                while (in.readRow(calendar.serviceId, calendar.operatesOnWeekday[0], calendar.operatesOnWeekday[1],
-                    calendar.operatesOnWeekday[2], calendar.operatesOnWeekday[3],
-                    calendar.operatesOnWeekday[4], calendar.operatesOnWeekday[5],
-                    calendar.operatesOnWeekday[6], startDate, endDate)) {
+                while (in.readRow(
+                    calendar.serviceId, calendar.operatesOnWeekday[0],
+                    calendar.operatesOnWeekday[1], calendar.operatesOnWeekday[2],
+                    calendar.operatesOnWeekday[3], calendar.operatesOnWeekday[4],
+                    calendar.operatesOnWeekday[5], calendar.operatesOnWeekday[6],
+                    startDate, endDate)) {
                     calendar.startDate = stringToDay(startDate);
                     calendar.endDate = stringToDay(endDate);
                     if (calendar.validate())
@@ -104,13 +111,15 @@ protected:
             verbose);
     }
 
-    inline void readCalendarDates(const std::string& fileName, const bool verbose = true)
+    inline void readCalendarDates(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Calendar Dates",
             [&]() {
                 int count = 0;
-                IO::CSVReader<3, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
+                IO::CSVReader<3, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
                 in.readHeader(ReadMode, "service_id", "date", "exception_type");
                 CalendarDate calendarDate;
                 std::string date;
@@ -127,18 +136,22 @@ protected:
             verbose);
     }
 
-    inline void readFrequencies(const std::string& fileName, const bool verbose = true)
+    inline void readFrequencies(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Frequencies",
             [&]() {
                 int count = 0;
-                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader(ReadMode, "trip_id", "start_time", "end_time", "headway_secs");
+                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
+                in.readHeader(ReadMode, "trip_id", "start_time", "end_time",
+                    "headway_secs");
                 Frequency frequency;
                 std::string startTime;
                 std::string endTime;
-                while (in.readRow(frequency.tripId, startTime, endTime, frequency.headwaySecs)) {
+                while (in.readRow(frequency.tripId, startTime, endTime,
+                    frequency.headwaySecs)) {
                     frequency.startTime = String::parseSeconds(startTime);
                     frequency.endTime = String::parseSeconds(endTime);
                     if (frequency.validate())
@@ -150,20 +163,23 @@ protected:
             verbose);
     }
 
-    inline void readRoutes(const std::string& fileName, const bool verbose = true)
+    inline void readRoutes(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Routes",
             [&]() {
                 int count = 0;
-                IO::CSVReader<7, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader(ReadMode, "route_id", "agency_id", "route_short_name", "route_long_name", "route_type",
-                    "route_color", "route_text_color");
+                IO::CSVReader<7, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
+                in.readHeader(ReadMode, "route_id", "agency_id", "route_short_name",
+                    "route_long_name", "route_type", "route_color",
+                    "route_text_color");
                 Route route;
                 std::string shortName;
                 std::string longName;
-                while (in.readRow(route.routeId, route.agencyId, shortName, longName, route.type, route.routeColor,
-                    route.textColor)) {
+                while (in.readRow(route.routeId, route.agencyId, shortName, longName,
+                    route.type, route.routeColor, route.textColor)) {
                     route.name = "[" + shortName + "] " + longName;
                     if (route.validate())
                         routes.emplace_back(route);
@@ -174,14 +190,17 @@ protected:
             verbose);
     }
 
-    inline void readStops(const std::string& fileName, const bool verbose = true)
+    inline void readStops(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Stops",
             [&]() {
                 int count = 0;
-                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader(ReadMode, "stop_id", "stop_name", "stop_lat", "stop_lon");
+                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
+                in.readHeader(ReadMode, "stop_id", "stop_name", "stop_lat",
+                    "stop_lon");
                 Stop stop;
                 double latitude = 0.0;
                 double longitude = 0.0;
@@ -196,18 +215,25 @@ protected:
             verbose);
     }
 
-    inline void readStopTimes(const std::string& fileName, const bool verbose = true)
+    inline void readStopTimes(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Stop Times",
             [&]() {
                 int count = 0;
-                IO::CSVReader<5, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader(ReadMode, "trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence");
+                IO::CSVReader<5, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
+                in.readHeader(ReadMode, "trip_id", "arrival_time", "departure_time",
+                    "stop_id", "stop_sequence");
                 StopTime stopTime;
                 std::string arrivalTime;
                 std::string departureTime;
-                while (in.readRow(stopTime.tripId, arrivalTime, departureTime, stopTime.stopId, stopTime.stopSequence)) {
+                while (in.readRow(stopTime.tripId, arrivalTime, departureTime,
+                    stopTime.stopId, stopTime.stopSequence)) {
+                    if (arrivalTime.empty() || departureTime.empty() || stopTime.stopId.empty()) {
+                        continue;
+                    }
                     stopTime.arrivalTime = String::parseSeconds(arrivalTime);
                     stopTime.departureTime = String::parseSeconds(departureTime);
                     if (stopTime.validate())
@@ -219,17 +245,21 @@ protected:
             verbose);
     }
 
-    inline void readTransfers(const std::string& fileName, const bool verbose = true)
+    inline void readTransfers(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Transfers",
             [&]() {
                 int count = 0;
-                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader(ReadMode, "from_stop_id", "to_stop_id", "min_transfer_time", "transfer_type");
+                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
+                in.readHeader(ReadMode, "from_stop_id", "to_stop_id",
+                    "min_transfer_time", "transfer_type");
                 Transfer transfer;
                 int transferType = 0;
-                while (in.readRow(transfer.fromStopId, transfer.toStopId, transfer.minTransferTime, transferType)) {
+                while (in.readRow(transfer.fromStopId, transfer.toStopId,
+                    transfer.minTransferTime, transferType)) {
                     if (transferType == 3)
                         continue;
                     if (transfer.validate())
@@ -241,18 +271,23 @@ protected:
             verbose);
     }
 
-    inline void readTrips(const std::string& fileName, const bool verbose = true)
+    inline void readTrips(const std::string& fileName,
+        const bool verbose = true)
     {
         IO::readFile(
             fileName, "Trips",
             [&]() {
                 int count = 0;
-                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(fileName);
-                in.readHeader(ReadMode, "route_id", "service_id", "trip_id", "trip_short_name");
+                IO::CSVReader<4, IO::TrimChars<>, IO::DoubleQuoteEscape<',', '"'>> in(
+                    fileName);
+                in.readHeader(ReadMode, "route_id", "service_id", "trip_id",
+                    "trip_short_name");
                 Trip trip;
-                while (in.readRow(trip.routeId, trip.serviceId, trip.tripId, trip.name)) {
+                while (in.readRow(trip.routeId, trip.serviceId, trip.tripId,
+                    trip.name)) {
                     if (trip.validate())
                         trips.emplace_back(trip);
+                    count++;
                 }
                 return count;
             },
@@ -260,8 +295,9 @@ protected:
     }
 
 public:
-    inline Map<std::string, std::vector<int>> unrollCalendarDates(
-        const int startDate, const int endDate, const bool ignoreDaysOfOperation = false) const noexcept
+    inline Map<std::string, std::vector<int>>
+    unrollCalendarDates(const int startDate, const int endDate,
+        const bool ignoreDaysOfOperation = false) const noexcept
     {
         Map<std::string, std::set<int>> data;
         for (const Calendar& calendar : calendars) {
@@ -388,36 +424,42 @@ public:
                 lastDay = calendarDate.date;
         }
         std::cout << "GTFS raw data:" << std::endl;
-        std::cout << "   Number of Agencies:       " << std::setw(12) << String::prettyInt(agencies.size())
-                  << std::endl;
-        std::cout << "   Number of Calendars:      " << std::setw(12) << String::prettyInt(calendars.size())
-                  << std::endl;
-        std::cout << "   Number of Calendar Dates: " << std::setw(12) << String::prettyInt(calendarDates.size())
-                  << std::endl;
-        std::cout << "   Number of Frequencies:    " << std::setw(12) << String::prettyInt(frequencies.size())
-                  << std::endl;
-        std::cout << "   Number of Routes:         " << std::setw(12) << String::prettyInt(routes.size()) << std::endl;
-        std::cout << "   Number of Stops:          " << std::setw(12) << String::prettyInt(stops.size()) << std::endl;
-        std::cout << "   Number of Stop Times:     " << std::setw(12) << String::prettyInt(stopTimes.size())
-                  << std::endl;
-        std::cout << "   Number of Transfers:      " << std::setw(12) << String::prettyInt(transfers.size())
-                  << std::endl;
-        std::cout << "   Number of Trips:          " << std::setw(12) << String::prettyInt(trips.size()) << std::endl;
-        std::cout << "   First Day:                " << std::setw(12) << dayToString(firstDay) << std::endl;
-        std::cout << "   Last Day:                 " << std::setw(12) << dayToString(lastDay) << std::endl;
-        std::cout << "   Bounding Box:             " << std::setw(12) << boundingBox() << std::endl;
+        std::cout << "   Number of Agencies:       " << std::setw(12)
+                  << String::prettyInt(agencies.size()) << std::endl;
+        std::cout << "   Number of Calendars:      " << std::setw(12)
+                  << String::prettyInt(calendars.size()) << std::endl;
+        std::cout << "   Number of Calendar Dates: " << std::setw(12)
+                  << String::prettyInt(calendarDates.size()) << std::endl;
+        std::cout << "   Number of Frequencies:    " << std::setw(12)
+                  << String::prettyInt(frequencies.size()) << std::endl;
+        std::cout << "   Number of Routes:         " << std::setw(12)
+                  << String::prettyInt(routes.size()) << std::endl;
+        std::cout << "   Number of Stops:          " << std::setw(12)
+                  << String::prettyInt(stops.size()) << std::endl;
+        std::cout << "   Number of Stop Times:     " << std::setw(12)
+                  << String::prettyInt(stopTimes.size()) << std::endl;
+        std::cout << "   Number of Transfers:      " << std::setw(12)
+                  << String::prettyInt(transfers.size()) << std::endl;
+        std::cout << "   Number of Trips:          " << std::setw(12)
+                  << String::prettyInt(trips.size()) << std::endl;
+        std::cout << "   First Day:                " << std::setw(12)
+                  << dayToString(firstDay) << std::endl;
+        std::cout << "   Last Day:                 " << std::setw(12)
+                  << dayToString(lastDay) << std::endl;
+        std::cout << "   Bounding Box:             " << std::setw(12)
+                  << boundingBox() << std::endl;
     }
 
     inline void serialize(const std::string& fileName) const noexcept
     {
-        IO::serialize(fileName, agencies, calendars, calendarDates, frequencies, routes, stops, stopTimes, transfers,
-            trips);
+        IO::serialize(fileName, agencies, calendars, calendarDates, frequencies,
+            routes, stops, stopTimes, transfers, trips);
     }
 
     inline void deserialize(const std::string& fileName) noexcept
     {
-        IO::deserialize(fileName, agencies, calendars, calendarDates, frequencies, routes, stops, stopTimes, transfers,
-            trips);
+        IO::deserialize(fileName, agencies, calendars, calendarDates, frequencies,
+            routes, stops, stopTimes, transfers, trips);
     }
 
 public:

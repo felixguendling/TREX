@@ -34,7 +34,8 @@ inline size_t count(const std::vector<T>& container, const T& element)
     return c;
 }
 
-template <typename T, typename COUNT_IF, typename = decltype(std::declval<COUNT_IF>()(std::declval<T>()))>
+template <typename T, typename COUNT_IF,
+    typename = decltype(std::declval<COUNT_IF>()(std::declval<T>()))>
 inline size_t count(const std::vector<T>& container, const COUNT_IF& countIf)
 {
     size_t c = 0;
@@ -81,27 +82,32 @@ inline T& remove(T& array, size_t index)
 }
 
 template <typename T, typename FUNCTION>
-inline void removeIf(std::vector<T>& container, const FUNCTION& condition) noexcept
-{
-    container.erase(std::remove_if(container.begin(), container.end(), condition), container.end());
-}
-
-template <typename T, typename FUNCTION>
-inline void removeIf(std::vector<T>& container, const size_t beginIndex, const FUNCTION& condition) noexcept
-{
-    AssertMsg(beginIndex < container.size(),
-        "Index " << beginIndex << " is out of bounds! (" << container.size() << ")");
-    container.erase(std::remove_if(container.begin() + beginIndex, container.end(), condition), container.end());
-}
-
-template <typename T, typename FUNCTION>
-inline void removeIf(std::vector<T>& container, const size_t beginIndex, const size_t endIndex,
+inline void removeIf(std::vector<T>& container,
     const FUNCTION& condition) noexcept
 {
-    AssertMsg(beginIndex < container.size(),
-        "Index " << beginIndex << " is out of bounds! (" << container.size() << ")");
+    container.erase(std::remove_if(container.begin(), container.end(), condition),
+        container.end());
+}
+
+template <typename T, typename FUNCTION>
+inline void removeIf(std::vector<T>& container, const size_t beginIndex,
+    const FUNCTION& condition) noexcept
+{
+    AssertMsg(beginIndex < container.size(), "Index " << beginIndex << " is out of bounds! (" << container.size() << ")");
+    container.erase(std::remove_if(container.begin() + beginIndex,
+                        container.end(), condition),
+        container.end());
+}
+
+template <typename T, typename FUNCTION>
+inline void removeIf(std::vector<T>& container, const size_t beginIndex,
+    const size_t endIndex,
+    const FUNCTION& condition) noexcept
+{
+    AssertMsg(beginIndex < container.size(), "Index " << beginIndex << " is out of bounds! (" << container.size() << ")");
     AssertMsg(endIndex <= container.size(), "Index " << endIndex << " is out of bounds! (" << container.size() << ")");
-    container.erase(std::remove_if(container.begin() + beginIndex, container.begin() + endIndex, condition),
+    container.erase(std::remove_if(container.begin() + beginIndex,
+                        container.begin() + endIndex, condition),
         container.begin() + endIndex);
 }
 
@@ -151,7 +157,8 @@ inline bool equals(const std::vector<T>& a, const std::vector<T>& b)
 }
 
 template <typename T>
-inline bool equals(const std::vector<std::vector<T>>& a, const std::vector<std::vector<T>>& b)
+inline bool equals(const std::vector<std::vector<T>>& a,
+    const std::vector<std::vector<T>>& b)
 {
     if (a.size() != b.size())
         return false;
@@ -179,34 +186,40 @@ inline bool isSorted(const std::vector<T>& vec)
 }
 
 template <typename T>
-inline std::vector<T> sortedIntersection(const std::vector<T>& a, const std::vector<T>& b) noexcept
+inline std::vector<T> sortedIntersection(const std::vector<T>& a,
+    const std::vector<T>& b) noexcept
 {
     std::vector<T> result;
     AssertMsg(isSorted(a), "First vector is not sorted!");
     AssertMsg(isSorted(b), "Second vector is not sorted!");
-    std::set_intersection(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(result));
+    std::set_intersection(a.begin(), a.end(), b.begin(), b.end(),
+        std::back_inserter(result));
     return result;
 }
 
 template <typename T>
-inline std::vector<T> sortedUnion(const std::vector<T>& a, const std::vector<T>& b) noexcept
+inline std::vector<T> sortedUnion(const std::vector<T>& a,
+    const std::vector<T>& b) noexcept
 {
     std::vector<T> result;
     AssertMsg(isSorted(a), "First vector is not sorted!");
     AssertMsg(isSorted(b), "Second vector is not sorted!");
-    std::set_union(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(result));
+    std::set_union(a.begin(), a.end(), b.begin(), b.end(),
+        std::back_inserter(result));
     return result;
 }
 
 template <typename T, typename U, typename COMPARE>
-inline size_t lowerBound(const std::vector<T>& vec, const U& val, const COMPARE& compare) noexcept
+inline size_t lowerBound(const std::vector<T>& vec, const U& val,
+    const COMPARE& compare) noexcept
 {
     AssertMsg(isSorted(vec), "Vector is not sorted!");
     return std::lower_bound(vec.begin(), vec.end(), val, compare) - vec.begin();
 }
 
 template <typename T, typename U, typename COMPARE>
-inline size_t upperBound(const std::vector<T>& vec, const U& val, const COMPARE& compare) noexcept
+inline size_t upperBound(const std::vector<T>& vec, const U& val,
+    const COMPARE& compare) noexcept
 {
     AssertMsg(isSorted(vec), "Vector is not sorted!");
     return std::upper_bound(vec.begin(), vec.end(), val, compare) - vec.begin();
@@ -291,10 +304,12 @@ inline T min(const std::vector<T>& vec)
 }
 
 template <typename T, typename LESS>
-inline std::array<T, 2> twoSmallestValues(const std::vector<T>& vec, const LESS& less)
+inline std::array<T, 2> twoSmallestValues(const std::vector<T>& vec,
+    const LESS& less)
 {
     Assert(!vec.empty());
-    std::array<T, 2> result { std::numeric_limits<T>::max(), std::numeric_limits<T>::max() };
+    std::array<T, 2> result { std::numeric_limits<T>::max(),
+        std::numeric_limits<T>::max() };
     for (const T& element : vec) {
         if (less(element, result[1])) {
             if (less(element, result[0])) {
@@ -365,9 +380,11 @@ inline double mean(const std::vector<T>& vec, const EVALUATE& evaluate)
 }
 
 template <typename T, typename EVALUATE>
-inline double percentile(const std::vector<T>& sortedData, const double p, const EVALUATE& evaluate) noexcept
+inline double percentile(const std::vector<T>& sortedData, const double p,
+    const EVALUATE& evaluate) noexcept
 {
-    AssertMsg(!sortedData.empty(), "Percentile is not defined for empty data sets!");
+    AssertMsg(!sortedData.empty(),
+        "Percentile is not defined for empty data sets!");
     AssertMsg(p >= 0, "Percentile cannot be negative!");
     AssertMsg(p <= 1, "Percentile cannot be greater than one!");
     if (sortedData.size() == 1)
@@ -382,13 +399,15 @@ inline double percentile(const std::vector<T>& sortedData, const double p, const
 }
 
 template <typename T>
-inline double percentile(const std::vector<T>& sortedData, const double p) noexcept
+inline double percentile(const std::vector<T>& sortedData,
+    const double p) noexcept
 {
     return percentile(sortedData, p, [&](const T& element) { return element; });
 }
 
 template <typename T, typename EVALUATE>
-inline double median(const std::vector<T>& sortedData, const EVALUATE& evaluate) noexcept
+inline double median(const std::vector<T>& sortedData,
+    const EVALUATE& evaluate) noexcept
 {
     return percentile(sortedData, 0.5, evaluate);
 }
@@ -405,7 +424,8 @@ inline void fill(std::vector<T>& vector, const T& value = T()) noexcept
     std::fill(vector.begin(), vector.end(), value);
 }
 
-template <typename T, typename U, typename = std::enable_if_t<!Meta::Equals<T, U>()>>
+template <typename T, typename U,
+    typename = std::enable_if_t<!Meta::Equals<T, U>()>>
 inline void assign(std::vector<T>& to, const std::vector<U>& from) noexcept
 {
     to.clear();
@@ -416,7 +436,8 @@ inline void assign(std::vector<T>& to, const std::vector<U>& from) noexcept
 }
 
 template <typename T, typename U>
-inline void assign(std::vector<std::vector<T>>& to, const std::vector<std::vector<U>>& from) noexcept
+inline void assign(std::vector<std::vector<T>>& to,
+    const std::vector<std::vector<U>>& from) noexcept
 {
     to.clear();
     to.resize(from.size());
@@ -426,7 +447,8 @@ inline void assign(std::vector<std::vector<T>>& to, const std::vector<std::vecto
 }
 
 template <typename T>
-inline void assign(std::vector<std::vector<T>>& to, const std::vector<std::vector<T>>& from) noexcept
+inline void assign(std::vector<std::vector<T>>& to,
+    const std::vector<std::vector<T>>& from) noexcept
 {
     to = from;
 }
@@ -469,7 +491,8 @@ inline std::vector<uint8_t> packBool(const std::vector<bool>& vector) noexcept
 
 inline constexpr uint8_t bitMask = (1 << 7);
 
-inline std::vector<bool> unpackBool(const std::vector<uint8_t>& vector) noexcept
+inline std::vector<bool>
+unpackBool(const std::vector<uint8_t>& vector) noexcept
 {
     std::vector<bool> result;
     result.reserve(vector.size() * 8);
@@ -495,7 +518,9 @@ inline void printConcise(const std::vector<T>& vector, STREAM& out = std::cout,
 }
 
 template <typename T, typename TO_STRING, typename STREAM = std::ostream>
-inline void printConciseMapped(const std::vector<T>& vector, const TO_STRING& toString, STREAM& out = std::cout,
+inline void printConciseMapped(const std::vector<T>& vector,
+    const TO_STRING& toString,
+    STREAM& out = std::cout,
     const std::string& separator = ", ") noexcept
 {
     for (size_t i = 0; i < vector.size(); i++) {
@@ -505,9 +530,11 @@ inline void printConciseMapped(const std::vector<T>& vector, const TO_STRING& to
     }
 }
 
-inline double difference(const std::vector<bool>& firstVector, const std::vector<bool>& secondVector) noexcept
+inline double difference(const std::vector<bool>& firstVector,
+    const std::vector<bool>& secondVector) noexcept
 {
-    AssertMsg(firstVector.size() == secondVector.size(), "Vectors have different sizes!");
+    AssertMsg(firstVector.size() == secondVector.size(),
+        "Vectors have different sizes!");
     if (firstVector.size() != secondVector.size())
         return -1;
     size_t common = 1;
@@ -523,7 +550,8 @@ inline double difference(const std::vector<bool>& firstVector, const std::vector
 }
 
 template <typename T>
-inline std::vector<T> flatten(const std::vector<std::vector<T>>& vector) noexcept
+inline std::vector<T>
+flatten(const std::vector<std::vector<T>>& vector) noexcept
 {
     std::vector<T> result;
     for (const std::vector<T>& e : vector) {
@@ -533,8 +561,8 @@ inline std::vector<T> flatten(const std::vector<std::vector<T>>& vector) noexcep
 }
 
 template <typename T, typename F>
-inline std::vector<decltype(std::declval<F>()(std::declval<T>()))> map(const std::vector<T>& vector,
-    const F& function) noexcept
+inline std::vector<decltype(std::declval<F>()(std::declval<T>()))>
+map(const std::vector<T>& vector, const F& function) noexcept
 {
     std::vector<decltype(std::declval<F>()(std::declval<T>()))> result;
     for (const T& e : vector) {
@@ -565,7 +593,8 @@ inline std::vector<T> operator+(std::vector<T>&& a, const std::vector<T>& b)
 }
 
 template <typename T>
-inline std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
+inline std::vector<T> operator+(const std::vector<T>& a,
+    const std::vector<T>& b)
 {
     std::vector<T> result;
     result.reserve(a.size() + b.size());

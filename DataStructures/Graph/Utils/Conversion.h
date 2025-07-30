@@ -30,9 +30,11 @@ inline void computeReverseEdgePointers(GRAPH& graph) noexcept
 }
 
 // StaticGraph --> StaticGraph
-template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-    typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-inline void move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+    typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void
+move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
     StaticGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
@@ -58,9 +60,11 @@ inline void move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUT
 }
 
 // StaticGraph --> DynamicGraph
-template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-    typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-inline void move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+    typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void
+move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
     DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
@@ -93,9 +97,11 @@ inline void move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUT
 }
 
 // StaticGraph --> EdgeList
-template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-    typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-inline void move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+    typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void
+move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
     EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
@@ -122,9 +128,11 @@ inline void move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUT
 }
 
 // DynamicGraph --> StaticGraph
-template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-    typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-inline void move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+    typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void
+move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
     StaticGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
@@ -137,7 +145,8 @@ inline void move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBU
         const Vertex u = Vertex(v + 1);
         if (from[OutDegree][v] == 0)
             to.beginOut[v] = to.beginOut[u];
-        AssertMsg(to.beginOut[v] <= to.beginOut[u], "Adjacency data structure is out of order!");
+        AssertMsg(to.beginOut[v] <= to.beginOut[u],
+            "Adjacency data structure is out of order!");
     }
     to.vertexAttributes.assign(from.vertexAttributes, attributeNameChanges...);
     to.edgeAttributes.assign(from.edgeAttributes, attributeNameChanges...);
@@ -150,9 +159,11 @@ inline void move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBU
 }
 
 // DynamicGraph --> DynamicGraph
-template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-    typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-inline void move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+    typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void
+move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
     DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
@@ -170,9 +181,11 @@ inline void move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBU
 }
 
 // DynamicGraph --> EdgeList
-template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-    typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-inline void move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+    typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void
+move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
     EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
@@ -188,9 +201,11 @@ inline void move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBU
 }
 
 // EdgeList --> EdgeList
-template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-    typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-inline void move(EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+    typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void move(
+    EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
     EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
@@ -205,9 +220,11 @@ inline void move(EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_
 }
 
 // EdgeList --> StaticGraph
-template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-    typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-inline void move(EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+    typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void move(
+    EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
     StaticGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
@@ -234,9 +251,11 @@ inline void move(EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_
 }
 
 // EdgeList --> DynamicGraph
-template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM, typename VERTEX_ATTRIBUTES_TO,
-    typename EDGE_ATTRIBUTES_TO, typename... ATTRIBUTE_NAME_CHANGES>
-inline void move(EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
+template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
+    typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void move(
+    EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
     DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
@@ -246,8 +265,10 @@ inline void move(EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_
 }
 
 // Copy graph data instead of moving it
-template <typename FROM_GRAPH_TYPE, typename TO_GRAPH_TYPE, typename... ATTRIBUTE_NAME_CHANGES>
-inline void copy(const FROM_GRAPH_TYPE& from, TO_GRAPH_TYPE& to,
+template <typename FROM_GRAPH_TYPE, typename TO_GRAPH_TYPE,
+    typename... ATTRIBUTE_NAME_CHANGES>
+inline void
+copy(const FROM_GRAPH_TYPE& from, TO_GRAPH_TYPE& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges) noexcept
 {
     FROM_GRAPH_TYPE fromCopy = from;

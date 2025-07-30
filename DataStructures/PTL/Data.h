@@ -1,194 +1,293 @@
 #pragma once
 
-#include "../TE/Data.h"
-
 #include <algorithm>
 #include <vector>
+
+#include "../TE/Data.h"
 
 namespace PTL {
 
 class Data {
-public:
-    Data() {};
+ public:
+  Data(){};
 
-    Data(TE::Data& teData)
-        : teData(teData)
-        , fwdVertices(teData.numberOfTEVertices())
-        , bwdVertices(teData.numberOfTEVertices()) {};
+  Data(TE::Data& teData)
+      : teData(teData),
+        fwdVertices(teData.numberOfTEVertices()),
+        bwdVertices(teData.numberOfTEVertices()){};
 
-    Data(TE::Data& teData, const std::string fileName)
-        : teData(teData)
-        , fwdVertices(teData.numberOfTEVertices())
-        , bwdVertices(teData.numberOfTEVertices())
-    {
-        readLabels(fileName);
-        sortLabels();
-    };
+  Data(TE::Data& teData, const std::string fileName)
+      : teData(teData),
+        fwdVertices(teData.numberOfTEVertices()),
+        bwdVertices(teData.numberOfTEVertices()) {
+    readViennotLabels(fileName);
+    sortLabels();
+  };
 
-    inline static Data FromBinary(const std::string& fileName) noexcept
-    {
-        Data data;
-        data.deserialize(fileName);
-        return data;
+  inline static Data FromBinary(const std::string& fileName) noexcept {
+    Data data;
+    data.deserialize(fileName);
+    return data;
+  }
+
+  inline bool readViennotLabels(const std::string& fileName) {
+    std::cout << "Reading Viennot Labels from " << fileName << " ... "
+              << std::endl;
+    std::ifstream file;
+    file.open(fileName);
+
+    if (!file.is_open()) {
+      std::cerr << "Error: Could not open the file." << std::endl;
+      return 1;
     }
 
-    inline bool readLabels(const std::string fileName)
-    {
-        std::cout << "Reading Labels from " << fileName << " ... " << std::endl;
-        std::ifstream file;
-        file.open(fileName);
+    size_t n = teData.numberOfTEVertices();
 
-        size_t n;
-        file >> n;
+    fwdVertices.resize(n, {});
+    bwdVertices.resize(n, {});
 
-        if (n != teData.numberOfTEVertices()) {
-            std::cout << "Wrong number of entries!" << std::endl;
-            return false;
-        }
+    std::string line;
+    char type;
+    size_t vertex, hub, dummyDist;
 
-        fwdVertices.resize(n, {});
-        bwdVertices.resize(n, {});
+    while (std::getline(file, line)) {
+      std::istringstream iss(line);
+      iss >> type >> vertex >> hub >> dummyDist;
 
-        int dummyDist;
+      --vertex;
+      --hub;
 
-        for (Vertex v = Vertex(0); v < n; ++v) {
-            size_t s;
+      AssertMsg(vertex < n, "Vertex is out of bounds!");
+      AssertMsg(hub < n, "Hub is out of bounds!");
 
-            // bwd
-            file >> s;
-            bwdVertices[v].resize(s);
-            for (size_t i = 0; i < s; ++i) {
-                file >> bwdVertices[v][i];
-                file >> dummyDist;
-            }
-
-            // fwd
-            file >> s;
-            fwdVertices[v].resize(s);
-            for (size_t i = 0; i < s; ++i) {
-                file >> fwdVertices[v][i];
-                file >> dummyDist;
-            }
-        }
-        file >> std::ws;
-        file.close();
-        std::cout << "Done!" << std::endl;
-        return file.eof() && !file.fail();
+      switch (type) {
+        case 'o':
+          fwdVertices[vertex].push_back(Vertex(hub));
+          break;
+        case 'i':
+          bwdVertices[hub].push_back(Vertex(vertex));
+          break;
+        default:
+          std::cerr << "Warning: Unknown label type '" << type
+                    << "' in line: " << line << std::endl;
+          break;
+      }
     }
 
-    inline void clear() noexcept
-    {
-        AssertMsg(fwdVertices.size() == (teData.numberOfTEVertices()), "Not the same size!");
-        AssertMsg(bwdVertices.size() == (teData.numberOfTEVertices()), "Not the same size!");
+    file >> std::ws;
+    file.close();
+    std::cout << "Done!" << std::endl;
+    return file.eof() && !file.fail();
+  }
 
-        for (Vertex v = Vertex(0); v < (teData.numberOfTEVertices()); ++v) {
-            fwdVertices.clear();
-            bwdVertices.clear();
-        }
+  inline bool readSavrusLabels(const std::string& fileName) {
+    std::cout << "Reading Savrus Labels from " << fileName << " ... "
+              << std::endl;
+    std::ifstream file;
+    file.open(fileName);
+
+    if (!file.is_open()) {
+      std::cerr << "Error: Could not open the file." << std::endl;
+      return 1;
     }
 
-    inline void sortLabels() noexcept
-    {
-        AssertMsg(fwdVertices.size() == (teData.numberOfTEVertices()), "Not the same size!");
-        AssertMsg(bwdVertices.size() == (teData.numberOfTEVertices()), "Not the same size!");
+    size_t n;
+    file >> n;
 
-        for (Vertex v = Vertex(0); v < (teData.numberOfTEVertices()); ++v) {
-            std::sort(fwdVertices[v].begin(), fwdVertices[v].end());
-            std::sort(bwdVertices[v].begin(), bwdVertices[v].end());
-        }
+    if (n != teData.numberOfTEVertices()) {
+      std::cout << "Wrong number of entries!" << std::endl;
+      return false;
     }
 
-    inline size_t numberOfStops() const noexcept { return teData.numberOfStops(); }
-    inline bool isStop(const StopId stop) const noexcept { return stop < numberOfStops(); }
-    inline Range<StopId> stops() const noexcept { return Range<StopId>(StopId(0), StopId(numberOfStops())); }
+    fwdVertices.resize(n, {});
+    bwdVertices.resize(n, {});
 
-    inline size_t numberOfTrips() const noexcept { return teData.numTrips; }
-    inline bool isTrip(const TripId route) const noexcept { return route < numberOfTrips(); }
-    inline Range<TripId> trips() const noexcept { return Range<TripId>(TripId(0), TripId(numberOfTrips())); }
+    int dummyDist;
 
-    inline size_t numberOfStopEvents() const noexcept { return teData.events.size(); }
+    for (Vertex v = Vertex(0); v < n; ++v) {
+      size_t s;
 
-    inline bool isEvent(const Vertex event) const noexcept { return teData.isEvent(event); }
-    inline bool isDepartureEvent(const Vertex event) const noexcept { return teData.isDepartureEvent(event); }
-    inline bool isArrivalEvent(const Vertex event) const noexcept { return teData.isArrivalEvent(event); }
+      // bwd
+      file >> s;
+      bwdVertices[v].resize(s);
+      for (size_t i = 0; i < s; ++i) {
+        file >> bwdVertices[v][i];
+        file >> dummyDist;
+      }
 
-    inline void printInfo() const noexcept
-    {
-        size_t minSizeFWD = teData.numberOfTEVertices();
-        size_t maxSizeFWD = 0;
-        size_t totalSizeFWD = 0;
+      // fwd
+      file >> s;
+      fwdVertices[v].resize(s);
+      for (size_t i = 0; i < s; ++i) {
+        file >> fwdVertices[v][i];
+        file >> dummyDist;
+      }
+    }
+    file >> std::ws;
+    file.close();
+    std::cout << "Done!" << std::endl;
+    return file.eof() && !file.fail();
+  }
 
-        size_t minSizeBWD = teData.numberOfTEVertices();
-        size_t maxSizeBWD = 0;
-        size_t totalSizeBWD = 0;
+  inline void clear() noexcept {
+    AssertMsg(fwdVertices.size() == (teData.numberOfTEVertices()),
+              "Not the same size!");
+    AssertMsg(bwdVertices.size() == (teData.numberOfTEVertices()),
+              "Not the same size!");
 
-        AssertMsg(fwdVertices.size() == (teData.numberOfTEVertices()), "Not the same size!");
-        AssertMsg(bwdVertices.size() == (teData.numberOfTEVertices()), "Not the same size!");
+    for (Vertex v = Vertex(0); v < (teData.numberOfTEVertices()); ++v) {
+      fwdVertices.clear();
+      bwdVertices.clear();
+    }
+  }
 
-        for (Vertex v = Vertex(0); v < teData.numberOfTEVertices(); ++v) {
-            minSizeFWD = std::min(minSizeFWD, fwdVertices[v].size());
-            maxSizeFWD = std::max(maxSizeFWD, fwdVertices[v].size());
+  inline void sortLabels() noexcept {
+    AssertMsg(fwdVertices.size() == (teData.numberOfTEVertices()),
+              "Not the same size!");
+    AssertMsg(bwdVertices.size() == (teData.numberOfTEVertices()),
+              "Not the same size!");
 
-            totalSizeFWD += fwdVertices[v].size();
+    for (Vertex v = Vertex(0); v < (teData.numberOfTEVertices()); ++v) {
+      std::sort(fwdVertices[v].begin(), fwdVertices[v].end());
+      std::sort(bwdVertices[v].begin(), bwdVertices[v].end());
+    }
+  }
 
-            minSizeBWD = std::min(minSizeBWD, bwdVertices[v].size());
-            maxSizeBWD = std::max(maxSizeBWD, bwdVertices[v].size());
+  inline size_t numberOfStops() const noexcept {
+    return teData.numberOfStops();
+  }
+  inline bool isStop(const StopId stop) const noexcept {
+    return stop < numberOfStops();
+  }
+  inline Range<StopId> stops() const noexcept {
+    return Range<StopId>(StopId(0), StopId(numberOfStops()));
+  }
 
-            totalSizeBWD += bwdVertices[v].size();
-        }
+  inline size_t numberOfTrips() const noexcept { return teData.numTrips; }
+  inline bool isTrip(const TripId route) const noexcept {
+    return route < numberOfTrips();
+  }
+  inline Range<TripId> trips() const noexcept {
+    return Range<TripId>(TripId(0), TripId(numberOfTrips()));
+  }
 
-        std::cout << "PTL public transit data:" << std::endl;
-        std::cout << "   Number of Stops:           " << std::setw(12) << String::prettyInt(teData.numberOfStops()) << std::endl;
-        std::cout << "   Number of Trips:           " << std::setw(12) << String::prettyInt(teData.numberOfTrips()) << std::endl;
-        std::cout << "   Number of TE Vertices:     " << std::setw(12) << String::prettyInt(teData.timeExpandedGraph.numVertices()) << std::endl;
-        std::cout << "   Number of TE Edges:        " << std::setw(12) << String::prettyInt(teData.timeExpandedGraph.numEdges()) << std::endl;
-        std::cout << "   Forward Labels:" << std::endl;
-        std::cout << "      Min # of hubs:          " << std::setw(12) << String::prettyInt(minSizeFWD) << std::endl;
-        std::cout << "      Max # of hubs:          " << std::setw(12) << String::prettyInt(maxSizeFWD) << std::endl;
-        std::cout << "      Avg # of hubs:          " << std::setw(12) << String::prettyDouble(static_cast<double>(totalSizeFWD) / (teData.numberOfTEVertices())) << std::endl;
-        std::cout << "   Backward Labels:" << std::endl;
-        std::cout << "      Min # of hubs:          " << std::setw(12) << String::prettyInt(minSizeBWD) << std::endl;
-        std::cout << "      Max # of hubs:          " << std::setw(12) << String::prettyInt(maxSizeBWD) << std::endl;
-        std::cout << "      Avg # of hubs:          " << std::setw(12) << String::prettyDouble(static_cast<double>(totalSizeBWD) / (teData.numberOfTEVertices())) << std::endl;
-        std::cout << "   Total size:                " << std::setw(12) << String::bytesToString(byteSize()) << std::endl;
+  inline size_t numberOfStopEvents() const noexcept {
+    return teData.events.size();
+  }
+
+  inline bool isEvent(const Vertex event) const noexcept {
+    return teData.isEvent(event);
+  }
+  inline bool isDepartureEvent(const Vertex event) const noexcept {
+    return teData.isDepartureEvent(event);
+  }
+  inline bool isArrivalEvent(const Vertex event) const noexcept {
+    return teData.isArrivalEvent(event);
+  }
+
+  inline void printInfo() const noexcept {
+    size_t minSizeFWD = teData.numberOfTEVertices();
+    size_t maxSizeFWD = 0;
+    size_t totalSizeFWD = 0;
+    Vertex maxFwdVertex = noVertex;
+
+    size_t minSizeBWD = teData.numberOfTEVertices();
+    size_t maxSizeBWD = 0;
+    size_t totalSizeBWD = 0;
+    Vertex maxBwdVertex = noVertex;
+
+    AssertMsg(fwdVertices.size() == (teData.numberOfTEVertices()),
+              "Not the same size!");
+    AssertMsg(bwdVertices.size() == (teData.numberOfTEVertices()),
+              "Not the same size!");
+
+    for (Vertex v = Vertex(0); v < teData.numberOfTEVertices(); ++v) {
+      minSizeFWD = std::min(minSizeFWD, fwdVertices[v].size());
+      maxSizeFWD = std::max(maxSizeFWD, fwdVertices[v].size());
+
+      if (maxSizeFWD == fwdVertices[v].size()) {
+        maxFwdVertex = v;
+      }
+
+      totalSizeFWD += fwdVertices[v].size();
+
+      minSizeBWD = std::min(minSizeBWD, bwdVertices[v].size());
+      maxSizeBWD = std::max(maxSizeBWD, bwdVertices[v].size());
+
+      if (maxSizeBWD == bwdVertices[v].size()) {
+        maxBwdVertex = v;
+      }
+      totalSizeBWD += bwdVertices[v].size();
     }
 
-    inline void serialize(const std::string& fileName) const noexcept
-    {
-        IO::serialize(fileName, fwdVertices, bwdVertices);
-        teData.serialize(fileName + ".te");
-    }
+    std::cout << "PTL public transit data:" << std::endl;
+    std::cout << "   Number of Stops:           " << std::setw(12)
+              << String::prettyInt(teData.numberOfStops()) << std::endl;
+    std::cout << "   Number of Trips:           " << std::setw(12)
+              << String::prettyInt(teData.numberOfTrips()) << std::endl;
+    std::cout << "   Number of TE Vertices:     " << std::setw(12)
+              << String::prettyInt(teData.timeExpandedGraph.numVertices())
+              << std::endl;
+    std::cout << "   Number of TE Edges:        " << std::setw(12)
+              << String::prettyInt(teData.timeExpandedGraph.numEdges())
+              << std::endl;
+    std::cout << "   Forward Labels:" << std::endl;
+    std::cout << "      Min # of hubs:          " << std::setw(12)
+              << String::prettyInt(minSizeFWD) << std::endl;
+    std::cout << "      Avg # of hubs:          " << std::setw(12)
+              << String::prettyDouble(static_cast<double>(totalSizeFWD) /
+                                      (teData.numberOfTEVertices()))
+              << std::endl;
+    std::cout << "      Max # of hubs:          " << std::setw(12)
+              << String::prettyInt(maxSizeFWD) << std::endl;
+    std::cout << "      Max Vertex:             " << std::setw(12)
+              << maxFwdVertex << std::endl;
+    std::cout << "   Backward Labels:" << std::endl;
+    std::cout << "      Min # of hubs:          " << std::setw(12)
+              << String::prettyInt(minSizeBWD) << std::endl;
+    std::cout << "      Avg # of hubs:          " << std::setw(12)
+              << String::prettyDouble(static_cast<double>(totalSizeBWD) /
+                                      (teData.numberOfTEVertices()))
+              << std::endl;
+    std::cout << "      Max # of hubs:          " << std::setw(12)
+              << String::prettyInt(maxSizeBWD) << std::endl;
+    std::cout << "      Max Vertex:             " << std::setw(12)
+              << maxBwdVertex << std::endl;
+    std::cout << "   Total size:                " << std::setw(12)
+              << String::bytesToString(byteSize()) << std::endl;
+  }
 
-    inline void deserialize(const std::string& fileName) noexcept
-    {
-        IO::deserialize(fileName, fwdVertices, bwdVertices);
-        teData.deserialize(fileName + ".te");
-    }
+  inline void serialize(const std::string& fileName) const noexcept {
+    IO::serialize(fileName, fwdVertices, bwdVertices);
+    teData.serialize(fileName + ".te");
+  }
 
-    inline long long byteSize() const noexcept
-    {
-        long long result = Vector::byteSize(fwdVertices);
-        result += Vector::byteSize(bwdVertices);
-        result += teData.byteSize();
-        return result;
-    }
+  inline void deserialize(const std::string& fileName) noexcept {
+    IO::deserialize(fileName, fwdVertices, bwdVertices);
+    teData.deserialize(fileName + ".te");
+  }
 
-    inline std::vector<Vertex>& getFwdHubs(const Vertex vertex) noexcept
-    {
-        AssertMsg(teData.isEvent(vertex), "Vertex is not valid!");
+  inline long long byteSize() const noexcept {
+    long long result = Vector::byteSize(fwdVertices);
+    result += Vector::byteSize(bwdVertices);
+    result += teData.byteSize();
+    return result;
+  }
 
-        return fwdVertices[vertex];
-    }
+  inline std::vector<Vertex>& getFwdHubs(const Vertex vertex) noexcept {
+    AssertMsg(teData.isEvent(vertex), "Vertex is not valid!");
 
-    inline std::vector<Vertex>& getBwdHubs(const Vertex vertex) noexcept
-    {
-        AssertMsg(teData.isEvent(vertex), "Vertex is not valid!");
+    return fwdVertices[vertex];
+  }
 
-        return bwdVertices[vertex];
-    }
+  inline std::vector<Vertex>& getBwdHubs(const Vertex vertex) noexcept {
+    AssertMsg(teData.isEvent(vertex), "Vertex is not valid!");
 
-    TE::Data teData;
-    std::vector<std::vector<Vertex>> fwdVertices;
-    std::vector<std::vector<Vertex>> bwdVertices;
+    return bwdVertices[vertex];
+  }
+
+  TE::Data teData;
+  std::vector<std::vector<Vertex>> fwdVertices;
+  std::vector<std::vector<Vertex>> bwdVertices;
 };
-}
+}  // namespace PTL

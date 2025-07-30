@@ -16,7 +16,7 @@ echo "Partition $D into $N with imbalance of $I"
     --instance-type=graph \
     --preset-type highest_quality \
     --i-r-flow-algo flow_cutter \
-    --i-r-refine-until-no-improvement true \
-    --enable-progress-bar=true \
-    --show-detailed-timings=true \
-    --verbose=true
+    --i-r-refine-until-no-improvement true # \
+    # --enable-progress-bar=true \
+    # --show-detailed-timings=true \
+    # --verbose=true

@@ -29,7 +29,7 @@
 using namespace Shell;
 
 class ApplyPartitionFile : public ParameterizedCommand {
- public:
+public:
   ApplyPartitionFile(BasicShell &shell)
       : ParameterizedCommand(
             shell, "applyPartitionFile",
@@ -58,7 +58,7 @@ class ApplyPartitionFile : public ParameterizedCommand {
 };
 
 class RAPTORToMLTB : public ParameterizedCommand {
- public:
+public:
   RAPTORToMLTB(BasicShell &shell)
       : ParameterizedCommand(shell, "raptorToMLTB",
                              "Reads RAPTOR Data, Number of Levels and Number "
@@ -105,7 +105,7 @@ class RAPTORToMLTB : public ParameterizedCommand {
     data.serialize(mltbFile);
   }
 
- private:
+private:
   inline int getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -116,7 +116,7 @@ class RAPTORToMLTB : public ParameterizedCommand {
 };
 
 class BuildTBTEGraph : public ParameterizedCommand {
- public:
+public:
   BuildTBTEGraph(BasicShell &shell)
       : ParameterizedCommand(shell, "buildTBTEGraph",
                              "Given the MLTB data, builds the TBTE Graph.") {
@@ -134,7 +134,7 @@ class BuildTBTEGraph : public ParameterizedCommand {
 };
 
 class CreateCompactLayoutGraph : public ParameterizedCommand {
- public:
+public:
   CreateCompactLayoutGraph(BasicShell &shell)
       : ParameterizedCommand(
             shell, "createCompactLayoutGraph",
@@ -169,7 +169,7 @@ class CreateCompactLayoutGraph : public ParameterizedCommand {
 };
 
 class Customization : public ParameterizedCommand {
- public:
+public:
   Customization(BasicShell &shell)
       : ParameterizedCommand(shell, "customize",
                              "Computes the customization of MLTB") {
@@ -201,7 +201,7 @@ class Customization : public ParameterizedCommand {
     data.serialize(output);
   }
 
- private:
+private:
   inline int getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -212,7 +212,7 @@ class Customization : public ParameterizedCommand {
 };
 
 class ShowInfoOfMLTB : public ParameterizedCommand {
- public:
+public:
   ShowInfoOfMLTB(BasicShell &shell)
       : ParameterizedCommand(shell, "showInfoOfMLTB",
                              "Shows Information about the given MLTB file.") {
@@ -257,26 +257,27 @@ class ShowInfoOfMLTB : public ParameterizedCommand {
     /*                       << std::endl; */
     /*         } */
 
-    if (writeToCSV) data.writeLocalLevelOfTripsToCSV(fileName);
+    if (writeToCSV)
+      data.writeLocalLevelOfTripsToCSV(fileName);
   }
 };
 
 class RunMLQuery : public ParameterizedCommand {
- public:
+public:
   RunMLQuery(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runMLTBQueries",
             "Runs the given number of random MultiLevel TB queries.") {
     addParameter("Input file (MLTB Data)");
     addParameter("Number of queries");
-    addParameter("Compare to TB?");
-    addParameter("TB Input for eval");
+    /* addParameter("Compare to TB?"); */
+    /* addParameter("TB Input for eval"); */
   }
 
   virtual void execute() noexcept {
     const std::string tripFile = getParameter("Input file (MLTB Data)");
-    const bool eval = getParameter<bool>("Compare to TB?");
-    const std::string evalFile = getParameter("TB Input for eval");
+    /* const bool eval = getParameter<bool>("Compare to TB?"); */
+    /* const std::string evalFile = getParameter("TB Input for eval"); */
 
     TripBased::MLData data(tripFile);
     data.printInfo();
@@ -286,16 +287,16 @@ class RunMLQuery : public ParameterizedCommand {
     const std::vector<StopQuery> queries =
         generateRandomStopQueries(data.numberOfStops(), n);
 
-    std::vector<std::vector<std::pair<int, int>>> result;
-    result.assign(n, {});
+    /* std::vector<std::vector<std::pair<int, int>>> result; */
+    /* result.assign(n, {}); */
 
     size_t numberOfJourneys = 0;
 
-    size_t i(0);
+    /* size_t i(0); */
     for (const StopQuery &query : queries) {
       algorithm.run(query.source, query.departureTime, query.target);
       numberOfJourneys += algorithm.getJourneys().size();
-      result[i].reserve(algorithm.getArrivals().size());
+      /* result[i].reserve(algorithm.getArrivals().size()); */
 
       /*             std::cout << "MLTB Query" << std::endl; */
       /*             for (auto& journey : algorithm.getJourneys()) { */
@@ -321,11 +322,12 @@ class RunMLQuery : public ParameterizedCommand {
       /*                 std::cout << std::endl; */
       /*             } */
 
-      for (auto &arr : algorithm.getArrivals()) {
-        result[i].push_back(std::make_pair(arr.numberOfTrips, arr.arrivalTime));
-      }
+      /* for (auto &arr : algorithm.getArrivals()) { */
+      /*   result[i].push_back(std::make_pair(arr.numberOfTrips,
+       * arr.arrivalTime)); */
+      /* } */
 
-      i += 1;
+      /* i += 1; */
     }
     algorithm.getProfiler().printStatistics();
     std::cout << "Avg. Journeys: "
@@ -333,90 +335,94 @@ class RunMLQuery : public ParameterizedCommand {
               << std::endl;
     /* algorithm.showTransferLevels(); */
 
-    if (eval) {
-      size_t wrongQueries = 0;
-      std::cout << "Evaluation against TB:" << std::endl;
-      TripBased::Data trip(evalFile);
-      trip.printInfo();
-      TripBased::TransitiveQuery<TripBased::AggregateProfiler> tripAlgorithm(
-          trip);
-      std::vector<std::vector<std::pair<int, int>>> tripResult;
-      tripResult.assign(n, {});
+    /* if (eval) { */
+    /*   size_t wrongQueries = 0; */
+    /*   std::cout << "Evaluation against TB:" << std::endl; */
+    /*   TripBased::Data trip(evalFile); */
+    /*   trip.printInfo(); */
+    /*   TripBased::TransitiveQuery<TripBased::AggregateProfiler> tripAlgorithm(
+     */
+    /*       trip); */
+    /*   std::vector<std::vector<std::pair<int, int>>> tripResult; */
+    /*   tripResult.assign(n, {}); */
 
-      numberOfJourneys = 0;
-      i = 0;
-      for (const StopQuery &query : queries) {
-        tripAlgorithm.run(query.source, query.departureTime, query.target);
-        numberOfJourneys += tripAlgorithm.getJourneys().size();
+    /*   numberOfJourneys = 0; */
+    /*   i = 0; */
+    /*   for (const StopQuery &query : queries) { */
+    /*     tripAlgorithm.run(query.source, query.departureTime, query.target);
+     */
+    /*     numberOfJourneys += tripAlgorithm.getJourneys().size(); */
 
-        /*                 std::cout << "TB Query" << std::endl; */
-        /*                 for (auto& journey : tripAlgorithm.getJourneys()) {
-         */
-        /*                     std::cout << query << std::endl; */
-        /*                     for (auto& leg : journey) { */
-        /*                         std::cout << (int)leg.from << " -> " <<
-         * (int)leg.to << " @ " << leg.departureTime << " -> " <<
-         * leg.arrivalTime << (leg.usesRoute ? ", route: " : ", transfer: ") <<
-         * (int)leg.routeId; */
-        /*                         if (!leg.usesRoute && Edge(leg.routeId) !=
-         * noEdge) { */
-        /*                             uint8_t lcl = std::min( */
-        /*                                 data.getLowestCommonLevel(StopId(leg.from),
-         * query.source), */
-        /*                                 data.getLowestCommonLevel(StopId(leg.from),
-         * query.target)); */
-        /*                             std::cout << " LocalLevel: " <<
-         * (int)data.stopEventGraph.get(LocalLevel, Edge(leg.routeId)) << " and
-         * lcl: " << (int)lcl; */
-        /*                         } */
+    /*     std::cout << "TB Query" << std::endl; */
+    /*     for (auto &journey : tripAlgorithm.getJourneys()) { */
+    /*       std::cout << query << std::endl; */
+    /*       for (auto &leg : journey) { */
+    /*         std::cout << (int)leg.from << " -> " << (int)leg.to << " @ " */
+    /*                   << leg.departureTime << " -> " << leg.arrivalTime */
+    /*                   << (leg.usesRoute ? ", route: " : ", transfer: ") */
+    /*                   << (int)leg.routeId; */
+    /*         if (!leg.usesRoute && Edge(leg.routeId) != noEdge) { */
+    /*           uint8_t lcl = std::min( */
+    /*               data.getLowestCommonLevel(StopId(leg.from), query.source),
+     */
+    /*               data.getLowestCommonLevel(StopId(leg.from), query.target));
+     */
+    /*           std::cout << " LocalLevel: " */
+    /*                     << (int)data.stopEventGraph.get(LocalLevel, */
+    /*                                                     Edge(leg.routeId)) */
+    /*                     << " and lcl : " << (int)lcl; */
+    /*         } */
 
-        /*                         std::cout << std::endl; */
-        /*                     } */
-        /*                     std::cout << std::endl; */
-        /*                 } */
+    /*         std::cout << std::endl; */
+    /*       } */
+    /*       std::cout << std::endl; */
+    /*     } */
 
-        tripResult[i].reserve(tripAlgorithm.getArrivals().size());
+    /*     tripResult[i].reserve(tripAlgorithm.getArrivals().size()); */
 
-        for (auto &arr : tripAlgorithm.getArrivals()) {
-          tripResult[i].push_back(
-              std::make_pair(arr.numberOfTrips, arr.arrivalTime));
-        }
+    /*     for (auto &arr : tripAlgorithm.getArrivals()) { */
+    /*       tripResult[i].push_back( */
+    /*           std::make_pair(arr.numberOfTrips, arr.arrivalTime)); */
+    /*     } */
 
-        i += 1;
-      }
-      tripAlgorithm.getProfiler().printStatistics();
-      std::cout << "Avg. Journeys: "
-                << String::prettyDouble(numberOfJourneys /
-                                        (float)queries.size())
-                << std::endl;
+    /*     i += 1; */
+    /*   } */
+    /*   tripAlgorithm.getProfiler().printStatistics(); */
+    /*   std::cout << "Avg. Journeys: " */
+    /*             << String::prettyDouble(numberOfJourneys / */
+    /*                                     (float)queries.size()) */
+    /*             << std::endl; */
 
-      for (size_t i(0); i < queries.size(); ++i) {
-        // computes the results from TB, which are not in MLTB
-        std::set<std::pair<int, int>> set1(tripResult[i].begin(),
-                                           tripResult[i].end());
-        std::set<std::pair<int, int>> set2(result[i].begin(), result[i].end());
-        std::set<std::pair<int, int>> difference;
-        std::set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(),
-                            std::inserter(difference, difference.begin()));
+    /*   for (size_t i(0); i < queries.size(); ++i) { */
+    /*     // computes the results from TB, which are not in MLTB */
+    /*     std::set<std::pair<int, int>> set1(tripResult[i].begin(), */
+    /*                                        tripResult[i].end()); */
+    /*     std::set<std::pair<int, int>> set2(result[i].begin(),
+     * result[i].end()); */
+    /*     std::set<std::pair<int, int>> difference; */
+    /*     std::set_difference(set1.begin(), set1.end(), set2.begin(),
+     * set2.end(), */
+    /*                         std::inserter(difference, difference.begin()));
+     */
 
-        if (difference.size() > 0) {
-          ++wrongQueries;
-          std::cout << "Query: " << queries[i] << std::endl;
-        }
-      }
+    /*     if (difference.size() > 0) { */
+    /*       ++wrongQueries; */
+    /*       std::cout << "Query: " << queries[i] << std::endl; */
+    /*     } */
+    /*   } */
 
-      std::cout << "Wrong queries: " << wrongQueries << std::endl;
-    }
+    /*   std::cout << "Wrong queries: " << wrongQueries << std::endl; */
+    /* } */
   }
 };
 
 class RunMLTBProfileQueries : public ParameterizedCommand {
- public:
+public:
   RunMLTBProfileQueries(BasicShell &shell)
-      : ParameterizedCommand(
-            shell, "runMLTBProfileQueries",
-            "Runs the given number of random transitive TripBased queries with "
-            "a time range of [0, 24 hours).") {
+      : ParameterizedCommand(shell, "runMLTBProfileQueries",
+                             "Runs the given number of random transitive "
+                             "TripBased queries with "
+                             "a time range of [0, 24 hours).") {
     addParameter("MLData input file");
     addParameter("Number of queries");
   }
@@ -442,7 +448,7 @@ class RunMLTBProfileQueries : public ParameterizedCommand {
 };
 
 class WriteMLTBToCSV : public ParameterizedCommand {
- public:
+public:
   WriteMLTBToCSV(BasicShell &shell)
       : ParameterizedCommand(shell, "writeMLTBToCSV",
                              "Writes MLTB Data to csv files") {
@@ -466,12 +472,12 @@ class WriteMLTBToCSV : public ParameterizedCommand {
 };
 
 class EventDistributionOverTime : public ParameterizedCommand {
- public:
+public:
   EventDistributionOverTime(BasicShell &shell)
-      : ParameterizedCommand(
-            shell, "eventDistribution",
-            "Shows the distribution of events over time. Each bucket contains "
-            "the number of events in this bucket.") {
+      : ParameterizedCommand(shell, "eventDistribution",
+                             "Shows the distribution of events over time. "
+                             "Each bucket contains "
+                             "the number of events in this bucket.") {
     addParameter("Input file (MLTB Data)");
   }
 
@@ -489,7 +495,8 @@ class EventDistributionOverTime : public ParameterizedCommand {
     for (size_t eventId(0); eventId < data.numberOfStopEvents(); ++eventId) {
       auto &depTime = data.departureTime(StopEventId(eventId));
 
-      if ((24 * 60 * 60) <= depTime) continue;
+      if ((24 * 60 * 60) <= depTime)
+        continue;
 
       // this is due to our implicit representation
       if (depTime < 0) {
@@ -505,12 +512,12 @@ class EventDistributionOverTime : public ParameterizedCommand {
 };
 
 class RunGeoRankedMLTBQueries : public ParameterizedCommand {
- public:
+public:
   RunGeoRankedMLTBQueries(BasicShell &shell)
-      : ParameterizedCommand(
-            shell, "runGeoRankedMLTBQueries",
-            "Runs MLTB queries to the 2^r th stop, where r is the geo rank. "
-            "Source stops are chosen randomly.") {
+      : ParameterizedCommand(shell, "runGeoRankedMLTBQueries",
+                             "Runs MLTB queries to the 2^r th stop, where "
+                             "r is the geo rank. "
+                             "Source stops are chosen randomly.") {
     addParameter("MLTB input file");
     addParameter("Number of source stops");
     addParameter("Output csv file");
@@ -605,7 +612,7 @@ class RunGeoRankedMLTBQueries : public ParameterizedCommand {
 };
 
 class CheckBorderStops : public ParameterizedCommand {
- public:
+public:
   CheckBorderStops(BasicShell &shell)
       : ParameterizedCommand(shell, "checkBorderStops",
                              "Check stop-to-stop (only border stops) and see "
@@ -670,7 +677,8 @@ class CheckBorderStops : public ParameterizedCommand {
           targets.push_back(static_cast<StopId>(t));
         }
 
-        /* auto isTransferInCell = [&](const std::uint16_t stopCell) -> bool {
+        /* auto isTransferInCell = [&](const std::uint16_t stopCell) -> bool
+         * {
          */
         /*   return cell == (stopCell >> level); */
         /* }; */
@@ -693,8 +701,10 @@ class CheckBorderStops : public ParameterizedCommand {
                   if (!leg.usesRoute && leg.transferId != noEdge) {
                     AssertMsg(leg.transferId < rankEstimate.size(),
                               "Transfer Id is out of range!");
-                    /* StopId toStop = data.getStopOfStopEvent(StopEventId( */
-                    /*     data.stopEventGraph.get(ToVertex, leg.transferId)));
+                    /* StopId toStop = data.getStopOfStopEvent(StopEventId(
+                     */
+                    /*     data.stopEventGraph.get(ToVertex,
+                     * leg.transferId)));
                      */
 
                     /* if (!isTransferInCell(data.cellIds[toStop])) */
@@ -722,7 +732,7 @@ class CheckBorderStops : public ParameterizedCommand {
     csv.close();
   }
 
- private:
+private:
   inline int getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -733,7 +743,7 @@ class CheckBorderStops : public ParameterizedCommand {
 };
 
 class ExportMLTBTimeExpandedGraph : public ParameterizedCommand {
- public:
+public:
   ExportMLTBTimeExpandedGraph(BasicShell &shell)
       : ParameterizedCommand(
             shell, "exportMLTBAsTE",
@@ -791,7 +801,7 @@ class ExportMLTBTimeExpandedGraph : public ParameterizedCommand {
 };
 
 class ShowInducedCellOfNetwork : public ParameterizedCommand {
- public:
+public:
   ShowInducedCellOfNetwork(BasicShell &shell)
       : ParameterizedCommand(
             shell, "showInducedCellOfNetwork",
@@ -847,7 +857,7 @@ class ShowInducedCellOfNetwork : public ParameterizedCommand {
 };
 
 class StopsImportance : public ParameterizedCommand {
- public:
+public:
   StopsImportance(BasicShell &shell)
       : ParameterizedCommand(shell, "stopsImportance",
                              "Export the importance of each stop into a csv.") {

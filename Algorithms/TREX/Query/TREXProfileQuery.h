@@ -25,7 +25,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 
 #include "../../../DataStructures/Container/Set.h"
-#include "../../../DataStructures/MLTB/MLData.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../../DataStructures/RAPTOR/Entities/RouteSegment.h"
@@ -42,10 +42,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace TripBased {
 
 template <typename PROFILER = NoProfiler>
-class MLTBProfileQuery {
+class TREXProfileQuery {
  public:
   using Profiler = PROFILER;
-  using Type = MLTBProfileQuery<Profiler>;
+  using Type = TREXProfileQuery<Profiler>;
 
  private:
   struct TripLabel {
@@ -115,7 +115,7 @@ class MLTBProfileQuery {
   };
 
  public:
-  MLTBProfileQuery(const MLData &data)
+  TREXProfileQuery(const TREXData &data)
       : data(data),
         reverseTransferGraph(data.raptorData.transferGraph),
         transferFromSource(data.numberOfStops(), INFTY),
@@ -618,7 +618,7 @@ class MLTBProfileQuery {
   }
 
  private:
-  const MLData &data;
+  const TREXData &data;
 
   TransferGraph reverseTransferGraph;
   std::vector<int> transferFromSource;

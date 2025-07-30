@@ -9,7 +9,7 @@
 #include <execution>
 #include <vector>
 
-#include "../../../DataStructures/MLTB/MLData.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../ExternalLibs/ips4o/ips4o.hpp"
 #include "../../../ExternalLibs/parlaylib/include/parlay/parallel.h"
 #include "../../../Helpers/Console/Progress.h"
@@ -31,7 +31,7 @@ constexpr uint32_t STOPINDEX_MASK = ((1 << 8) - 1);
 
 class Builder {
  public:
-  Builder(MLData& data, const int numberOfThreads = 1,
+  Builder(TREXData& data, const int numberOfThreads = 1,
           const int pinMultiplier = 1)
       : data(data),
         numberOfThreads(numberOfThreads),
@@ -184,7 +184,7 @@ class Builder {
 
   inline AggregateProfiler& getProfiler() noexcept { return profiler; }
 
-  MLData& data;
+  TREXData& data;
   const int numberOfThreads;
   const int pinMultiplier;
 

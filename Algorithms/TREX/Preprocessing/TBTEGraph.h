@@ -7,14 +7,14 @@
 #include "../../../Algorithms/DepthFirstSearch.h"
 #include "../../../DataStructures/Container/SIMD16u.h"
 #include "../../../DataStructures/Graph/Graph.h"
-#include "../../../DataStructures/MLTB/MLData.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../Helpers/Console/Progress.h"
 
 namespace TripBased {
 
 class TBTEGraph {
  public:
-  const MLData &data;
+  const TREXData &data;
   DynamicTBTEGraph graph;
 
   std::vector<std::uint8_t> rank;
@@ -22,7 +22,7 @@ class TBTEGraph {
   std::vector<SIMD16u> distances;
   std::vector<SIMD16u> parents;
 
-  TBTEGraph(const MLData &data)
+  TBTEGraph(const TREXData &data)
       : data(data),
         rank(data.stopEventGraph.numEdges(), 0),
         distances(),

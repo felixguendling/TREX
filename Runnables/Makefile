@@ -6,7 +6,7 @@ RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG -fomit-frame-pointe
 PREFETCH=-DENABLE_PREFETCH -DUSE_SIMD
 # SPARSEHASH=-I ../ExternalLibs/sparsehash/include
 
-all: MLTBRelease ULTRARelease NetworkRelease
+all: TREXRelease ULTRARelease NetworkRelease
 # all: TPDebug ArcTBDebug NetworkDebug ULTRADebug
 
 NetworkDebug:
@@ -33,8 +33,8 @@ TPDebug:
 TPRelease:
 	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) $(SPARSEHASH) -o TP TP.cpp $(PREFETCH)
 
-MLTBDebug:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o MLTB MLTB.cpp -ltbb -latomic $(PREFETCH)
+TREXDebug:
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(DEBUG) -o TREX TREX.cpp -ltbb -latomic $(PREFETCH)
 
-MLTBRelease:
-	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o MLTB MLTB.cpp -ltbb -latomic $(PREFETCH)
+TREXRelease:
+	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o TREX TREX.cpp -ltbb -latomic $(PREFETCH)

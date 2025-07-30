@@ -6,20 +6,20 @@
 #include <string>
 #include <vector>
 
-#include "../../Algorithms/MLTB/BorderStops.h"
-#include "../../Algorithms/MLTB/Preprocessing/BuilderIBEs.h"
-#include "../../Algorithms/MLTB/Preprocessing/TBTEGraph.h"
-#include "../../Algorithms/MLTB/Query/MLProfileQuery.h"
-#include "../../Algorithms/MLTB/Query/MLQuery.h"
+#include "../../Algorithms/TREX/BorderStops.h"
+#include "../../Algorithms/TREX/Preprocessing/BuilderIBEs.h"
+#include "../../Algorithms/TREX/Preprocessing/TBTEGraph.h"
+#include "../../Algorithms/TREX/Query/TREXProfileQuery.h"
+#include "../../Algorithms/TREX/Query/TREXQuery.h"
 #include "../../Algorithms/TripBased/Preprocessing/StopEventGraphBuilder.h"
 #include "../../Algorithms/TripBased/Preprocessing/ULTRABuilderTransitive.h"
 #include "../../Algorithms/TripBased/Query/TransitiveOneToManyQuery.h"
 #include "../../Algorithms/TripBased/Query/TransitiveQuery.h"
 #include "../../DataStructures/Graph/Graph.h"
 #include "../../DataStructures/Graph/Utils/IO.h"
-#include "../../DataStructures/MLTB/MLData.h"
 #include "../../DataStructures/Queries/Queries.h"
 #include "../../DataStructures/RAPTOR/Data.h"
+#include "../../DataStructures/TREX/TREXData.h"
 #include "../../DataStructures/TripBased/Data.h"
 #include "../../Helpers/Console/Progress.h"
 #include "../../Helpers/MultiThreading.h"
@@ -33,21 +33,21 @@ public:
   ApplyPartitionFile(BasicShell &shell)
       : ParameterizedCommand(
             shell, "applyPartitionFile",
-            "Applies the given partition to the MLTB data. Also give the "
+            "Applies the given partition to the TREX data. Also give the "
             "number of levels and the number of cells per level!") {
     addParameter("Input file (Partition File)");
     addParameter("Input file (Number of levels)");
-    addParameter("Input file (MLTB Data)");
+    addParameter("Input file (TREX Data)");
   }
 
   virtual void execute() noexcept {
-    const std::string raptorFile = getParameter("Input file (MLTB Data)");
+    const std::string raptorFile = getParameter("Input file (TREX Data)");
     const int numberOfLevels =
         getParameter<int>("Input file (Number of levels)");
     const std::string partitionFile =
         getParameter("Input file (Partition File)");
 
-    TripBased::MLData data(raptorFile);
+    TripBased::TREXData data(raptorFile);
     data.setNumberOfLevels(numberOfLevels);
     data.printInfo();
 
@@ -57,14 +57,14 @@ public:
   }
 };
 
-class RAPTORToMLTB : public ParameterizedCommand {
+class RAPTORToTREX : public ParameterizedCommand {
 public:
-  RAPTORToMLTB(BasicShell &shell)
-      : ParameterizedCommand(shell, "raptorToMLTB",
+  RAPTORToTREX(BasicShell &shell)
+      : ParameterizedCommand(shell, "raptorToTREX",
                              "Reads RAPTOR Data, Number of Levels and Number "
-                             "of Cells per Level and saves it to a MLTB Data") {
+                             "of Cells per Level and saves it to a TREX Data") {
     addParameter("Input file (RAPTOR Data)");
-    addParameter("Output file (MLTB Data)");
+    addParameter("Output file (TREX Data)");
     addParameter("Number of levels");
     addParameter("Route-based pruning?", "true");
     addParameter("Number of threads", "max");
@@ -73,7 +73,7 @@ public:
 
   virtual void execute() noexcept {
     const std::string raptorFile = getParameter("Input file (RAPTOR Data)");
-    const std::string mltbFile = getParameter("Output file (MLTB Data)");
+    const std::string mltbFile = getParameter("Output file (TREX Data)");
     const int numLevels = getParameter<int>("Number of levels");
     const bool routeBasedPruning = getParameter<bool>("Route-based pruning?");
     const int numberOfThreads = getNumberOfThreads();
@@ -82,7 +82,7 @@ public:
     RAPTOR::Data raptor(raptorFile);
     /* raptor.normalizeInstantaneousTravel(); */
 
-    TripBased::MLData data(raptor, numLevels);
+    TripBased::TREXData data(raptor, numLevels);
 
     if (numberOfThreads == 0) {
       if (routeBasedPruning) {
@@ -119,13 +119,13 @@ class BuildTBTEGraph : public ParameterizedCommand {
 public:
   BuildTBTEGraph(BasicShell &shell)
       : ParameterizedCommand(shell, "buildTBTEGraph",
-                             "Given the MLTB data, builds the TBTE Graph.") {
-    addParameter("Input file (MLTB Data)");
+                             "Given the TREX data, builds the TBTE Graph.") {
+    addParameter("Input file (TREX Data)");
   }
 
   virtual void execute() noexcept {
-    const std::string mltbFile = getParameter("Input file (MLTB Data)");
-    TripBased::MLData data(mltbFile);
+    const std::string mltbFile = getParameter("Input file (TREX Data)");
+    TripBased::TREXData data(mltbFile);
     data.printInfo();
 
     TripBased::TBTEGraph tbte(data);
@@ -138,22 +138,22 @@ public:
   CreateCompactLayoutGraph(BasicShell &shell)
       : ParameterizedCommand(
             shell, "createCompactLayoutGraph",
-            "Creates the compact layout graph of the given MLTB data, it "
+            "Creates the compact layout graph of the given TREX data, it "
             "writes the Compact Layout Graph into METIS Format. If wanted, "
             "write a GRAPHML file.") {
-    addParameter("Input file (MLTB Data)");
+    addParameter("Input file (TREX Data)");
     addParameter("Output file (METIS File)");
     addParameter("Write Dimacs?", "false");
     addParameter("Write GRAPHML?", "false");
   }
 
   virtual void execute() noexcept {
-    const std::string mltbFile = getParameter("Input file (MLTB Data)");
+    const std::string mltbFile = getParameter("Input file (TREX Data)");
     const std::string metisFile = getParameter("Output file (METIS File)");
     const bool writeDimacs = getParameter<bool>("Write Dimacs?");
     const bool writeGRAPHML = getParameter<bool>("Write GRAPHML?");
 
-    TripBased::MLData data(mltbFile);
+    TripBased::TREXData data(mltbFile);
     data.printInfo();
 
     data.createCompactLayoutGraph();
@@ -172,22 +172,22 @@ class Customization : public ParameterizedCommand {
 public:
   Customization(BasicShell &shell)
       : ParameterizedCommand(shell, "customize",
-                             "Computes the customization of MLTB") {
-    addParameter("Input file (MLTB Data)");
-    addParameter("Output file (MLTB Data)");
+                             "Computes the customization of TREX") {
+    addParameter("Input file (TREX Data)");
+    addParameter("Output file (TREX Data)");
     /* addParameter("Verbose?", "true"); */
     addParameter("Number of threads", "max");
     addParameter("Pin multiplier", "1");
   }
 
   virtual void execute() noexcept {
-    const std::string mltbFile = getParameter("Input file (MLTB Data)");
-    const std::string output = getParameter("Output file (MLTB Data)");
+    const std::string mltbFile = getParameter("Input file (TREX Data)");
+    const std::string output = getParameter("Output file (TREX Data)");
     /* const bool verbose = getParameter<bool>("Verbose?"); */
     const int numberOfThreads = getNumberOfThreads();
     const int pinMultiplier = getParameter<int>("Pin multiplier");
 
-    TripBased::MLData data(mltbFile);
+    TripBased::TREXData data(mltbFile);
     // reset
     data.addInformationToStopEventGraph();
     data.printInfo();
@@ -211,21 +211,21 @@ private:
   }
 };
 
-class ShowInfoOfMLTB : public ParameterizedCommand {
+class ShowInfoOfTREX : public ParameterizedCommand {
 public:
-  ShowInfoOfMLTB(BasicShell &shell)
-      : ParameterizedCommand(shell, "showInfoOfMLTB",
-                             "Shows Information about the given MLTB file.") {
-    addParameter("Input file (MLTB Data)");
+  ShowInfoOfTREX(BasicShell &shell)
+      : ParameterizedCommand(shell, "showInfoOfTREX",
+                             "Shows Information about the given TREX file.") {
+    addParameter("Input file (TREX Data)");
     addParameter("Write to csv?", "false");
     addParameter("Output file (csv)", "false");
   }
 
   virtual void execute() noexcept {
-    const std::string tripFile = getParameter("Input file (MLTB Data)");
+    const std::string tripFile = getParameter("Input file (TREX Data)");
     const bool writeToCSV = getParameter<bool>("Write to csv?");
     const std::string fileName = getParameter("Output file (csv)");
-    TripBased::MLData data(tripFile);
+    TripBased::TREXData data(tripFile);
     data.printInfo();
 
     std::vector<size_t> numLocalTransfers(data.getNumberOfLevels() + 1, 0);
@@ -262,26 +262,26 @@ public:
   }
 };
 
-class RunMLQuery : public ParameterizedCommand {
+class RunTREXQuery : public ParameterizedCommand {
 public:
-  RunMLQuery(BasicShell &shell)
+  RunTREXQuery(BasicShell &shell)
       : ParameterizedCommand(
-            shell, "runMLTBQueries",
+            shell, "runTREXQueries",
             "Runs the given number of random MultiLevel TB queries.") {
-    addParameter("Input file (MLTB Data)");
+    addParameter("Input file (TREX Data)");
     addParameter("Number of queries");
     /* addParameter("Compare to TB?"); */
     /* addParameter("TB Input for eval"); */
   }
 
   virtual void execute() noexcept {
-    const std::string tripFile = getParameter("Input file (MLTB Data)");
+    const std::string tripFile = getParameter("Input file (TREX Data)");
     /* const bool eval = getParameter<bool>("Compare to TB?"); */
     /* const std::string evalFile = getParameter("TB Input for eval"); */
 
-    TripBased::MLData data(tripFile);
+    TripBased::TREXData data(tripFile);
     data.printInfo();
-    TripBased::MLQuery<TripBased::AggregateProfiler> algorithm(data);
+    TripBased::TREXQuery<TripBased::AggregateProfiler> algorithm(data);
 
     const size_t n = getParameter<size_t>("Number of queries");
     const std::vector<StopQuery> queries =
@@ -298,7 +298,7 @@ public:
       numberOfJourneys += algorithm.getJourneys().size();
       /* result[i].reserve(algorithm.getArrivals().size()); */
 
-      /*             std::cout << "MLTB Query" << std::endl; */
+      /*             std::cout << "TREX Query" << std::endl; */
       /*             for (auto& journey : algorithm.getJourneys()) { */
       /*                 std::cout << query << std::endl; */
       /*                 for (auto& leg : journey) { */
@@ -394,7 +394,7 @@ public:
     /*             << std::endl; */
 
     /*   for (size_t i(0); i < queries.size(); ++i) { */
-    /*     // computes the results from TB, which are not in MLTB */
+    /*     // computes the results from TB, which are not in TREX */
     /*     std::set<std::pair<int, int>> set1(tripResult[i].begin(), */
     /*                                        tripResult[i].end()); */
     /*     std::set<std::pair<int, int>> set2(result[i].begin(),
@@ -416,21 +416,21 @@ public:
   }
 };
 
-class RunMLTBProfileQueries : public ParameterizedCommand {
+class RunTREXProfileQueries : public ParameterizedCommand {
 public:
-  RunMLTBProfileQueries(BasicShell &shell)
-      : ParameterizedCommand(shell, "runMLTBProfileQueries",
+  RunTREXProfileQueries(BasicShell &shell)
+      : ParameterizedCommand(shell, "runTREXProfileQueries",
                              "Runs the given number of random transitive "
                              "TripBased queries with "
                              "a time range of [0, 24 hours).") {
-    addParameter("MLData input file");
+    addParameter("TREX input file");
     addParameter("Number of queries");
   }
 
   virtual void execute() noexcept {
-    TripBased::MLData data(getParameter("MLData input file"));
+    TripBased::TREXData data(getParameter("TREX input file"));
     data.printInfo();
-    TripBased::MLTBProfileQuery<TripBased::AggregateProfiler> algorithm(data);
+    TripBased::TREXProfileQuery<TripBased::AggregateProfiler> algorithm(data);
 
     const size_t n = getParameter<size_t>("Number of queries");
     const std::vector<StopQuery> queries =
@@ -447,20 +447,20 @@ public:
   }
 };
 
-class WriteMLTBToCSV : public ParameterizedCommand {
+class WriteTREXToCSV : public ParameterizedCommand {
 public:
-  WriteMLTBToCSV(BasicShell &shell)
-      : ParameterizedCommand(shell, "writeMLTBToCSV",
-                             "Writes MLTB Data to csv files") {
-    addParameter("Input file (MLTB Data)");
+  WriteTREXToCSV(BasicShell &shell)
+      : ParameterizedCommand(shell, "writeTREXToCSV",
+                             "Writes TREX Data to csv files") {
+    addParameter("Input file (TREX Data)");
     addParameter("Output file (CSV files)");
   }
 
   virtual void execute() noexcept {
-    const std::string mltb = getParameter("Input file (MLTB Data)");
+    const std::string mltb = getParameter("Input file (TREX Data)");
     const std::string output = getParameter("Output file (CSV files)");
 
-    TripBased::MLData data(mltb);
+    TripBased::TREXData data(mltb);
     data.printInfo();
 
     data.raptorData.writeCSV(output);
@@ -478,14 +478,14 @@ public:
                              "Shows the distribution of events over time. "
                              "Each bucket contains "
                              "the number of events in this bucket.") {
-    addParameter("Input file (MLTB Data)");
+    addParameter("Input file (TREX Data)");
   }
 
   virtual void execute() noexcept {
-    const std::string mltb = getParameter("Input file (MLTB Data)");
+    const std::string mltb = getParameter("Input file (TREX Data)");
     const int numBuckets = 24;
 
-    TripBased::MLData data(mltb);
+    TripBased::TREXData data(mltb);
     data.printInfo();
 
     std::vector<size_t> buckets(numBuckets, 0);
@@ -511,14 +511,14 @@ public:
   }
 };
 
-class RunGeoRankedMLTBQueries : public ParameterizedCommand {
+class RunGeoRankedTREXQueries : public ParameterizedCommand {
 public:
-  RunGeoRankedMLTBQueries(BasicShell &shell)
-      : ParameterizedCommand(shell, "runGeoRankedMLTBQueries",
-                             "Runs MLTB queries to the 2^r th stop, where "
+  RunGeoRankedTREXQueries(BasicShell &shell)
+      : ParameterizedCommand(shell, "runGeoRankedTREXQueries",
+                             "Runs TREX queries to the 2^r th stop, where "
                              "r is the geo rank. "
                              "Source stops are chosen randomly.") {
-    addParameter("MLTB input file");
+    addParameter("TREX input file");
     addParameter("Number of source stops");
     addParameter("Output csv file");
     addParameter("Lowest r");
@@ -526,9 +526,9 @@ public:
 
   virtual void execute() noexcept {
     const std::string file = getParameter("Output csv file");
-    TripBased::MLData data(getParameter("MLTB input file"));
+    TripBased::TREXData data(getParameter("TREX input file"));
     data.printInfo();
-    TripBased::MLQuery<TripBased::AggregateProfiler> algorithm(data);
+    TripBased::TREXQuery<TripBased::AggregateProfiler> algorithm(data);
 
     const size_t n = getParameter<size_t>("Number of source stops");
     const int minR = getParameter<int>("Lowest r");
@@ -617,17 +617,17 @@ public:
       : ParameterizedCommand(shell, "checkBorderStops",
                              "Check stop-to-stop (only border stops) and see "
                              "which transfers are used.") {
-    addParameter("Input file (MLTB Data)");
+    addParameter("Input file (TREX Data)");
     addParameter("Output file (csv)", "transfers.csv");
     addParameter("Number of threads", "max");
   }
 
   virtual void execute() noexcept {
-    const std::string mltb = getParameter("Input file (MLTB Data)");
+    const std::string mltb = getParameter("Input file (TREX Data)");
     const std::string file = getParameter("Output file (csv)");
     const int numberOfThreads = getNumberOfThreads();
 
-    TripBased::MLData data(mltb);
+    TripBased::TREXData data(mltb);
     data.printInfo();
 
     std::vector<std::uint8_t> rankEstimate(data.stopEventGraph.numEdges(), 0);
@@ -742,21 +742,21 @@ private:
   }
 };
 
-class ExportMLTBTimeExpandedGraph : public ParameterizedCommand {
+class ExportTREXTimeExpandedGraph : public ParameterizedCommand {
 public:
-  ExportMLTBTimeExpandedGraph(BasicShell &shell)
+  ExportTREXTimeExpandedGraph(BasicShell &shell)
       : ParameterizedCommand(
-            shell, "exportMLTBAsTE",
-            "Export MLTB data into a Time Expanded-like graph") {
-    addParameter("Input file (MLTB Data)");
+            shell, "exportTREXAsTE",
+            "Export TREX data into a Time Expanded-like graph") {
+    addParameter("Input file (TREX Data)");
     addParameter("Output file (csv file)");
   }
 
   virtual void execute() noexcept {
-    const std::string tb = getParameter("Input file (MLTB Data)");
+    const std::string tb = getParameter("Input file (TREX Data)");
     const std::string outputFilename = getParameter("Output file (csv file)");
 
-    TripBased::MLData data(tb);
+    TripBased::TREXData data(tb);
     data.printInfo();
 
     DynamicTripBasedTimeExpGraph graph;
@@ -806,17 +806,17 @@ public:
       : ParameterizedCommand(
             shell, "showInducedCellOfNetwork",
             "Show stops, trips, lines inside the given cell.") {
-    addParameter("Input file (MLTB Data)");
+    addParameter("Input file (TREX Data)");
     addParameter("CellId", "0");
     addParameter("Level", "0");
   }
 
   virtual void execute() noexcept {
-    const std::string tb = getParameter("Input file (MLTB Data)");
+    const std::string tb = getParameter("Input file (TREX Data)");
     const int cellId = getParameter<int>("CellId");
     const int level = getParameter<int>("Level");
 
-    TripBased::MLData data(tb);
+    TripBased::TREXData data(tb);
     data.printInfo();
 
     std::unordered_set<std::uint32_t> collectedRoutes;
@@ -861,15 +861,15 @@ public:
   StopsImportance(BasicShell &shell)
       : ParameterizedCommand(shell, "stopsImportance",
                              "Export the importance of each stop into a csv.") {
-    addParameter("Input file (MLTB Data)");
+    addParameter("Input file (TREX Data)");
     addParameter("Output csv file");
   }
 
   virtual void execute() noexcept {
-    const std::string mltbFile = getParameter("Input file (MLTB Data)");
+    const std::string mltbFile = getParameter("Input file (TREX Data)");
     const std::string file = getParameter("Output csv file");
 
-    TripBased::MLData mltb(mltbFile);
+    TripBased::TREXData mltb(mltbFile);
 
     std::vector<int> rankOfStop(mltb.numberOfStops(), 0);
 

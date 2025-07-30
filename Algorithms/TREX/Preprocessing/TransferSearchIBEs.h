@@ -2,7 +2,7 @@
 
 #include "../../../DataStructures/Container/Set.h"
 /* #include "../../../DataStructures/Container/IndexedSetBranchless.h" */
-#include "../../../DataStructures/MLTB/MLData.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../../DataStructures/TripBased/Data.h"
@@ -83,7 +83,7 @@ class TransferSearch {
   };
 
  public:
-  TransferSearch(MLData &data)
+  TransferSearch(TREXData &data)
       : data(data),
         /* edgesToInsert(), */
         queue(data.numberOfStopEvents()),
@@ -369,7 +369,7 @@ class TransferSearch {
   /* } */
 
  private:
-  MLData &data;
+  TREXData &data;
   /* std::vector<ShortCutToInsert> edgesToInsert; */
 
   std::vector<TripLabel> queue;

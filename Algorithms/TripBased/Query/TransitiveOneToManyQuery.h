@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include "../../../DataStructures/Container/Set.h"
-#include "../../../DataStructures/MLTB/MLData.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../../DataStructures/TripBased/Data.h"
@@ -64,7 +64,7 @@ class TransitiveOneToManyQuery {
   };
 
  public:
-  TransitiveOneToManyQuery(const MLData &data)
+  TransitiveOneToManyQuery(const TREXData &data)
       : data(data),
         reverseTransferGraph(data.raptorData.transferGraph),
         transferFromSource(data.numberOfStops(), INFTY),
@@ -514,7 +514,7 @@ class TransitiveOneToManyQuery {
   }
 
  private:
-  const MLData &data;
+  const TREXData &data;
 
   TransferGraph reverseTransferGraph;
   std::vector<int> transferFromSource;

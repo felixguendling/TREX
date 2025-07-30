@@ -1,3 +1,3 @@
 # Multi-Level Trip Based
 
-Repo für MLTB, Ideen für bessere Namen?
+Repo für TREX, Ideen für bessere Namen?

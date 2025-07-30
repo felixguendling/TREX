@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../../../DataStructures/MLTB/MLData.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/String/String.h"
@@ -16,7 +16,7 @@ namespace TripBased {
 
 class Builder {
  public:
-  Builder(MLData& data) : data(data), search(data), stopEvents() {}
+  Builder(TREXData& data) : data(data), search(data), stopEvents() {}
 
   void collectUsingMasks(const uint64_t LEVELMASK, const uint64_t TARGETMASK) {
     /* profiler.startPhase(); */
@@ -75,14 +75,14 @@ class Builder {
     stopEvents.clear();
   }
 
-  MLData& data;
+  TREXData& data;
   TransferSearch<TripBased::AggregateProfiler> search;
   std::vector<std::pair<TripId, StopIndex>> stopEvents;
 
   /* AggregateProfiler profiler; */
 };
 
-inline void Customize(MLData& data, const bool verbose = true) {
+inline void Customize(TREXData& data, const bool verbose = true) {
   data.createCompactLayoutGraph();
 
   data.addInformationToStopEventGraph();
@@ -123,7 +123,7 @@ inline void Customize(MLData& data, const bool verbose = true) {
   }
 }
 
-inline void Customize(MLData& data, const int numberOfThreads,
+inline void Customize(TREXData& data, const int numberOfThreads,
                       const int pinMultiplier = 1, const bool verbose = true) {
   data.createCompactLayoutGraph();
   data.addInformationToStopEventGraph();

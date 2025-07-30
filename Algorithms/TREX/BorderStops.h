@@ -5,14 +5,14 @@
 #include <iostream>
 #include <vector>
 
-#include "../../DataStructures/MLTB/MLData.h"
+#include "../../DataStructures/TREX/TREXData.h"
 #include "../../Helpers/Console/Progress.h"
 
 namespace TripBased {
 
 class BorderStops {
  public:
-  BorderStops(MLData &data) : data(data), borderStops() {}
+  BorderStops(TREXData &data) : data(data), borderStops() {}
 
   void collectBorderStops() {
     borderStops.clear();
@@ -101,7 +101,7 @@ class BorderStops {
   }
 
  private:
-  MLData &data;
+  TREXData &data;
   std::vector<StopId> borderStops;
 };
 }  // namespace TripBased

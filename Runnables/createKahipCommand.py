@@ -5,13 +5,13 @@ def generate_bash_script(name, levels, imbalance, time_limit):
     hierarchy_parameters = ':'.join(['2'] * levels)
     distance_parameters = ':'.join(['1'] * levels)
     command = "./../ExternalLibs/KaHIP/deploy/kaffpa \\\n\
-        ../../Datasets/{}/MLTB/compact_layout.graph.metis \\\n\
+        ../../Datasets/{}/TREX/compact_layout.graph.metis \\\n\
         --imbalance={} \\\n\
         --k={} \\\n\
         --preconfiguration=ssocial \\\n\
         --hierarchy_parameter_string={} \\\n\
         --distance_parameter_string={} \\\n\
-        --output_filename=../../Datasets/{}/MLTB/partition{}_2.i{}.txt \\\n\
+        --output_filename=../../Datasets/{}/TREX/partition{}_2.i{}.txt \\\n\
         --time_limit={}".format(name, imbalance, 2**levels, hierarchy_parameters, distance_parameters, name, levels, imbalance, time_limit)
 
     script_content = f'''#!/bin/bash

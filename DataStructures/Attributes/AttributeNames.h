@@ -94,7 +94,7 @@ using BundleSizeType = AttributeNameWrapper<27>;
 // Arc-Flag TB
 using ARCFlag = AttributeNameWrapper<28>;
 
-// MLTB
+// TREX
 using LocalLevel = AttributeNameWrapper<29>;
 using Hop = AttributeNameWrapper<30>;
 

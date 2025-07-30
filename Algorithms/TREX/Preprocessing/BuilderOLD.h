@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../../../DataStructures/MLTB/MLData.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/String/String.h"
@@ -16,7 +16,7 @@ namespace TripBased {
 
 class Builder {
  public:
-  Builder(MLData& data)
+  Builder(TREXData& data)
       : data(data),
         search(data)
         /* , incommingEventsOfCell(0) */
@@ -142,7 +142,7 @@ class Builder {
   }
 
  private:
-  MLData& data;
+  TREXData& data;
   TransferSearch<TripBased::AggregateProfiler> search;
 
   // to collect stats

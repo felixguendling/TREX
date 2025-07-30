@@ -1,2 +1,2 @@
-raptorToMLTB ../../Datasets/Europe/raptor.binary ../../Datasets/Europe/MLTB/mltb.binary 16
-createCompactLayoutGraph ../../Datasets/Europe/MLTB/mltb.binary ../../Datasets/Europe/MLTB/compact_layout.graph true
+raptorToTREX ../../Datasets/Europe/raptor.binary ../../Datasets/Europe/TREX/mltb.binary 16
+createCompactLayoutGraph ../../Datasets/Europe/TREX/mltb.binary ../../Datasets/Europe/TREX/compact_layout.graph true

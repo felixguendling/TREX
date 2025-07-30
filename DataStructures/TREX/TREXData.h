@@ -14,9 +14,9 @@
 
 namespace TripBased {
 
-class MLData : public Data {
+class TREXData : public Data {
  public:
-  MLData(const RAPTOR::Data& raptor, const int numLevels)
+  TREXData(const RAPTOR::Data& raptor, const int numLevels)
       : Data(raptor),
         numberOfLevels(numLevels),
         unionFind(numberOfStops()),
@@ -24,7 +24,7 @@ class MLData : public Data {
         localLevelOfEvent(raptor.numberOfStopEvents(), 0),
         cellIds(raptor.numberOfStops(), 0) {}
 
-  MLData(const std::string& fileName) { deserialize(fileName); }
+  TREXData(const std::string& fileName) { deserialize(fileName); }
 
  public:
   inline void addInformationToStopEventGraph() noexcept {

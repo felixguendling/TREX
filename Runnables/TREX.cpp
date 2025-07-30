@@ -1,4 +1,4 @@
-#include "Commands/MLTB.h"
+#include "Commands/TREX.h"
 
 #include "../Helpers/Console/CommandLineParser.h"
 #include "../Shell/Shell.h"
@@ -23,19 +23,19 @@ int main(int argc, char **argv) {
   ::Shell::Shell shell;
 
   new ApplyPartitionFile(shell);
-  new RAPTORToMLTB(shell);
+  new RAPTORToTREX(shell);
   new CreateCompactLayoutGraph(shell);
   new Customization(shell);
-  new ShowInfoOfMLTB(shell);
-  new WriteMLTBToCSV(shell);
+  new ShowInfoOfTREX(shell);
+  new WriteTREXToCSV(shell);
   new EventDistributionOverTime(shell);
   new CheckBorderStops(shell);
-  new ExportMLTBTimeExpandedGraph(shell);
+  new ExportTREXTimeExpandedGraph(shell);
   new BuildTBTEGraph(shell);
   new ShowInducedCellOfNetwork(shell);
 
-  new RunMLQuery(shell);
-  new RunMLTBProfileQueries(shell);
+  new RunTREXQuery(shell);
+  new RunTREXProfileQueries(shell);
 
   new RunTransitiveRAPTORQueries(shell);
   new RunOneTransitiveRAPTORQuery(shell);
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
   new RunGeoRankedRAPTORQueries(shell);
   new RunGeoRankedTripBasedQueries(shell);
-  new RunGeoRankedMLTBQueries(shell);
+  new RunGeoRankedTREXQueries(shell);
 
   new IntermediateToTD(shell);
   new IntermediateToTE(shell);

@@ -102,7 +102,7 @@ using SimpleDynamicGraphWithARCFlag =
     DynamicGraph<NoVertexAttributes, WithARCFlag>;
 using SimpleEdgeListWithARCFlag = EdgeList<NoVertexAttributes, WithARCFlag>;
 
-// MLTB
+// TREX
 using WithLocalLevel = List<Attribute<LocalLevel, uint8_t>>;
 using WithTravelTimeAndLocalLevel =
     List<Attribute<TravelTime, int>, Attribute<LocalLevel, uint8_t>>;

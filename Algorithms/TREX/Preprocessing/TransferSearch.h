@@ -1,16 +1,15 @@
-// NOTE: das habe ich nicht angepasst an "numberOfCellsPerLevel == 2", wird prop
-// nicht laufen
 #pragma once
 
 #include "../../../DataStructures/Container/Set.h"
-/* #include "../../../DataStructures/Container/Map.h" */
-#include "../../../DataStructures/MLTB/MLData.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../../DataStructures/TripBased/Data.h"
 #include "../../TripBased/Query/Profiler.h"
 #include "../../TripBased/Query/ReachedIndex.h"
 
+// NOTE: die Länge der extracted paths stimmt nicht, weil ich beim entpacken
+// aufhöre sobald ich etwas sehe was ich vorher bereits schon entpackt habe
 namespace TripBased {
 
 template <typename PROFILER = NoProfiler>
@@ -83,9 +82,8 @@ class TransferSearch {
   };
 
  public:
-  TransferSearch(MLData& data)
+  TransferSearch(TREXData& data)
       : data(data),
-        augmentedStopEventGraph(),
         edgesToInsert(),
         queue(data.numberOfStopEvents()),
         edgeRanges(data.numberOfStopEvents()),
@@ -93,23 +91,13 @@ class TransferSearch {
         reachedIndex(data),
         edgeLabels(data.stopEventGraph.numEdges()),
         routeLabels(data.numberOfRoutes()),
-        localLevels(data.stopEventGraph.numEdges(), 0),
         toBeUnpacked(data.numberOfStopEvents()),
-        fromStopEventId(data.stopEventGraph.numEdges())
-        /* , lastExtractedRun(data.numberOfStopEvents(), 0) */
-        ,
+        fromStopEventId(data.stopEventGraph.numEdges()),
         lastExtractedRun(data.stopEventGraph.numEdges(), 0),
         currentRun(0),
         extractedPaths(0),
         totalLengthPfExtractedPaths(0),
         numAddedShortcuts(0) {
-    // copy stopEventGraph to augmentedStopEventGraph
-    Graph::copy(data.stopEventGraph, augmentedStopEventGraph);
-
-    // we dont insert straight away, but rather collect the shortcuts, then add
-    // them
-    edgesToInsert.reserve(augmentedStopEventGraph.numEdges());
-
     for (const auto [edge, from] : data.stopEventGraph.edgesWithFromVertex()) {
       edgeLabels[edge].stopEvent =
           StopEventId(data.stopEventGraph.get(ToVertex, edge) + 1);
@@ -144,17 +132,19 @@ class TransferSearch {
   }
 
   inline void run(const TripId trip, const StopIndex stopIndex,
-                  std::vector<int> currentLevels,
-                  std::vector<int> currentCellIds) noexcept {
+                  const uint64_t newLEVELMASK,
+                  const uint64_t newTARGETMASK) noexcept {
     AssertMsg(data.isTrip(trip), "Trip is not valid!");
     AssertMsg(stopIndex < data.numberOfStopsInTrip(trip),
               "StopIndex is not valid!");
 
     profiler.start();
     clear();
-    levels = currentLevels;
-    cellIds = currentCellIds;
-    minLevel = *std::min_element(levels.begin(), levels.end());
+
+    LEVELMASK = newLEVELMASK;
+    TARGETMASK = newTARGETMASK;
+    // find the lowest first bit set to true (and -1 bcs 1 based)
+    minLevel = (uint8_t)(__builtin_ffs(LEVELMASK) - 1);
 
     enqueue(trip, stopIndex);
     scanTrips();
@@ -163,8 +153,6 @@ class TransferSearch {
   }
 
   inline Profiler& getProfiler() noexcept { return profiler; }
-
-  inline std::vector<uint8_t>& getLocalLevels() noexcept { return localLevels; }
 
  private:
   inline void clear() noexcept {
@@ -224,7 +212,7 @@ class TransferSearch {
 
   inline bool isStopInCell(StopId stop) const {
     AssertMsg(data.isStop(stop), "Stop is not a valid stop!");
-    return data.stopInCell(stop, levels, cellIds);
+    return (data.getCellIdOfStop(stop) & LEVELMASK) == TARGETMASK;
   }
 
   inline void enqueue(const TripId trip, const StopIndex index) noexcept {
@@ -250,7 +238,7 @@ class TransferSearch {
             label.trip, StopIndex(label.stopEvent - label.firstEvent - 1))))
       return;
 
-    if (minLevel > localLevels[edge]) return;
+    if (minLevel > data.stopEventGraph.get(LocalLevel, edge)) return;
 
     queue[queueSize] = TripLabel(
         label.stopEvent,
@@ -271,7 +259,7 @@ class TransferSearch {
       unpackStopEvent(index);
 
       // STATS
-      ++extractedPaths;
+      /* ++extractedPaths; */
     }
   }
 
@@ -282,10 +270,10 @@ class TransferSearch {
     Edge currentEdge = label.parentTransfer;
 
     // new vertices for the shortcut
-    StopEventId toVertex = label.begin;
-    StopEventId fromVertex = noStopEvent;  // will be assigned
+    /* StopEventId toVertex = label.begin; */
+    /* StopEventId fromVertex = noStopEvent; // will be assigned */
 
-    uint8_t currentHopCounter(0);
+    /* uint8_t currentHopCounter(0); */
 
     while (currentEdge != noEdge) {
       // commented this out since I want to create shortcuts, hence i need to
@@ -293,39 +281,40 @@ class TransferSearch {
       if (lastExtractedRun[currentEdge] == currentRun) return;
       lastExtractedRun[currentEdge] = currentRun;
 
-      localLevels[currentEdge] = minLevel + 1;
+      /* // set the locallevel of the events */
+      /* fromVertex = fromStopEventId[currentEdge]; */
+      /* currentHopCounter += data.stopEventGraph.get(Hop, currentEdge); */
 
-      fromVertex = fromStopEventId[currentEdge];
+      data.stopEventGraph.set(LocalLevel, currentEdge, minLevel + 1);
 
       // set the locallevel of the events
       StopEventId e = fromStopEventId[currentEdge];
       data.getLocalLevelOfEvent(e) = minLevel + 1;
-
-      currentHopCounter += data.stopEventGraph.get(Hop, currentEdge);
 
       index = label.parent;
       label = queue[index];
       currentEdge = label.parentTransfer;
 
       // STATS
-      ++totalLengthPfExtractedPaths;
+      /* ++totalLengthPfExtractedPaths; */
     }
 
     AssertMsg(
         index == 0,
         "The origin of the journey does not start with the incomming event!");
 
-    // only add a shortcut if we can skip at least 2 transfers
-    if (currentHopCounter >= 2) {
-      AssertMsg(fromVertex != noStopEvent,
-                "From StopEvent has not been assigned properly");
-      AssertMsg(fromVertex != toVertex,
-                "From- and To StopEvent should not be the same");
-      /* edgesToInsert.emplace_back(fromVertex, toVertex, currentHopCounter); */
+    /* // only add a shortcut if we can skip at least 2 transfers */
+    /* if ((currentHopCounter / (minLevel+1)) >= 2) { */
+    /*     /1* AssertMsg(fromVertex != noStopEvent, "From StopEvent has not been
+     * assigned properly"); *1/ */
+    /*     /1* AssertMsg(fromVertex != toVertex, "From- and To StopEvent should
+     * not be the same"); *1/ */
+    /*     /1* edgesToInsert.emplace_back(fromVertex, toVertex,
+     * currentHopCounter); *1/ */
 
-      // STATS
-      ++numAddedShortcuts;
-    }
+    /*     // STATS */
+    /*     ++numAddedShortcuts; */
+    /* } */
   }
 
  public:
@@ -344,34 +333,8 @@ class TransferSearch {
     numAddedShortcuts = 0;
   }
 
-  // this adds the shortcuts to the augmentedStopEventGraph
-  void addCollectShortcuts() noexcept {
-    std::sort(edgesToInsert.begin(), edgesToInsert.end());
-
-    for (auto& shortcut : edgesToInsert) {
-      Vertex from(shortcut.fromStopEventId);
-      Vertex to(shortcut.toStopEventId);
-
-      Edge edge = augmentedStopEventGraph.findOrAddEdge(from, to);
-      AssertMsg(augmentedStopEventGraph.isEdge(edge),
-                "Shortcut is not a valid edge");
-
-      augmentedStopEventGraph.set(LocalLevel, edge, minLevel + 1);
-      augmentedStopEventGraph.set(Hop, edge, shortcut.hopCounter);
-    }
-
-    edgesToInsert.clear();
-  }
-
-  DynamicTransferGraphWithLocalLevelAndHopAndFromVertex&
-  getAugmentedGraph() noexcept {
-    return augmentedStopEventGraph;
-  }
-
  private:
-  MLData& data;
-
-  DynamicTransferGraphWithLocalLevelAndHopAndFromVertex augmentedStopEventGraph;
+  TREXData& data;
   std::vector<ShortCutToInsert> edgesToInsert;
 
   std::vector<TripLabel> queue;
@@ -382,11 +345,11 @@ class TransferSearch {
 
   std::vector<EdgeLabel> edgeLabels;
   std::vector<RouteLabel> routeLabels;
-  std::vector<uint8_t> localLevels;
 
-  std::vector<int> levels;
-  std::vector<int> cellIds;
-  int minLevel;
+  uint64_t LEVELMASK;
+  uint64_t TARGETMASK;
+
+  uint8_t minLevel;
 
   Profiler profiler;
 

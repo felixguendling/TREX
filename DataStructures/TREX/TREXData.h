@@ -1,3 +1,27 @@
+/**********************************************************************************
+
+ Copyright (c) 2023-2025 Patrick Steil
+
+ MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+**********************************************************************************/
 #pragma once
 
 #include <cmath>
@@ -16,7 +40,7 @@ namespace TripBased {
 
 class TREXData : public Data {
  public:
-  TREXData(const RAPTOR::Data& raptor, const int numLevels)
+  TREXData(const RAPTOR::Data &raptor, const int numLevels)
       : Data(raptor),
         numberOfLevels(numLevels),
         unionFind(numberOfStops()),
@@ -24,7 +48,7 @@ class TREXData : public Data {
         localLevelOfEvent(raptor.numberOfStopEvents(), 0),
         cellIds(raptor.numberOfStops(), 0) {}
 
-  TREXData(const std::string& fileName) { deserialize(fileName); }
+  TREXData(const std::string &fileName) { deserialize(fileName); }
 
  public:
   inline void addInformationToStopEventGraph() noexcept {
@@ -35,7 +59,7 @@ class TREXData : public Data {
     /* stopEventGraph.get(Hop).swap(initHops); */
   }
 
-  inline void readPartitionFile(const std::string& fileName) {
+  inline void readPartitionFile(const std::string &fileName) {
     std::vector<uint64_t> globalIds(numberOfStops(), 0);
     std::fstream file(fileName);
 
@@ -59,7 +83,7 @@ class TREXData : public Data {
     applyGlobalIDs(globalIds);
   }
 
-  inline void applyGlobalIDs(std::vector<uint64_t>& globalIds) noexcept {
+  inline void applyGlobalIDs(std::vector<uint64_t> &globalIds) noexcept {
     /*
     std::vector<Vertex> stopToVertexMapping(numberOfStops(), noVertex);
 
@@ -274,7 +298,7 @@ class TREXData : public Data {
 
   inline int getNumberOfCellsPerLevel() const noexcept { return 2; }
 
-  inline uint64_t getCellIdOfStop(const StopId& stop) const noexcept {
+  inline uint64_t getCellIdOfStop(const StopId &stop) const noexcept {
     AssertMsg(isStop(stop), "Stop is not a stop!");
 
     return cellIds[stop];
@@ -285,7 +309,7 @@ class TREXData : public Data {
     return raptorData.routesContainingStop(stop);
   }
 
-  inline uint8_t& getLocalLevelOfEvent(StopEventId event) noexcept {
+  inline uint8_t &getLocalLevelOfEvent(StopEventId event) noexcept {
     AssertMsg(event < localLevelOfEvent.size(), "Event is out of bounds!");
     return localLevelOfEvent[event];
   }
@@ -319,21 +343,21 @@ class TREXData : public Data {
   }
 
   // Serialization
-  inline void serialize(const std::string& fileName) const noexcept {
+  inline void serialize(const std::string &fileName) const noexcept {
     Data::serialize(fileName + ".trip");
     IO::serialize(fileName, numberOfLevels, unionFind, layoutGraph,
                   localLevelOfEvent, cellIds);
     stopEventGraph.writeBinary(fileName + ".trip.graph");
   }
 
-  inline void deserialize(const std::string& fileName) noexcept {
+  inline void deserialize(const std::string &fileName) noexcept {
     Data::deserialize(fileName + ".trip");
     IO::deserialize(fileName, numberOfLevels, unionFind, layoutGraph,
                     localLevelOfEvent, cellIds);
     stopEventGraph.readBinary(fileName + ".trip.graph");
   }
 
-  inline void writePartitionToCSV(const std::string& fileName) noexcept {
+  inline void writePartitionToCSV(const std::string &fileName) noexcept {
     std::ofstream file(fileName);
 
     file << "StopID,CellId\n";
@@ -344,7 +368,7 @@ class TREXData : public Data {
     file.close();
   }
 
-  inline void writeUnionFindToFile(const std::string& fileName) noexcept {
+  inline void writeUnionFindToFile(const std::string &fileName) noexcept {
     std::ofstream file(fileName);
 
     file << "StopID,CorrespondingStopID\n";
@@ -377,7 +401,7 @@ class TREXData : public Data {
   inline void setNumberOfLevels(int level) noexcept { numberOfLevels = level; }
 
   inline void writeLocalLevelOfTripsToCSV(
-      const std::string& fileName) const noexcept {
+      const std::string &fileName) const noexcept {
     std::vector<size_t> outgoingLocalLevelOfTrip(numberOfTrips(), 0);
     std::vector<size_t> incomingLocalLevelOfTrip(numberOfTrips(), 0);
     std::vector<std::vector<size_t>> numOfTransferPerLevel(numberOfTrips());

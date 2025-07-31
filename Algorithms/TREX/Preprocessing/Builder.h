@@ -1,3 +1,27 @@
+/**********************************************************************************
+
+ Copyright (c) 2023-2025 Patrick Steil
+
+ MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+**********************************************************************************/
 #pragma once
 
 // Builder for Number Of Cells = 2 on all levels
@@ -16,7 +40,7 @@ namespace TripBased {
 
 class Builder {
  public:
-  Builder(TREXData& data) : data(data), search(data), stopEvents() {}
+  Builder(TREXData &data) : data(data), search(data), stopEvents() {}
 
   void collectUsingMasks(const uint64_t LEVELMASK, const uint64_t TARGETMASK) {
     /* profiler.startPhase(); */
@@ -33,7 +57,7 @@ class Builder {
       AssertMsg(data.layoutGraph.isVertex(stop),
                 "Stop is not in the layoutgraph");
 
-      for (const RAPTOR::RouteSegment& route :
+      for (const RAPTOR::RouteSegment &route :
            data.routesContainingStop(stop)) {
         // EDGE CASE: a stop is not a border stop (of a route) if it's at either
         // end (start or end)
@@ -67,7 +91,7 @@ class Builder {
     collectUsingMasks(LEVELMASK, TARGETMASK);
 
     /* profiler.startPhase(); */
-    for (auto& element : stopEvents) {
+    for (auto &element : stopEvents) {
       search.run(element.first, element.second, LEVELMASK, TARGETMASK);
     }
 
@@ -75,14 +99,14 @@ class Builder {
     stopEvents.clear();
   }
 
-  TREXData& data;
+  TREXData &data;
   TransferSearch<TripBased::AggregateProfiler> search;
   std::vector<std::pair<TripId, StopIndex>> stopEvents;
 
   /* AggregateProfiler profiler; */
 };
 
-inline void Customize(TREXData& data, const bool verbose = true) {
+inline void Customize(TREXData &data, const bool verbose = true) {
   data.createCompactLayoutGraph();
 
   data.addInformationToStopEventGraph();
@@ -123,7 +147,7 @@ inline void Customize(TREXData& data, const bool verbose = true) {
   }
 }
 
-inline void Customize(TREXData& data, const int numberOfThreads,
+inline void Customize(TREXData &data, const int numberOfThreads,
                       const int pinMultiplier = 1, const bool verbose = true) {
   data.createCompactLayoutGraph();
   data.addInformationToStopEventGraph();

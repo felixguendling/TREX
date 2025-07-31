@@ -1,6 +1,6 @@
 /**********************************************************************************
 
- Copyright (c) 202% Patrick Steil
+ Copyright (c) 2023-2025 Patrick Steil
 
  MIT License
 
@@ -25,10 +25,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 
 #include "../../../DataStructures/Container/Set.h"
-#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../../DataStructures/RAPTOR/Entities/RouteSegment.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../Helpers/String/String.h"
 
 #ifdef USE_SIMD

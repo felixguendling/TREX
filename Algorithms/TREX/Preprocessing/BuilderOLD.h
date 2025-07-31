@@ -1,3 +1,27 @@
+/**********************************************************************************
+
+ Copyright (c) 2023-2025 Patrick Steil
+
+ MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+**********************************************************************************/
 // NOTE: das habe ich nicht angepasst an "numberOfCellsPerLevel == 2", wird prop
 // nicht laufen
 #pragma once
@@ -16,7 +40,7 @@ namespace TripBased {
 
 class Builder {
  public:
-  Builder(TREXData& data)
+  Builder(TREXData &data)
       : data(data),
         search(data)
         /* , incommingEventsOfCell(0) */
@@ -25,7 +49,7 @@ class Builder {
     data.createCompactLayoutGraph();
   }
 
-  void process(std::vector<int>& levels, std::vector<int>& ids,
+  void process(std::vector<int> &levels, std::vector<int> &ids,
                size_t indexOfCell) {
     std::vector<std::pair<TripId, StopIndex>> stopEvents =
         data.getBorderStopEvents(levels, ids);
@@ -38,7 +62,7 @@ class Builder {
   }
 
   // obacht, das ist eine recs function
-  void computeCellIds(std::vector<std::vector<int>>& result,
+  void computeCellIds(std::vector<std::vector<int>> &result,
                       std::vector<int> level, int depth, int NUM_LEVELS,
                       int NUM_CELLS_PER_LEVELS) {
     if (depth == NUM_LEVELS) {
@@ -53,7 +77,7 @@ class Builder {
     }
   }
 
-  void generateAllLevelCellIds(std::vector<std::vector<int>>& result,
+  void generateAllLevelCellIds(std::vector<std::vector<int>> &result,
                                int NUM_LEVELS) {
     std::vector<int> currentLevel(NUM_LEVELS, 0);
     computeCellIds(result, currentLevel, 0, NUM_LEVELS,
@@ -85,7 +109,7 @@ class Builder {
 
       Progress progress(result.size());
 
-      for (auto& element : result) {
+      for (auto &element : result) {
         process(levels, element, indexOfCell);
         ++progress;
         ++indexOfCell;
@@ -142,7 +166,7 @@ class Builder {
   }
 
  private:
-  TREXData& data;
+  TREXData &data;
   TransferSearch<TripBased::AggregateProfiler> search;
 
   // to collect stats

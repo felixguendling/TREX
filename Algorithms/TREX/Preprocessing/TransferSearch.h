@@ -1,9 +1,33 @@
+/**********************************************************************************
+
+ Copyright (c) 2023-2025 Patrick Steil
+
+ MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+**********************************************************************************/
 #pragma once
 
 #include "../../../DataStructures/Container/Set.h"
-#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
+#include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../DataStructures/TripBased/Data.h"
 #include "../../TripBased/Query/Profiler.h"
 #include "../../TripBased/Query/ReachedIndex.h"
@@ -74,7 +98,7 @@ class TransferSearch {
           toStopEventId(toStopEventId),
           hopCounter(hopCounter) {}
 
-    bool operator<(const ShortCutToInsert& other) {
+    bool operator<(const ShortCutToInsert &other) {
       return std::tie(fromStopEventId, toStopEventId, hopCounter) <
              std::tie(other.fromStopEventId, other.toStopEventId,
                       other.hopCounter);
@@ -82,7 +106,7 @@ class TransferSearch {
   };
 
  public:
-  TransferSearch(TREXData& data)
+  TransferSearch(TREXData &data)
       : data(data),
         edgesToInsert(),
         queue(data.numberOfStopEvents()),
@@ -112,7 +136,7 @@ class TransferSearch {
     for (const RouteId route : data.raptorData.routes()) {
       const size_t numberOfStops = data.numberOfStopsInRoute(route);
       const size_t numberOfTrips = data.raptorData.numberOfTripsInRoute(route);
-      const RAPTOR::StopEvent* stopEvents =
+      const RAPTOR::StopEvent *stopEvents =
           data.raptorData.firstTripOfRoute(route);
       routeLabels[route].numberOfTrips = numberOfTrips;
       routeLabels[route].departureTimes.resize((numberOfStops - 1) *
@@ -152,7 +176,7 @@ class TransferSearch {
     profiler.done();
   }
 
-  inline Profiler& getProfiler() noexcept { return profiler; }
+  inline Profiler &getProfiler() noexcept { return profiler; }
 
  private:
   inline void clear() noexcept {
@@ -176,7 +200,7 @@ class TransferSearch {
       profiler.countMetric(METRIC_ROUNDS);
 
       for (size_t i = roundBegin; i < roundEnd; i++) {
-        const TripLabel& label = queue[i];
+        const TripLabel &label = queue[i];
         profiler.countMetric(METRIC_SCANNED_TRIPS);
         for (StopEventId j = label.begin; j < label.end; j++) {
           profiler.countMetric(METRIC_SCANNED_STOPS);
@@ -189,7 +213,7 @@ class TransferSearch {
       }
 
       for (size_t i = roundBegin; i < roundEnd; i++) {
-        TripLabel& label = queue[i];
+        TripLabel &label = queue[i];
         edgeRanges[i].begin =
             data.stopEventGraph.beginEdgeFrom(Vertex(label.begin));
         edgeRanges[i].end =
@@ -197,7 +221,7 @@ class TransferSearch {
       }
 
       for (size_t i = roundBegin; i < roundEnd; i++) {
-        const EdgeRange& label = edgeRanges[i];
+        const EdgeRange &label = edgeRanges[i];
 
         for (Edge edge = label.begin; edge < label.end; edge++) {
           profiler.countMetric(METRIC_RELAXED_TRANSFERS);
@@ -228,7 +252,7 @@ class TransferSearch {
 
   inline void enqueue(const Edge edge, const size_t parent) noexcept {
     profiler.countMetric(METRIC_ENQUEUES);
-    const EdgeLabel& label = edgeLabels[edge];
+    const EdgeLabel &label = edgeLabels[edge];
 
     // break if a) already reached OR b) the stop if this transfer is not in the
     // same cell
@@ -334,7 +358,7 @@ class TransferSearch {
   }
 
  private:
-  TREXData& data;
+  TREXData &data;
   std::vector<ShortCutToInsert> edgesToInsert;
 
   std::vector<TripLabel> queue;

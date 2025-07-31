@@ -411,7 +411,7 @@ class TREXProfileQuery {
     size_t roundBegin = 0;
     size_t roundEnd = queueSize;
     u_int8_t n = 1;
-    while (roundBegin < roundEnd && n < 15) {
+    while (roundBegin < roundEnd && n < 16) {
       profiler.countMetric(METRIC_ROUNDS);
       // Evaluate final transfers in order to check if the target is
       // reachable
@@ -437,6 +437,9 @@ class TREXProfileQuery {
           }
         }
       }
+
+      if (n == 15) break;
+
       // Find the range of transfers for each trip
       for (size_t i = roundBegin; i < roundEnd; i++) {
 #ifdef ENABLE_PREFETCH

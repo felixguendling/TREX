@@ -108,7 +108,7 @@ class ProfileQuery {
   };
 
  public:
-  ProfileQuery(const Data& data)
+  ProfileQuery(const Data &data)
       : data(data),
         reverseTransferGraph(data.raptorData.transferGraph),
         transferFromSource(data.numberOfStops(), INFTY),
@@ -144,7 +144,7 @@ class ProfileQuery {
     for (const RouteId route : data.raptorData.routes()) {
       const size_t numberOfStops = data.numberOfStopsInRoute(route);
       const size_t numberOfTrips = data.raptorData.numberOfTripsInRoute(route);
-      const RAPTOR::StopEvent* stopEvents =
+      const RAPTOR::StopEvent *stopEvents =
           data.raptorData.firstTripOfRoute(route);
       routeLabels[route].numberOfTrips = numberOfTrips;
       routeLabels[route].departureTimes.resize((numberOfStops - 1) *
@@ -219,20 +219,20 @@ class ProfileQuery {
 
   inline void evaluateInitialTransfers() noexcept {
     reachedRoutes.clear();
-    for (const RAPTOR::RouteSegment& route :
+    for (const RAPTOR::RouteSegment &route :
          data.raptorData.routesContainingStop(sourceStop)) {
       reachedRoutes.insert(route.routeId);
     }
     for (const Edge edge :
          data.raptorData.transferGraph.edgesFrom(sourceStop)) {
       const Vertex stop = data.raptorData.transferGraph.get(ToVertex, edge);
-      for (const RAPTOR::RouteSegment& route :
+      for (const RAPTOR::RouteSegment &route :
            data.raptorData.routesContainingStop(StopId(stop))) {
         reachedRoutes.insert(route.routeId);
       }
     }
     reachedRoutes.sort();
-    auto& valuesToLoopOver = reachedRoutes.getValues();
+    auto &valuesToLoopOver = reachedRoutes.getValues();
 
     for (size_t i = 0; i < valuesToLoopOver.size(); ++i) {
 #ifdef ENABLE_PREFETCH
@@ -243,10 +243,10 @@ class ProfileQuery {
 #endif
 
       const RouteId route = valuesToLoopOver[i];
-      const RouteLabel& label = routeLabels[route];
+      const RouteLabel &label = routeLabels[route];
       const StopIndex endIndex = label.end();
       const TripId firstTrip = data.firstTripOfRoute[route];
-      const StopId* stops = data.raptorData.stopArrayOfRoute(route);
+      const StopId *stops = data.raptorData.stopArrayOfRoute(route);
       TripId tripIndex = noTripId;
       for (StopIndex stopIndex(0); stopIndex < endIndex; stopIndex++) {
         const int timeFromSource = transferFromSource[stops[stopIndex]];
@@ -277,9 +277,9 @@ class ProfileQuery {
     }
   }
 
-  inline Profiler& getProfiler() noexcept { return profiler; }
+  inline Profiler &getProfiler() noexcept { return profiler; }
 
-  const std::vector<TripStopIndex>& getCollectedDepTimes() noexcept {
+  const std::vector<TripStopIndex> &getCollectedDepTimes() noexcept {
     return collectedDepTimes;
   }
 
@@ -291,7 +291,7 @@ class ProfileQuery {
     std::vector<RAPTOR::Journey> result;
     int bestArrivalTime = INFTY;
     int counter(0);
-    for (const TargetLabel& label : targetLabels) {
+    for (const TargetLabel &label : targetLabels) {
       if ((!targetLabelChanged[counter++]) ||
           label.arrivalTime >= bestArrivalTime)
         continue;
@@ -350,14 +350,14 @@ class ProfileQuery {
     collectedDepTimes.clear();
     // get all reachable routes (meaning also by footpaths)
     reachedRoutes.clear();
-    for (const RAPTOR::RouteSegment& route :
+    for (const RAPTOR::RouteSegment &route :
          data.raptorData.routesContainingStop(sourceStop)) {
       reachedRoutes.insert(route.routeId);
     }
     for (const Edge edge :
          data.raptorData.transferGraph.edgesFrom(sourceStop)) {
       const Vertex stop = data.raptorData.transferGraph.get(ToVertex, edge);
-      for (const RAPTOR::RouteSegment& route :
+      for (const RAPTOR::RouteSegment &route :
            data.raptorData.routesContainingStop(StopId(stop))) {
         reachedRoutes.insert(route.routeId);
       }
@@ -365,8 +365,8 @@ class ProfileQuery {
     reachedRoutes.sort();
     for (const RouteId route : reachedRoutes) {
       const size_t numberOfStops = data.numberOfStopsInRoute(route);
-      const StopId* stops = data.raptorData.stopArrayOfRoute(route);
-      const RAPTOR::StopEvent* stopEvents =
+      const StopId *stops = data.raptorData.stopArrayOfRoute(route);
+      const RAPTOR::StopEvent *stopEvents =
           data.raptorData.firstTripOfRoute(route);
       const TripId firstTrip = data.firstTripOfRoute[route];
       for (size_t stopEventIndex = 0;
@@ -399,7 +399,7 @@ class ProfileQuery {
     size_t roundBegin = 0;
     size_t roundEnd = queueSize;
     u_int8_t n = 1;
-    while (roundBegin < roundEnd && n < 15) {
+    while (roundBegin < roundEnd && n < 16) {
       profiler.countMetric(METRIC_ROUNDS);
       // Evaluate final transfers in order to check if the target is
       // reachable
@@ -411,7 +411,7 @@ class ProfileQuery {
         }
 #endif
 
-        const TripLabel& label = queue[i];
+        const TripLabel &label = queue[i];
         profiler.countMetric(METRIC_SCANNED_TRIPS);
         for (StopEventId j = label.begin; j < label.end; j++) {
           profiler.countMetric(METRIC_SCANNED_STOPS);
@@ -425,6 +425,9 @@ class ProfileQuery {
           }
         }
       }
+
+      if (n == 15) break;
+
       // Find the range of transfers for each trip
       for (size_t i = roundBegin; i < roundEnd; i++) {
 #ifdef ENABLE_PREFETCH
@@ -434,7 +437,7 @@ class ProfileQuery {
         }
 #endif
 
-        TripLabel& label = queue[i];
+        TripLabel &label = queue[i];
         for (StopEventId j = label.begin; j < label.end; j++) {
           if (data.arrivalEvents[j].arrivalTime >= minArrivalTimeFastLookUp[n])
             label.end = j;
@@ -446,7 +449,7 @@ class ProfileQuery {
       }
       // Relax the transfers for each trip
       for (size_t i = roundBegin; i < roundEnd; i++) {
-        const EdgeRange& label = edgeRanges[i];
+        const EdgeRange &label = edgeRanges[i];
         for (Edge edge = label.begin; edge < label.end; edge++) {
           profiler.countMetric(METRIC_RELAXED_TRANSFERS);
           enqueue(edge, i, n);
@@ -475,7 +478,7 @@ class ProfileQuery {
   inline void enqueue(const Edge edge, const size_t parent,
                       const u_int8_t n) noexcept {
     profiler.countMetric(METRIC_ENQUEUES);
-    const EdgeLabel& label = edgeLabels[edge];
+    const EdgeLabel &label = edgeLabels[edge];
     if (reachedIndex.alreadyReached(label.trip,
                                     label.stopEvent - label.firstEvent, n + 1))
       return;
@@ -518,7 +521,7 @@ class ProfileQuery {
   }
 
   inline RAPTOR::Journey getJourney(
-      const TargetLabel& targetLabel) const noexcept {
+      const TargetLabel &targetLabel) const noexcept {
     RAPTOR::Journey result;
     u_int32_t parent = targetLabel.parent;
     if (parent == u_int32_t(-1)) {
@@ -531,7 +534,7 @@ class ProfileQuery {
     int lastTime(minDepartureTime);
     while (parent != u_int32_t(-1)) {
       AssertMsg(parent < queueSize, "Parent " << parent << " is out of range!");
-      const TripLabel& label = queue[parent];
+      const TripLabel &label = queue[parent];
       StopEventId arrivalStopEvent;
       Edge edge;
       std::tie(arrivalStopEvent, edge) =
@@ -568,7 +571,7 @@ class ProfileQuery {
   }
 
   inline std::pair<StopEventId, Edge> getParent(
-      const TripLabel& parentLabel,
+      const TripLabel &parentLabel,
       const StopEventId departureStopEvent) const noexcept {
     for (StopEventId i = parentLabel.begin; i < parentLabel.end; i++) {
       for (const Edge edge : data.stopEventGraph.edgesFrom(Vertex(i))) {
@@ -581,8 +584,8 @@ class ProfileQuery {
   }
 
   inline std::pair<StopEventId, Edge> getParent(
-      const TripLabel& parentLabel,
-      const TargetLabel& targetLabel) const noexcept {
+      const TripLabel &parentLabel,
+      const TargetLabel &targetLabel) const noexcept {
     // Final transfer to target may start exactly at parentLabel.end if it has
     // length 0
     const TripId trip = data.tripOfStopEvent[parentLabel.begin];
@@ -599,7 +602,7 @@ class ProfileQuery {
   }
 
  private:
-  const Data& data;
+  const Data &data;
 
   TransferGraph reverseTransferGraph;
   std::vector<int> transferFromSource;

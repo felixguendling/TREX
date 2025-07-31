@@ -449,6 +449,9 @@ class ProfileTB {
           }
         }
       }
+
+      if (n == 15) break;
+
       // Find the range of transfers for each trip
       for (size_t i = roundBegin; i < roundEnd; ++i) {
         TripLabel &label = queue[i];

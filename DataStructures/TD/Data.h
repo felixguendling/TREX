@@ -1,7 +1,6 @@
 /**********************************************************************************
 
  Copyright (c) 2023-2025 Patrick Steil
- Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 
@@ -54,24 +53,24 @@ class Data {
  public:
   Data() {}
 
-  Data(const std::string& fileName) { deserialize(fileName); }
+  Data(const std::string &fileName) { deserialize(fileName); }
 
-  inline static Data FromBinary(const std::string& fileName) noexcept {
+  inline static Data FromBinary(const std::string &fileName) noexcept {
     Data data;
     data.deserialize(fileName);
     return data;
   }
 
   inline static Data FromIntermediate(
-      const Intermediate::Data& inter) noexcept {
+      const Intermediate::Data &inter) noexcept {
     return FromIntermediate(inter, inter.greedyfifoRoutes());
   }
 
   inline static Data FromIntermediate(
-      const Intermediate::Data& inter,
-      const std::vector<std::vector<Intermediate::Trip>>& routes) noexcept {
+      const Intermediate::Data &inter,
+      const std::vector<std::vector<Intermediate::Trip>> &routes) noexcept {
     Data data;
-    for (const Intermediate::Stop& stop : inter.stops) {
+    for (const Intermediate::Stop &stop : inter.stops) {
       data.stopData.emplace_back(stop);
     }
 
@@ -81,12 +80,12 @@ class Data {
     data.numberOfStopEvents = 0;
 
     for (RouteId i(0); i < routes.size(); ++i) {
-      const auto& route = routes[i];
+      const auto &route = routes[i];
       AssertMsg(!route.empty(), "A route should not be empty!");
 
       numberOfRouteNodesToAdd += route[0].stopEvents.size();
 
-      for (auto& event : route[0].stopEvents) {
+      for (auto &event : route[0].stopEvents) {
         data.stopsOfRoute[i].emplace_back(event.stopId);
       }
     }
@@ -100,10 +99,10 @@ class Data {
 
     Vertex currentVertex = Vertex(inter.numberOfStops());
     for (RouteId i = RouteId(0); i < routes.size(); i++) {
-      const auto& route = routes[i];
+      const auto &route = routes[i];
       AssertMsg(!route.empty(), "A route should not be empty!");
 
-      const auto& firstTrip = route[0];
+      const auto &firstTrip = route[0];
       data.routeData.emplace_back(firstTrip.routeName, firstTrip.type);
 
       data.numberOfStopEvents += route.size() * firstTrip.stopEvents.size();
@@ -113,7 +112,7 @@ class Data {
         std::vector<std::pair<uint32_t, uint32_t>> durationFunction;
         durationFunction.reserve(32);
 
-        for (const Intermediate::Trip& trip : route) {
+        for (const Intermediate::Trip &trip : route) {
           AssertMsg(trip.stopEvents[j - 1].departureTime <=
                         trip.stopEvents[j].arrivalTime,
                     "Time travel!");
@@ -153,7 +152,7 @@ class Data {
           .set(TravelTime, inter.transferGraph.get(TravelTime, edge));
     }
 
-    for (auto& val : builderGraph[DurationFunction]) {
+    for (auto &val : builderGraph[DurationFunction]) {
       val.emplace_back(intMax, intMax);
     }
 
@@ -191,7 +190,7 @@ class Data {
     return stopsOfRoute[route].size();
   }
 
-  inline std::vector<StopId>& getStopsOfRoute(const RouteId route) noexcept {
+  inline std::vector<StopId> &getStopsOfRoute(const RouteId route) noexcept {
     AssertMsg(isRoute(route),
               "The id " << route << " does not represent a route!");
     return stopsOfRoute[route];
@@ -235,13 +234,13 @@ class Data {
               << String::prettyInt(maxNumOfEntries) << std::endl;
   }
 
-  inline void serialize(const std::string& fileName) const noexcept {
+  inline void serialize(const std::string &fileName) const noexcept {
     IO::serialize(fileName, stopData, routeData, stopsOfRoute,
                   numberOfStopEvents);
     timeDependentGraph.writeBinary(fileName + ".graph");
   }
 
-  inline void deserialize(const std::string& fileName) noexcept {
+  inline void deserialize(const std::string &fileName) noexcept {
     IO::deserialize(fileName, stopData, routeData, stopsOfRoute,
                     numberOfStopEvents);
     timeDependentGraph.readBinary(fileName + ".graph");

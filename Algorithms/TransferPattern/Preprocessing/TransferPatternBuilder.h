@@ -1,7 +1,6 @@
 /**********************************************************************************
 
  Copyright (c) 2023-2025 Patrick Steil
- Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 
@@ -44,15 +43,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace TransferPattern {
 
 struct eqVecStopid {
-  bool operator()(const std::vector<StopId>& a,
-                  const std::vector<StopId>& b) const {
+  bool operator()(const std::vector<StopId> &a,
+                  const std::vector<StopId> &b) const {
     return a == b;
   }
 };
 
 class TransferPatternBuilder {
  public:
-  TransferPatternBuilder(TripBased::Data& data)
+  TransferPatternBuilder(TripBased::Data &data)
       : data(data),
         query(data)
         /* , query(data.raptorData) */
@@ -64,13 +63,13 @@ class TransferPatternBuilder {
     clear();
   }
 
-  inline const DynamicDAGTransferPattern& getDAG() const noexcept {
+  inline const DynamicDAGTransferPattern &getDAG() const noexcept {
     return dynamicDAG;
   }
 
-  inline DynamicDAGTransferPattern& getDAG() noexcept { return dynamicDAG; }
+  inline DynamicDAGTransferPattern &getDAG() noexcept { return dynamicDAG; }
 
-  inline void addPrefixToDAG(std::vector<StopId>& prefix,
+  inline void addPrefixToDAG(std::vector<StopId> &prefix,
                              const int travelTime = -1) {
     AssertMsg(prefix.size() > 0, "Prefix is empty?");
     if (seenPrefix.find(prefix) != seenPrefix.end()) return;
@@ -107,7 +106,7 @@ class TransferPatternBuilder {
     int travelTime(-1);
     StopId target(0);
 
-    for (RAPTOR::Journey& j : query.getAllJourneys()) {
+    for (RAPTOR::Journey &j : query.getAllJourneys()) {
       /* for (RAPTOR::JourneyWithStopEvent& j : query.getAllJourneys()) { */
       currentPrefix.clear();
       currentPrefix.reserve(32);
@@ -167,11 +166,11 @@ class TransferPatternBuilder {
     /* seenPrefix.clear_no_resize(); */
   }
 
-  inline std::vector<int>& getMinTravelTimes() noexcept {
+  inline std::vector<int> &getMinTravelTimes() noexcept {
     return query.getMinTravelTimes();
   }
 
-  inline std::vector<uint8_t>& getMinNumberOfTransfers() noexcept {
+  inline std::vector<uint8_t> &getMinNumberOfTransfers() noexcept {
     return query.getMinNumberOfTransfers();
   }
 
@@ -206,7 +205,7 @@ class TransferPatternBuilder {
 };
 
 inline void ComputeTransferPatternUsingTripBased(
-    TripBased::Data& data, TransferPattern::Data& tpData) {
+    TripBased::Data &data, TransferPattern::Data &tpData) {
   Progress progress(data.numberOfStops());
   TransferPatternBuilder bobTheBuilder(data);
 
@@ -228,8 +227,8 @@ inline void ComputeTransferPatternUsingTripBased(
   progress.finished();
 }
 
-inline void ComputeTransferPatternUsingTripBased(TripBased::Data& data,
-                                                 TransferPattern::Data& tpData,
+inline void ComputeTransferPatternUsingTripBased(TripBased::Data &data,
+                                                 TransferPattern::Data &tpData,
                                                  const int numberOfThreads,
                                                  const int pinMultiplier = 1) {
   Progress progress(data.numberOfStops());

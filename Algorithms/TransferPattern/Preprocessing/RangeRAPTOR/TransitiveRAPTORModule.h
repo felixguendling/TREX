@@ -1,6 +1,7 @@
 /**********************************************************************************
 
- Copyright (c) 2023 Patrick Steil
+ Copyright (c) 2023-2025 Patrick Steil
+ Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 
@@ -77,8 +78,8 @@ class TransitiveRAPTORModule {
   using Round = std::vector<EarliestArrivalLabel>;
 
  public:
-  TransitiveRAPTORModule(Data& data,
-                         const Profiler& profilerTemplate = Profiler())
+  TransitiveRAPTORModule(Data &data,
+                         const Profiler &profilerTemplate = Profiler())
       : data(data),
         roundIndex(-1),
         stopsUpdatedByRoute(data.numberOfStops()),
@@ -106,7 +107,7 @@ class TransitiveRAPTORModule {
   }
 
   template <typename ATTRIBUTE>
-  TransitiveRAPTORModule(Data& data, const InitialTransferGraph&,
+  TransitiveRAPTORModule(Data &data, const InitialTransferGraph &,
                          const ATTRIBUTE)
       : TransitiveRAPTORModule(data) {}
 
@@ -146,7 +147,7 @@ class TransitiveRAPTORModule {
   inline void runAddSource(const StopId source,
                            const int departureTime) noexcept {
     AssertMsg(departureTime >= 0, "Negative depTime??");
-    EarliestArrivalLabel& label = currentRoundLabel(source);
+    EarliestArrivalLabel &label = currentRoundLabel(source);
     label.arrivalTime = departureTime;
     label.parentDepartureTime = sourceDepartureTime;
     label.usesRoute = false;
@@ -204,7 +205,7 @@ class TransitiveRAPTORModule {
   }
 
   inline bool getJourney(const Vertex vertex, const size_t round,
-                         JourneyWithStopEvent& journey) noexcept {
+                         JourneyWithStopEvent &journey) noexcept {
     std::vector<JourneyWithStopEvent> journeys;
     getJourney(journeys, round, vertex);
     if (journeys.empty()) return false;
@@ -281,7 +282,7 @@ class TransitiveRAPTORModule {
     return roundLabel(numberOfTrips, StopId(vertex)).arrivalTime;
   }
 
-  inline const IndexedSet<false, Vertex>& getReachedVertices() const noexcept {
+  inline const IndexedSet<false, Vertex> &getReachedVertices() const noexcept {
     return reachedVertices;
   }
 
@@ -310,7 +311,7 @@ class TransitiveRAPTORModule {
 
   inline void reset() noexcept { clear<true>(); }
 
-  inline const Profiler& getProfiler() const noexcept { return profiler; }
+  inline const Profiler &getProfiler() const noexcept { return profiler; }
 
   template <bool T = TripPruning,
             typename = std::enable_if_t<T == TripPruning && T>>
@@ -333,7 +334,7 @@ class TransitiveRAPTORModule {
     startNewRound();
     stopsUpdatedByRoute.insert(sourceStop);
     if constexpr (CollectReachedVertices) reachedVertices.insert(source);
-    EarliestArrivalLabel& label = currentRoundLabel(sourceStop);
+    EarliestArrivalLabel &label = currentRoundLabel(sourceStop);
     label.arrivalTime = departureTime;
     label.parent = source;
     label.parentDepartureTime = departureTime;
@@ -356,7 +357,7 @@ class TransitiveRAPTORModule {
 
   inline void collectRoutesServingUpdatedStops() noexcept {
     for (const StopId stop : stopsUpdatedByTransfer) {
-      for (const RouteSegment& route : data.routesContainingStop(stop)) {
+      for (const RouteSegment &route : data.routesContainingStop(stop)) {
         AssertMsg(data.isRoute(route.routeId),
                   "Route " << route.routeId << " is out of range!");
         AssertMsg(data.stopIds[data.firstStopIdOfRoute[route.routeId] +
@@ -368,7 +369,7 @@ class TransitiveRAPTORModule {
           const uint16_t tripNum =
               lastTrip[roundIndex][route.routeId][route.stopIndex];
           if (tripNum == uint16_t(-1)) continue;
-          const StopEvent* trip =
+          const StopEvent *trip =
               data.tripOfRoute(route.routeId, tripNum) + route.stopIndex;
           if (trip->departureTime < previousRoundLabel(stop).arrivalTime)
             continue;
@@ -387,7 +388,7 @@ class TransitiveRAPTORModule {
     }
   }
 
-  inline size_t getStopEventId(const StopEvent* stopEvent) {
+  inline size_t getStopEventId(const StopEvent *stopEvent) {
     return size_t(stopEvent - &(data.stopEvents[0]));
   }
 
@@ -402,9 +403,9 @@ class TransitiveRAPTORModule {
                     << route << ", StopIndex: " << stopIndex << ", TripSize: "
                     << tripSize << ", RoundIndex: " << roundIndex << ")!");
 
-      const StopId* stops = data.stopArrayOfRoute(route);
-      const StopEvent* firstTrip = data.firstTripOfRoute(route);
-      const StopEvent* trip;
+      const StopId *stops = data.stopArrayOfRoute(route);
+      const StopEvent *firstTrip = data.firstTripOfRoute(route);
+      const StopEvent *trip;
       if constexpr (TripPruning) {
         trip = data.tripOfRoute(route, lastTrip[roundIndex][route][stopIndex]);
         if (trip < firstTrip) continue;
@@ -436,7 +437,7 @@ class TransitiveRAPTORModule {
         profiler.countMetric(METRIC_ROUTE_SEGMENTS);
         if (arrivalByRoute(stop, trip[stopIndex].arrivalTime)) {
           if constexpr (CollectReachedVertices) reachedVertices.insert(stop);
-          EarliestArrivalLabel& label = currentRoundLabel(stop);
+          EarliestArrivalLabel &label = currentRoundLabel(stop);
           AssertMsg(data.isStop(stops[parentIndex]),
                     "ParentStop is not a stop!\n");
           label.parent = stops[parentIndex];
@@ -484,13 +485,13 @@ class TransitiveRAPTORModule {
     stopsUpdatedByTransfer.sort();
   }
 
-  inline EarliestArrivalLabel& roundLabel(const size_t round,
+  inline EarliestArrivalLabel &roundLabel(const size_t round,
                                           const StopId stop) noexcept {
     AssertMsg(data.isStop(stop), "Stop is not really a stop!\n");
     AssertMsg(rounds.size() > round, "Not enough rounds!\n");
     AssertMsg(rounds[round].size() > stop,
               "Enough rounds, but not enough stops!\n");
-    EarliestArrivalLabel& result = rounds[round][stop];
+    EarliestArrivalLabel &result = rounds[round][stop];
     if (result.timestamp != timestamp) {
       if (round > 0) {
         result.arrivalTime = std::min(result.arrivalTime,
@@ -511,7 +512,7 @@ class TransitiveRAPTORModule {
     return result;
   }
 
-  inline EarliestArrivalLabel& currentRoundLabel(const StopId stop) noexcept {
+  inline EarliestArrivalLabel &currentRoundLabel(const StopId stop) noexcept {
     AssertMsg(data.isStop(stop), "Stop is not really a stop!\n");
     AssertMsg(roundIndex < rounds.size(),
               "Round index is out of bounds (roundIndex = "
@@ -520,7 +521,7 @@ class TransitiveRAPTORModule {
     return roundLabel(roundIndex, stop);
   }
 
-  inline EarliestArrivalLabel& previousRoundLabel(const StopId stop) noexcept {
+  inline EarliestArrivalLabel &previousRoundLabel(const StopId stop) noexcept {
     AssertMsg(data.isStop(stop), "Stop is not really a stop!\n");
     AssertMsg(roundIndex - 1 < rounds.size(),
               "Round index is out of bounds (roundIndex = "
@@ -560,7 +561,7 @@ class TransitiveRAPTORModule {
                   << sourceDepartureTime
                   << "], arrival time: " << String::secToTime(arrivalTime)
                   << " [" << arrivalTime << "], stop: " << stop << ")!");
-    EarliestArrivalLabel& label = currentRoundLabel(stop);
+    EarliestArrivalLabel &label = currentRoundLabel(stop);
 
     if (label.arrivalTime <= arrivalTime) return false;
 
@@ -587,7 +588,7 @@ class TransitiveRAPTORModule {
                   << sourceDepartureTime
                   << "], arrival time: " << String::secToTime(arrivalTime)
                   << " [" << arrivalTime << "])!");
-    EarliestArrivalLabel& label = currentRoundLabel(stop);
+    EarliestArrivalLabel &label = currentRoundLabel(stop);
 
     if (label.arrivalTime <= arrivalTime) return;
 
@@ -601,7 +602,7 @@ class TransitiveRAPTORModule {
     if constexpr (CollectReachedVertices) reachedVertices.insert(stop);
   }
 
-  inline void getJourney(std::vector<JourneyWithStopEvent>& journeys,
+  inline void getJourney(std::vector<JourneyWithStopEvent> &journeys,
                          size_t round, Vertex vertex) noexcept {
     AssertMsg(data.isStop(StopId(vertex)), "Stop is not really a stop!\n");
     if (roundLabel(round, StopId(vertex)).arrivalTime >=
@@ -613,7 +614,7 @@ class TransitiveRAPTORModule {
       AssertMsg(
           round != size_t(-1),
           "Backtracking parent pointers did not pass through the source stop!");
-      const EarliestArrivalLabel& label = roundLabel(round, StopId(vertex));
+      const EarliestArrivalLabel &label = roundLabel(round, StopId(vertex));
       AssertMsg(label.arrivalTime >= 0, "negative arrTime??");
       journey.emplace_back(label.parent, vertex, label.parentDepartureTime,
                            label.arrivalTime, label.usesRoute, label.routeId);
@@ -624,8 +625,8 @@ class TransitiveRAPTORModule {
     journeys.emplace_back(Vector::reverse(journey));
   }
 
-  inline void getEdgeList(std::vector<JourneyWithStopEvent>& journeys,
-                          std::vector<EdgeListOfStopEventIds>& edgeLists,
+  inline void getEdgeList(std::vector<JourneyWithStopEvent> &journeys,
+                          std::vector<EdgeListOfStopEventIds> &edgeLists,
                           size_t round, Vertex vertex) noexcept {
     AssertMsg(data.isStop(StopId(vertex)), "Stop is not really a stop!\n");
     if (roundLabel(round, StopId(vertex)).arrivalTime >=
@@ -639,7 +640,7 @@ class TransitiveRAPTORModule {
       AssertMsg(
           round != size_t(-1),
           "Backtracking parent pointers did not pass through the source stop!");
-      const EarliestArrivalLabel& label = roundLabel(round, StopId(vertex));
+      const EarliestArrivalLabel &label = roundLabel(round, StopId(vertex));
       journey.emplace_back(label.parent, vertex, label.fromStopEventId,
                            label.toStopEventId, label.parentDepartureTime,
                            label.arrivalTime, label.usesRoute, label.routeId);
@@ -664,10 +665,10 @@ class TransitiveRAPTORModule {
     if (edgeList.size() > 0) edgeLists.emplace_back(Vector::reverse(edgeList));
   }
 
-  inline void getArrival(std::vector<ArrivalLabel>& labels, size_t round,
+  inline void getArrival(std::vector<ArrivalLabel> &labels, size_t round,
                          const Vertex vertex) noexcept {
     AssertMsg(data.isStop(StopId(vertex)), "Stop is not really a stop!\n");
-    const EarliestArrivalLabel& label = roundLabel(round, StopId(vertex));
+    const EarliestArrivalLabel &label = roundLabel(round, StopId(vertex));
     if (label.arrivalTime >=
         (labels.empty() ? never : labels.back().arrivalTime))
       return;
@@ -681,7 +682,7 @@ class TransitiveRAPTORModule {
               << std::setw(14) << "parent" << std::setw(14) << "Route"
               << std::setw(14) << "Run & Timestamp" << std::endl;
     for (size_t i = 0; i <= roundIndex; ++i) {
-      EarliestArrivalLabel& label = roundLabel(i, stop);
+      EarliestArrivalLabel &label = roundLabel(i, stop);
       std::cout << std::setw(10) << i << std::setw(14) << label.arrivalTime
                 << std::setw(14) << label.parent << std::setw(14)
                 << (int)label.usesRoute << std::setw(14) << (int)label.timestamp
@@ -690,7 +691,7 @@ class TransitiveRAPTORModule {
   }
 
  private:
-  Data& data;
+  Data &data;
 
   std::vector<Round> rounds;
   size_t roundIndex;

@@ -1,7 +1,6 @@
 /**********************************************************************************
 
  Copyright (c) 2023-2025 Patrick Steil
- Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 
@@ -56,7 +55,7 @@ class Query {
           parentIndex(-1) {}
 
     template <typename LABEL>
-    DijkstraLabel(const LABEL& parentLabel, const int travelTime)
+    DijkstraLabel(const LABEL &parentLabel, const int travelTime)
         : arrivalTime(parentLabel.arrivalTime + travelTime),
           parentDepartureTime(parentLabel),
           numberOfTrips(parentLabel.numberOfTrips),
@@ -95,17 +94,17 @@ class Query {
 
     inline int getKey() const { return arrivalTime; }
 
-    inline bool hasSmallerKey(const DijkstraLabel* const other) const {
+    inline bool hasSmallerKey(const DijkstraLabel *const other) const {
       return getKey() < other->getKey();
     }
 
     template <typename OTHER_LABEL>
-    inline bool dominates(const OTHER_LABEL& other) const {
+    inline bool dominates(const OTHER_LABEL &other) const {
       return arrivalTime <= other.arrivalTime &&
              numberOfTrips <= other.numberOfTrips;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const DijkstraLabel& r) {
+    friend std::ostream &operator<<(std::ostream &out, const DijkstraLabel &r) {
       return out << r.arrivalTime << "," << (int)r.numberOfTrips << ","
                  << (int)r.parentStop << "," << (int)r.routeId;
     }
@@ -121,7 +120,7 @@ class Query {
   using DijkstraBagType = DijkstraBag<DijkstraLabel>;
 
  public:
-  Query(Data& data)
+  Query(Data &data)
       : data(data),
         sourceStop(noVertex),
         targetStop(noVertex),
@@ -186,13 +185,13 @@ class Query {
     return journeys;
   }
 
-  inline void getJourney(std::vector<RAPTOR::Journey>& journeys, Vertex vertex,
+  inline void getJourney(std::vector<RAPTOR::Journey> &journeys, Vertex vertex,
                          size_t index) {
     RAPTOR::Journey journey;
     do {
       AssertMsg(timestampsForBags[vertex] == currentTimestamp,
                 "Something is wrong!");
-      DijkstraLabel& label = dijkstraBags[vertex].access(index);
+      DijkstraLabel &label = dijkstraBags[vertex].access(index);
       journey.emplace_back(label.parentStop, StopId(vertex),
                            label.parentDepartureTime, label.arrivalTime,
                            label.routeId != noRouteId, label.routeId);
@@ -242,7 +241,7 @@ class Query {
   inline void extractQueryGraph() {
     profiler.startPhase();
 
-    const StaticDAGTransferPattern& sourceTP =
+    const StaticDAGTransferPattern &sourceTP =
         data.transferPatternOfStop[sourceStop];
 
     Vertex currentVertex(targetStop);
@@ -344,8 +343,8 @@ class Query {
     profiler.startPhase();
 
     while (!Q.empty()) {
-      DijkstraBagType* uBag = Q.extractFront();
-      const DijkstraLabel& uLabel = uBag->extractFront();
+      DijkstraBagType *uBag = Q.extractFront();
+      const DijkstraLabel &uLabel = uBag->extractFront();
       const Vertex u = Vertex(uBag - &(dijkstraBags[0]));
       size_t parentIndex = dijkstraBags[u].getIndex(uLabel);
 
@@ -386,7 +385,7 @@ class Query {
     profiler.donePhase(PHASE_EVAL_GRAPH);
   }
 
-  inline bool arrivalByEdge(const Vertex vertex, const DijkstraLabel& label) {
+  inline bool arrivalByEdge(const Vertex vertex, const DijkstraLabel &label) {
     AssertMsg(label.arrivalTime >= sourceDepartureTime,
               "Arriving by route BEFORE departing from the source (source "
               "departure time: "
@@ -420,9 +419,9 @@ class Query {
     AssertMsg(data.raptorData.isStop(StopId(to)),
               "To " << to << "is not a valid stop");
 
-    std::vector<RAPTOR::RouteSegment>& fromLookup =
+    std::vector<RAPTOR::RouteSegment> &fromLookup =
         data.stopLookup[from].incidentLines;
-    std::vector<RAPTOR::RouteSegment>& toLookup =
+    std::vector<RAPTOR::RouteSegment> &toLookup =
         data.stopLookup[to].incidentLines;
 
     AssertMsg(std::is_sorted(fromLookup.begin(), fromLookup.end()),
@@ -473,10 +472,10 @@ class Query {
   }
 
  public:
-  inline Profiler& getProfiler() noexcept { return profiler; }
+  inline Profiler &getProfiler() noexcept { return profiler; }
 
  private:
-  Data& data;
+  Data &data;
 
   Vertex sourceStop;
   Vertex targetStop;

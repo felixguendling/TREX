@@ -1,7 +1,6 @@
 /**********************************************************************************
 
  Copyright (c) 2023-2025 Patrick Steil
- Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 
@@ -58,7 +57,7 @@ class QueryAStar {
           bestNumTrips(0) {}
 
     template <typename LABEL>
-    DijkstraLabel(LABEL& parentLabel, int travelTime)
+    DijkstraLabel(LABEL &parentLabel, int travelTime)
         : arrivalTime(parentLabel.arrivalTime + travelTime),
           parentDepartureTime(parentLabel),
           numberOfTrips(parentLabel.numberOfTrips),
@@ -68,7 +67,7 @@ class QueryAStar {
           bestTravelTime(0),
           bestNumTrips(0) {}
 
-    DijkstraLabel(const DijkstraLabel& other)
+    DijkstraLabel(const DijkstraLabel &other)
         : arrivalTime(other.arrivalTime + other.bestTravelTime),
           parentDepartureTime(other.parentDepartureTime),
           numberOfTrips(other.numberOfTrips + other.bestNumTrips),
@@ -117,17 +116,17 @@ class QueryAStar {
 
     inline int getKey() const { return arrivalTime + bestTravelTime; }
 
-    inline bool hasSmallerKey(DijkstraLabel* other) const {
+    inline bool hasSmallerKey(DijkstraLabel *other) const {
       return getKey() < other->getKey();
     }
 
     template <typename OTHER_LABEL>
-    inline bool dominates(OTHER_LABEL& other) const {
+    inline bool dominates(OTHER_LABEL &other) const {
       return arrivalTime <= other.arrivalTime &&
              numberOfTrips <= other.numberOfTrips;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, DijkstraLabel& r) {
+    friend std::ostream &operator<<(std::ostream &out, DijkstraLabel &r) {
       return out << r.arrivalTime << "," << (int)r.numberOfTrips << ","
                  << (int)r.parentStop << "," << (int)r.routeId;
     }
@@ -145,7 +144,7 @@ class QueryAStar {
   using DijkstraBagType = DijkstraBag<DijkstraLabel>;
 
  public:
-  QueryAStar(Data& data)
+  QueryAStar(Data &data)
       : data(data),
         sourceStop(noVertex),
         targetStop(noVertex),
@@ -210,13 +209,13 @@ class QueryAStar {
     return journeys;
   }
 
-  inline void getJourney(std::vector<RAPTOR::Journey>& journeys, Vertex vertex,
+  inline void getJourney(std::vector<RAPTOR::Journey> &journeys, Vertex vertex,
                          size_t index) {
     RAPTOR::Journey journey;
     do {
       AssertMsg(timestampsForBags[vertex] == currentTimestamp,
                 "Something is wrong!");
-      DijkstraLabel& label = dijkstraBags[vertex].access(index);
+      DijkstraLabel &label = dijkstraBags[vertex].access(index);
       journey.emplace_back(label.parentStop, StopId(vertex),
                            label.parentDepartureTime, label.arrivalTime,
                            label.routeId != noRouteId, label.routeId);
@@ -266,7 +265,7 @@ class QueryAStar {
   inline void extractQueryGraph() {
     profiler.startPhase();
 
-    const StaticDAGTransferPattern& sourceTP =
+    const StaticDAGTransferPattern &sourceTP =
         data.transferPatternOfStop[sourceStop];
 
     Vertex currentVertex(targetStop);
@@ -366,8 +365,8 @@ class QueryAStar {
     profiler.startPhase();
 
     while (!Q.empty()) {
-      DijkstraBagType* uBag = Q.extractFront();
-      const DijkstraLabel& uLabel = uBag->extractFront();
+      DijkstraBagType *uBag = Q.extractFront();
+      const DijkstraLabel &uLabel = uBag->extractFront();
       const Vertex u = Vertex(uBag - &(dijkstraBags[0]));
       size_t parentIndex = dijkstraBags[u].getIndex(uLabel);
 
@@ -411,7 +410,7 @@ class QueryAStar {
     profiler.donePhase(PHASE_EVAL_GRAPH);
   }
 
-  inline bool arrivalByEdge(const Vertex vertex, const DijkstraLabel& label) {
+  inline bool arrivalByEdge(const Vertex vertex, const DijkstraLabel &label) {
     AssertMsg(label.arrivalTime >= sourceDepartureTime,
               "Arriving by route BEFORE departing from the source (source "
               "departure time: "
@@ -449,9 +448,9 @@ class QueryAStar {
     AssertMsg(data.raptorData.isStop(StopId(to)),
               "To " << to << "is not a valid stop");
 
-    std::vector<RAPTOR::RouteSegment>& fromLookup =
+    std::vector<RAPTOR::RouteSegment> &fromLookup =
         data.stopLookup[from].incidentLines;
-    std::vector<RAPTOR::RouteSegment>& toLookup =
+    std::vector<RAPTOR::RouteSegment> &toLookup =
         data.stopLookup[to].incidentLines;
 
     AssertMsg(std::is_sorted(fromLookup.begin(), fromLookup.end()),
@@ -502,10 +501,10 @@ class QueryAStar {
   }
 
  public:
-  inline Profiler& getProfiler() noexcept { return profiler; }
+  inline Profiler &getProfiler() noexcept { return profiler; }
 
  private:
-  Data& data;
+  Data &data;
 
   Vertex sourceStop;
   Vertex targetStop;

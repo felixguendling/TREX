@@ -1,6 +1,7 @@
 /**********************************************************************************
 
- Copyright (c) 2023 Patrick Steil
+ Copyright (c) 2023-2025 Patrick Steil
+ Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 
@@ -57,7 +58,7 @@ class RangeRAPTOR {
   struct DepartureLabel {
     DepartureLabel(const int departureTime, const StopId departureStop)
         : departureTime(departureTime), departureStop(departureStop) {}
-    inline bool operator<(const DepartureLabel& other) const noexcept {
+    inline bool operator<(const DepartureLabel &other) const noexcept {
       return departureTime > other.departureTime;
     }
     int departureTime;
@@ -66,7 +67,7 @@ class RangeRAPTOR {
 
  public:
   template <typename ATTRIBUTE>
-  RangeRAPTOR(Data& data, const InitialTransferGraph& forwardGraph,
+  RangeRAPTOR(Data &data, const InitialTransferGraph &forwardGraph,
               const ATTRIBUTE weight)
       : forwardRaptor(data, forwardGraph, weight),
         data(data),
@@ -78,14 +79,14 @@ class RangeRAPTOR {
       typename T = TransferGraph,
       typename = std::enable_if_t<Meta::Equals<T, TransferGraph>() &&
                                   Meta::Equals<T, InitialTransferGraph>()>>
-  RangeRAPTOR(Data& data, const TransferGraph& forwardGraph)
+  RangeRAPTOR(Data &data, const TransferGraph &forwardGraph)
       : RangeRAPTOR(data, forwardGraph, TravelTime) {}
 
   template <
       typename T = TransferGraph,
       typename = std::enable_if_t<Meta::Equals<T, TransferGraph>() &&
                                   Meta::Equals<T, InitialTransferGraph>()>>
-  RangeRAPTOR(Data& data) : RangeRAPTOR(data, data.transferGraph) {}
+  RangeRAPTOR(Data &data) : RangeRAPTOR(data, data.transferGraph) {}
 
   template <bool T = OneToOne, typename = std::enable_if_t<T == OneToOne && !T>>
   inline void runOneToAll(const Vertex source, const int minTime = 0,
@@ -107,7 +108,7 @@ class RangeRAPTOR {
   }
 
   template <bool T = OneToOne, typename = std::enable_if_t<T == OneToOne && !T>>
-  inline void run(const Vertex source, const std::vector<Vertex>& targets,
+  inline void run(const Vertex source, const std::vector<Vertex> &targets,
                   const int minTime = 0, const int maxTime = 60 * 60 * 24,
                   const size_t maxRounds = INFTY) noexcept {
     run(source,
@@ -116,7 +117,7 @@ class RangeRAPTOR {
   }
 
   template <bool T = OneToOne, typename = std::enable_if_t<T == OneToOne && !T>>
-  inline void run(const Vertex source, const IndexedSet<false, Vertex>& targets,
+  inline void run(const Vertex source, const IndexedSet<false, Vertex> &targets,
                   const int minTime = 0, const int maxTime = 60 * 60 * 24,
                   const size_t maxRounds = INFTY) noexcept {
     clear();
@@ -213,8 +214,8 @@ class RangeRAPTOR {
     departures.clear();
     for (const RouteId route : data.routes()) {
       const size_t numberOfStops = data.numberOfStopsInRoute(route);
-      const StopId* stops = data.stopArrayOfRoute(route);
-      const StopEvent* stopEvents = data.firstTripOfRoute(route);
+      const StopId *stops = data.stopArrayOfRoute(route);
+      const StopEvent *stopEvents = data.firstTripOfRoute(route);
       for (uint32_t stopEventIndex = 0;
            stopEventIndex < data.numberOfStopEventsInRoute(route);
            ++stopEventIndex) {
@@ -238,11 +239,11 @@ class RangeRAPTOR {
 
   template <bool RUN_BACKWARD_QUERIES = false>
   inline void collectArrivals(
-      const IndexedSet<false, Vertex>& targets,
-      const IndexedSet<false, Vertex>& reachedVertices) noexcept {
-    const IndexedSet<false, Vertex>& smallTargetSet =
+      const IndexedSet<false, Vertex> &targets,
+      const IndexedSet<false, Vertex> &reachedVertices) noexcept {
+    const IndexedSet<false, Vertex> &smallTargetSet =
         (targets.size() < reachedVertices.size()) ? targets : reachedVertices;
-    const IndexedSet<false, Vertex>& largeTargetSet =
+    const IndexedSet<false, Vertex> &largeTargetSet =
         (targets.size() < reachedVertices.size()) ? reachedVertices : targets;
     for (const Vertex target : smallTargetSet) {
       if (!largeTargetSet.contains(target)) continue;
@@ -265,7 +266,7 @@ class RangeRAPTOR {
 
  private:
   RaptorModule forwardRaptor;
-  Data& data;
+  Data &data;
 
   Vertex sourceVertex;
   int minDepartureTime;

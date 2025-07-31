@@ -1,7 +1,6 @@
 /**********************************************************************************
 
  Copyright (c) 2023-2025 Patrick Steil
- Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 

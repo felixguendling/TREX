@@ -1,7 +1,6 @@
 /**********************************************************************************
 
  Copyright (c) 2023-2025 Patrick Steil
- Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 
@@ -34,7 +33,7 @@ namespace TD {
 
 typedef enum { PHASE_CLEAR, PHASE_RUN, NUM_PHASES } Phase;
 
-constexpr const char* PhaseNames[] = {"Clear Dijkstra               ",
+constexpr const char *PhaseNames[] = {"Clear Dijkstra               ",
                                       "Work in PQ                   "};
 
 typedef enum {
@@ -45,7 +44,7 @@ typedef enum {
   NUM_METRICS
 } Metric;
 
-constexpr const char* MetricNames[] = {
+constexpr const char *MetricNames[] = {
     "# Settled Vertices           ", "# Relaxed Transfer Edges     ",
     "# Relaxed Route Edges        ", "# Solutions                  ",
     "# Added Labels into bags     "};
@@ -53,9 +52,9 @@ constexpr const char* MetricNames[] = {
 class NoProfiler {
  public:
   inline void registerPhases(
-      const std::initializer_list<Phase>&) const noexcept {}
+      const std::initializer_list<Phase> &) const noexcept {}
   inline void registerMetrics(
-      const std::initializer_list<Metric>&) const noexcept {}
+      const std::initializer_list<Metric> &) const noexcept {}
 
   inline void start() const noexcept {}
   inline void done() const noexcept {}
@@ -77,14 +76,14 @@ class AggregateProfiler : public NoProfiler {
         numQueries(0) {}
 
   inline void registerPhases(
-      const std::initializer_list<Phase>& phaseList) noexcept {
+      const std::initializer_list<Phase> &phaseList) noexcept {
     for (const Phase phase : phaseList) {
       phases.push_back(phase);
     }
   }
 
   inline void registerMetrics(
-      const std::initializer_list<Metric>& metricList) noexcept {
+      const std::initializer_list<Metric> &metricList) noexcept {
     for (const Metric metric : metricList) {
       metrics.push_back(metric);
     }

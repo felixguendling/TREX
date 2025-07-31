@@ -1,7 +1,6 @@
 /**********************************************************************************
 
  Copyright (c) 2023-2025 Patrick Steil
- Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 
@@ -36,12 +35,12 @@ class Data {
  public:
   Data(){};
 
-  Data(TE::Data& teData)
+  Data(TE::Data &teData)
       : teData(teData),
         fwdVertices(teData.numberOfTEVertices()),
         bwdVertices(teData.numberOfTEVertices()){};
 
-  Data(TE::Data& teData, const std::string fileName)
+  Data(TE::Data &teData, const std::string fileName)
       : teData(teData),
         fwdVertices(teData.numberOfTEVertices()),
         bwdVertices(teData.numberOfTEVertices()) {
@@ -49,13 +48,13 @@ class Data {
     sortLabels();
   };
 
-  inline static Data FromBinary(const std::string& fileName) noexcept {
+  inline static Data FromBinary(const std::string &fileName) noexcept {
     Data data;
     data.deserialize(fileName);
     return data;
   }
 
-  inline bool readViennotLabels(const std::string& fileName) {
+  inline bool readViennotLabels(const std::string &fileName) {
     std::cout << "Reading Viennot Labels from " << fileName << " ... "
               << std::endl;
     std::ifstream file;
@@ -105,7 +104,7 @@ class Data {
     return file.eof() && !file.fail();
   }
 
-  inline bool readSavrusLabels(const std::string& fileName) {
+  inline bool readSavrusLabels(const std::string &fileName) {
     std::cout << "Reading Savrus Labels from " << fileName << " ... "
               << std::endl;
     std::ifstream file;
@@ -282,12 +281,12 @@ class Data {
               << String::bytesToString(byteSize()) << std::endl;
   }
 
-  inline void serialize(const std::string& fileName) const noexcept {
+  inline void serialize(const std::string &fileName) const noexcept {
     IO::serialize(fileName, fwdVertices, bwdVertices);
     teData.serialize(fileName + ".te");
   }
 
-  inline void deserialize(const std::string& fileName) noexcept {
+  inline void deserialize(const std::string &fileName) noexcept {
     IO::deserialize(fileName, fwdVertices, bwdVertices);
     teData.deserialize(fileName + ".te");
   }
@@ -299,13 +298,13 @@ class Data {
     return result;
   }
 
-  inline std::vector<Vertex>& getFwdHubs(const Vertex vertex) noexcept {
+  inline std::vector<Vertex> &getFwdHubs(const Vertex vertex) noexcept {
     AssertMsg(teData.isEvent(vertex), "Vertex is not valid!");
 
     return fwdVertices[vertex];
   }
 
-  inline std::vector<Vertex>& getBwdHubs(const Vertex vertex) noexcept {
+  inline std::vector<Vertex> &getBwdHubs(const Vertex vertex) noexcept {
     AssertMsg(teData.isEvent(vertex), "Vertex is not valid!");
 
     return bwdVertices[vertex];

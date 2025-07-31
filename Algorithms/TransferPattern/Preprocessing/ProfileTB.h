@@ -1,6 +1,6 @@
 /**********************************************************************************
 
- Copyright (c) 2023 Patrick Steil
+ Copyright (c) 2023-2025 Patrick Steil
 
  MIT License
 
@@ -103,7 +103,7 @@ class ProfileTB {
   };
 
  public:
-  ProfileTB(const Data& data)
+  ProfileTB(const Data &data)
       : data(data),
         reverseTransferGraph(data.raptorData.transferGraph),
         transferFromSource(data.numberOfStops(), INFTY),
@@ -145,7 +145,7 @@ class ProfileTB {
     for (const RouteId route : data.raptorData.routes()) {
       const size_t numberOfStops = data.numberOfStopsInRoute(route);
       const size_t numberOfTrips = data.raptorData.numberOfTripsInRoute(route);
-      const RAPTOR::StopEvent* stopEvents =
+      const RAPTOR::StopEvent *stopEvents =
           data.raptorData.firstTripOfRoute(route);
       routeLabels[route].numberOfTrips = numberOfTrips;
       routeLabels[route].departureTimes.resize((numberOfStops - 1) *
@@ -185,7 +185,7 @@ class ProfileTB {
 
   inline void run(const StopId source, const int minDepTime,
                   const int maxDepTime,
-                  const std::vector<StopId>& targets = {}) {
+                  const std::vector<StopId> &targets = {}) {
     profiler.start();
     sourceStop = source;
     minDepartureTime = minDepTime;
@@ -235,34 +235,34 @@ class ProfileTB {
     profiler.done();
   }
 
-  inline std::vector<int>& getMinTravelTimes() noexcept {
+  inline std::vector<int> &getMinTravelTimes() noexcept {
     return bestTravelTime;
   }
 
-  inline std::vector<uint8_t>& getMinNumberOfTransfers() noexcept {
+  inline std::vector<uint8_t> &getMinNumberOfTransfers() noexcept {
     return bestMinTransfers;
   }
 
   inline void evaluateInitialTransfers() noexcept {
     reachedRoutes.clear();
-    for (const RAPTOR::RouteSegment& route :
+    for (const RAPTOR::RouteSegment &route :
          data.raptorData.routesContainingStop(sourceStop)) {
       reachedRoutes.insert(route.routeId);
     }
     for (const Edge edge :
          data.raptorData.transferGraph.edgesFrom(sourceStop)) {
       const Vertex stop = data.raptorData.transferGraph.get(ToVertex, edge);
-      for (const RAPTOR::RouteSegment& route :
+      for (const RAPTOR::RouteSegment &route :
            data.raptorData.routesContainingStop(StopId(stop))) {
         reachedRoutes.insert(route.routeId);
       }
     }
     reachedRoutes.sort();
     for (const RouteId route : reachedRoutes) {
-      const RouteLabel& label = routeLabels[route];
+      const RouteLabel &label = routeLabels[route];
       const StopIndex endIndex = label.end();
       const TripId firstTrip = data.firstTripOfRoute[route];
-      const StopId* stops = data.raptorData.stopArrayOfRoute(route);
+      const StopId *stops = data.raptorData.stopArrayOfRoute(route);
       TripId tripIndex = noTripId;
       for (StopIndex stopIndex(0); stopIndex < endIndex; stopIndex++) {
         const int timeFromSource = transferFromSource[stops[stopIndex]];
@@ -293,13 +293,13 @@ class ProfileTB {
     }
   }
 
-  inline Profiler& getProfiler() noexcept { return profiler; }
+  inline Profiler &getProfiler() noexcept { return profiler; }
 
-  inline std::vector<RAPTOR::Journey>& getAllJourneys() noexcept {
+  inline std::vector<RAPTOR::Journey> &getAllJourneys() noexcept {
     return allJourneys;
   }
 
-  inline void getJourneys(const StopId& target, const int departureTime) {
+  inline void getJourneys(const StopId &target, const int departureTime) {
     if (target == lastSource) return;
 
     std::vector<RAPTOR::Journey> result;
@@ -308,7 +308,7 @@ class ProfileTB {
     uint8_t minCounter = 255;
 
     int counter(0);
-    for (const TargetLabel& label : targetLabels[target]) {
+    for (const TargetLabel &label : targetLabels[target]) {
       if ((!targetLabelChanged[target][counter++]) ||
           label.arrivalTime >= bestArrivalTime)
         continue;
@@ -368,14 +368,14 @@ class ProfileTB {
     collectedDepTimes.clear();
     // get all reachable routes (meaning also by footpaths)
     reachedRoutes.clear();
-    for (const RAPTOR::RouteSegment& route :
+    for (const RAPTOR::RouteSegment &route :
          data.raptorData.routesContainingStop(sourceStop)) {
       reachedRoutes.insert(route.routeId);
     }
     for (const Edge edge :
          data.raptorData.transferGraph.edgesFrom(sourceStop)) {
       const Vertex stop = data.raptorData.transferGraph.get(ToVertex, edge);
-      for (const RAPTOR::RouteSegment& route :
+      for (const RAPTOR::RouteSegment &route :
            data.raptorData.routesContainingStop(StopId(stop))) {
         reachedRoutes.insert(route.routeId);
       }
@@ -383,8 +383,8 @@ class ProfileTB {
     reachedRoutes.sort();
     for (const RouteId route : reachedRoutes) {
       const size_t numberOfStops = data.numberOfStopsInRoute(route);
-      const StopId* stops = data.raptorData.stopArrayOfRoute(route);
-      const RAPTOR::StopEvent* stopEvents =
+      const StopId *stops = data.raptorData.stopArrayOfRoute(route);
+      const RAPTOR::StopEvent *stopEvents =
           data.raptorData.firstTripOfRoute(route);
       const TripId firstTrip = data.firstTripOfRoute[route];
       for (size_t stopEventIndex = 0;
@@ -427,7 +427,7 @@ class ProfileTB {
       // Evaluate final transfers in order to check if the target is
       // reachable
       for (size_t i = roundBegin; i < roundEnd; ++i) {
-        const TripLabel& label = queue[i];
+        const TripLabel &label = queue[i];
         profiler.countMetric(METRIC_SCANNED_TRIPS);
         for (StopEventId j = label.begin; j < label.end; ++j) {
           stop = data.arrivalEvents[j].stop;
@@ -451,7 +451,7 @@ class ProfileTB {
       }
       // Find the range of transfers for each trip
       for (size_t i = roundBegin; i < roundEnd; ++i) {
-        TripLabel& label = queue[i];
+        TripLabel &label = queue[i];
         // Jonas: pruning idea
         /* maxMinArrivalTime = 0;
         for (StopEventId j(label.begin); j < label.end; ++j) {
@@ -505,7 +505,7 @@ class ProfileTB {
   inline void enqueue(const Edge edge, const size_t parent,
                       const u_int8_t n) noexcept {
     profiler.countMetric(METRIC_ENQUEUES);
-    const EdgeLabel& label = edgeLabels[edge];
+    const EdgeLabel &label = edgeLabels[edge];
     if (reachedIndex.alreadyReached(label.trip,
                                     label.stopEvent - label.firstEvent, n + 1))
       return;
@@ -543,8 +543,8 @@ class ProfileTB {
     }
   }
 
-  inline RAPTOR::Journey getJourney(const TargetLabel& targetLabel,
-                                    const Vertex& targetStop) const noexcept {
+  inline RAPTOR::Journey getJourney(const TargetLabel &targetLabel,
+                                    const Vertex &targetStop) const noexcept {
     RAPTOR::Journey result;
     u_int32_t parent = targetLabel.parent;
     if (parent == u_int32_t(-1)) {
@@ -557,7 +557,7 @@ class ProfileTB {
     int lastTime;
     while (parent != u_int32_t(-1)) {
       AssertMsg(parent < queueSize, "Parent " << parent << " is out of range!");
-      const TripLabel& label = queue[parent];
+      const TripLabel &label = queue[parent];
       StopEventId arrivalStopEvent;
       Edge edge;
       std::tie(arrivalStopEvent, edge) =
@@ -594,7 +594,7 @@ class ProfileTB {
   }
 
   inline std::pair<StopEventId, Edge> getParent(
-      const TripLabel& parentLabel,
+      const TripLabel &parentLabel,
       const StopEventId departureStopEvent) const noexcept {
     for (StopEventId i = parentLabel.begin; i < parentLabel.end; i++) {
       for (const Edge edge : data.stopEventGraph.edgesFrom(Vertex(i))) {
@@ -607,8 +607,8 @@ class ProfileTB {
   }
 
   inline std::pair<StopEventId, Edge> getParent(
-      const TripLabel& parentLabel, const TargetLabel& targetLabel,
-      const Vertex& targetStop) const noexcept {
+      const TripLabel &parentLabel, const TargetLabel &targetLabel,
+      const Vertex &targetStop) const noexcept {
     // Final transfer to target may start exactly at parentLabel.end if it has
     // length 0
     const TripId trip = data.tripOfStopEvent[parentLabel.begin];
@@ -632,7 +632,7 @@ class ProfileTB {
   }
 
  private:
-  const Data& data;
+  const Data &data;
 
   TransferGraph reverseTransferGraph;
   std::vector<int> transferFromSource;

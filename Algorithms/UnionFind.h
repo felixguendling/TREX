@@ -1,7 +1,6 @@
 /**********************************************************************************
 
  Copyright (c) 2023-2025 Patrick Steil
- Copyright (c) 2019-2022 KIT ITI Algorithmics Group
 
  MIT License
 
@@ -56,11 +55,11 @@ class UnionFind {
 
   inline std::vector<int> getParent() const { return parent; }
 
-  inline void serialize(IO::Serialization& serialize) const noexcept {
+  inline void serialize(IO::Serialization &serialize) const noexcept {
     serialize(n, parent);
   }
 
-  inline void deserialize(IO::Deserialization& deserialize) noexcept {
+  inline void deserialize(IO::Deserialization &deserialize) noexcept {
     deserialize(n, parent);
   }
 

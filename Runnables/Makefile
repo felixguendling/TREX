@@ -6,7 +6,8 @@ RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG -fomit-frame-pointe
 PREFETCH=-DENABLE_PREFETCH -DUSE_SIMD
 # SPARSEHASH=-I ../ExternalLibs/sparsehash/include
 
-all: TREXRelease ULTRARelease NetworkRelease
+all: TREXRelease NetworkRelease
+# all: TPRelease TREXRelease ULTRARelease NetworkRelease
 # all: TPDebug ArcTBDebug NetworkDebug ULTRADebug
 
 NetworkDebug:

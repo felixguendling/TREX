@@ -11,7 +11,6 @@
 
 #include "../../../DataStructures/TREX/TREXData.h"
 #include "../../../ExternalLibs/ips4o/ips4o.hpp"
-#include "../../../ExternalLibs/parlaylib/include/parlay/parallel.h"
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/String/String.h"

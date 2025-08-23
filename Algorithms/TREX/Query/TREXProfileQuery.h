@@ -491,8 +491,8 @@ class TREXProfileQuery {
                       const u_int8_t n) noexcept {
     profiler.countMetric(METRIC_ENQUEUES);
     const EdgeLabel &label = edgeLabels[edge];
-    if (reachedIndex.alreadyReached(label.trip,
-                                    label.stopEvent - label.firstEvent, n + 1))
+    if (reachedIndex.alreadyReached(
+            label.trip, StopIndex(label.stopEvent - label.firstEvent), n + 1))
       return;
 
     if (((label.cellId ^ sourceCellId) >> label.localLevel) &&

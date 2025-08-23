@@ -497,8 +497,8 @@ class TREXProfileQuery {
 
     if (((label.cellId ^ sourceCellId) >> label.localLevel) &&
         ((label.cellId ^ targetCellId) >> label.localLevel)) [[likely]] {
-      reachedIndex.update(label.trip, label.stopEvent - label.firstEvent,
-                          n + 1);
+      reachedIndex.update(label.trip,
+                          StopIndex(label.stopEvent - label.firstEvent), n + 1);
       return;
     }
     queue[queueSize] = TripLabel(

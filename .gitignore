@@ -3,3 +3,8 @@ Runnables/TP
 Runnables/ULTRA
 Runnables/Network
 Runnables/readcache
+/.idea
+/deps
+/.pkg.lock
+/.pkg.mutex
+/*build*
